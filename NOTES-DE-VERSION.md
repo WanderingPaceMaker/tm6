@@ -1,5 +1,9 @@
 # Notes de version
 
+## 22 novembre 2026 — départ au milieu du couloir
+
+Le patient peut partir ailleurs qu'à un plot, par exemple depuis une salle située au milieu du couloir. Un réglage indique la distance entre la ligne de départ et le premier plot atteint : le premier aller compte cette distance, les suivants la longueur du couloir, et le couloir dessiné montre la ligne de départ. Le compte rendu mentionne le départ, pour que le test puisse être refait sur le même parcours, comme le demande la norme ERS/ATS de 2014.
+
 ## 22 novembre 2026 — version web
 
 L'application est désormais publiée comme application web installable : elle s'ouvre depuis Safari ou Chrome, s'ajoute à l'écran d'accueil et fonctionne sans réseau après la première ouverture. Elle n'a plus besoin d'être signée ni réinstallée chaque semaine. Hors de l'application iOS d'origine, l'écran reste allumé pendant le test grâce à la fonction de verrou d'écran du navigateur, les bips utilisent une session audio de lecture et le compte rendu est transmis par la feuille de partage du système.

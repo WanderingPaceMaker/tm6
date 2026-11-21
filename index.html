@@ -173,6 +173,7 @@ h1{font-size:28px;line-height:1.15;margin:20px 0 4px;text-wrap:balance}
 .track .cone{fill:var(--tape);stroke:var(--tape-ink);stroke-width:2}
 .track .pt{fill:var(--accent)}
 .track .tick{stroke:var(--muted);stroke-width:2}
+.track .startl{stroke:var(--fg);stroke-width:4;stroke-linecap:round}
 .track text{font:700 15px var(--f-body);fill:var(--muted)}
 .clock{text-align:center;margin-top:12px}
 .clock .t{font:700 72px/1 var(--f-num);font-variant-numeric:tabular-nums}
@@ -683,7 +684,7 @@ var TEST = 360;
 var S = {
   step: 'patient', seen: { patient: 1 },
   sex: '', age: '', taille: '', poids: '',
-  exam: 'tm6', couloir: '30', o2: 'air', o2mode: 'continu', o2if: 'lunettes', o2debit: '', o2src: 'porte', aide: 'aucune',
+  exam: 'tm6', couloir: '30', depart: '', o2: 'air', o2mode: 'continu', o2if: 'lunettes', o2debit: '', o2src: 'porte', aide: 'aucune',
   o2dev: '', rt: [{ d: '', s: '' }, { d: '', s: '' }, { d: '', s: '' }, { d: '', s: '' }, { d: '', s: '' }], o2ch: [],
   rest: { spo2: '', fc: '', pas: '', pad: '', bd: '', bf: '' },
   ready: { oxy: false, line: false, consignes: false },
@@ -715,13 +716,14 @@ function stored() { try { return JSON.parse(localStorage.getItem(CFG_KEY)) || {}
   var c = stored();
   for (var k in S.cfg) if (typeof c[k] === 'string') S.cfg[k] = c[k];
   if (ok(c.couloir)) S.couloir = String(c.couloir);
+  if (typeof c.depart === 'string') S.depart = c.depart;
   if (typeof c.bips === 'boolean') S.beeps = c.bips;
   if (typeof c.vibrations === 'boolean') S.vibr = c.vibrations;
 })();
 // La clé de l'app d'origine absente ici (thème) est conservée telle quelle.
 function saveCfg() {
   var c = stored(); for (var k in S.cfg) c[k] = S.cfg[k];
-  c.couloir = S.couloir; c.bips = S.beeps; c.vibrations = S.vibr;
+  c.couloir = S.couloir; c.depart = S.depart; c.bips = S.beeps; c.vibrations = S.vibr;
   try { localStorage.setItem(CFG_KEY, JSON.stringify(c)); } catch (e) { }
 }
 // Écran allumé pendant le test (pont natif de l'app).
@@ -781,7 +783,16 @@ function beep(freq, dur, n) {
 
 /* ---------- Calculs ---------- */
 function corridor() { return ok(S.couloir) ? num(S.couloir) : 30; }
-function dist() { return S.laps.length * corridor() + (S.stop ? num(S.end.partiel) || 0 : 0); }
+function departTxt() { return depart() ? ', départ à ' + String(depart()).replace('.', ',') + ' m du plot' : ''; }
+// Départ ailleurs qu'à un plot (salle de l'oxymètre au milieu du couloir) : le premier passage à un plot ne compte
+// que la distance de la ligne de départ à ce plot ; 0 = départ au plot. La norme ERS/ATS 2014 (Holland 2014, « Recording
+// performance of the 6MWT ») demande de relever le nombre d'allers et la distance du dernier aller partiel ; elle ne place
+// pas la ligne de départ à un bout du couloir, mais demande de garder le même parcours d'un test à l'autre.
+function depart() { var d = num(S.depart), c = corridor(); return d > 0 && d < c ? d : 0; }
+function lapLen(i) { return i === 0 && depart() ? depart() : corridor(); }
+function cumDist(n) { return n <= 0 ? 0 : depart() ? depart() + (n - 1) * corridor() : n * corridor(); }
+function partMax() { return S.laps.length === 0 && depart() ? depart() : corridor(); }
+function dist() { return cumDist(S.laps.length) + (S.stop ? num(S.end.partiel) || 0 : 0); }
 function predicted() {
   var a = num(S.age), h = num(S.taille), w = num(S.poids);
   if (isNaN(a) || isNaN(h) || isNaN(w) || (S.sex !== 'F' && S.sex !== 'M')) return null;
@@ -915,7 +926,7 @@ var SCREENS = {
         (pulse ? '<label class="f' + (S.o2dev ? '' : ' empty') + '"><span>Dispositif (modèle)</span><span class="box"><input class="dev" list="devList" autocomplete="off" autocapitalize="off" spellcheck="false" data-k="o2dev" value="' + esc(S.o2dev) + '"></span><datalist id="devList">' +
           devices().map(function (d) { return '<option value="' + esc(d) + '"></option>'; }).join('') + '</datalist></label>' : '<span></span>');
     }
-    h += '</div><p class="hint corr">Couloir : ' + corridor() + ' m. <button type="button" class="linkbtn" id="gearInline">Modifier</button></p>';
+    h += '</div><p class="hint corr">Couloir : ' + corridor() + ' m' + departTxt() + '. <button type="button" class="linkbtn" id="gearInline">Modifier</button></p>';
     if (S.exam === 'titr' && S.o2 === 'air') h += '<p class="hint" style="margin-top:10px">La titration se fait sous oxygène : choisir une interface d\'oxygène.</p>';
     return h + '</div>';
   },
@@ -942,7 +953,7 @@ var SCREENS = {
     $('next').style.display = 'none';
     if (!S.started) return '<h1>Test</h1><div class="card"><p>Le test n\'a pas commencé.</p><button type="button" class="big" style="width:100%" data-go="pret">Aller au départ</button></div>';
     var ticks = ''; for (var m = 1; m < 6; m++) ticks += '<em style="left:' + (m / 6 * 100) + '%"></em>';
-    return '<p class="testinfo">' + examLabel() + ', ' + o2Lc() + ', couloir de ' + corridor() + ' m</p>' +
+    return '<p class="testinfo">' + examLabel() + ', ' + o2Lc() + ', couloir de ' + corridor() + ' m' + departTxt() + '</p>' +
       '<div class="cols test"><div class="col"><div class="clock"><div class="t" id="clk">0:00</div><div class="r" id="rem"></div></div>' +
       '<div class="bar"><b id="prog" style="width:0"></b>' + ticks + '</div>' +
       '<div id="alertBox"></div><div class="phrase" id="phrase">' + esc(S.lastPhrase || 'Départ. Marchez aussi loin que possible pendant 6 minutes.') + '</div>' +
@@ -966,8 +977,8 @@ var SCREENS = {
       '<div class="rtabs"><span class="rtstop">' + stopTxt + '</span><span class="rtclk" id="rtClk"></span>' + ['Arrêt', 'Borg, symptômes', 'Récupération'].map(function (t, i) { return '<button type="button" class="rtab' + ((S.rpane || 0) === i ? ' on' : '') + '" data-rpane="' + i + '">' + t + '</button>'; }).join('') + '</div>' +
       '<div class="cols rcp" data-pane="' + (S.rpane || 0) + '"><div class="col"><div class="rec"><div class="rt" id="rt1"><span>Récupération</span><b id="recClk">0:00</b></div><div class="rt" id="rt3"><span id="recLbl">Relevé à 1 min dans</span><b id="recNext">1:00</b></div></div>' +
       '<div class="card"><h2>À l\'arrêt</h2><div class="grid2">' + field('end.spo2', 'SpO2', '%') + field('end.fc', 'FC', '/min') + field('end.pas', 'PAS', 'mmHg') + field('end.pad', 'PAD', 'mmHg') + '</div>' +
-      '<div style="height:12px"></div><div class="f"><span>Mètres depuis le dernier cône : <b id="partV">' + (S.end.partiel || 0) + ' m</b></span>' +
-      '<input class="slider" type="range" min="0" max="' + corridor() + '" step="1" value="' + (S.end.partiel || 0) + '" data-k="end.partiel"></div>' + flags('recup') + '</div></div><div class="col">' +
+      '<div style="height:12px"></div><div class="f"><span>' + (S.laps.length === 0 && depart() ? 'Mètres depuis la ligne de départ' : 'Mètres depuis le dernier plot') + ' : <b id="partV">' + (S.end.partiel || 0) + ' m</b></span>' +
+      '<input class="slider" type="range" min="0" max="' + partMax() + '" step="1" value="' + (S.end.partiel || 0) + '" data-k="end.partiel"></div>' + flags('recup') + '</div></div><div class="col">' +
       '<div class="card"><h2>Borg à la fin</h2>' + borg('end.bd', 'Dyspnée') + borg('end.bf', 'Fatigue') + '</div>' +
       '<div class="card"><h2>Symptômes limitants</h2><p class="say">Après le Borg : « Qu\'est-ce qui vous a empêché de marcher plus loin ? »</p>' + sy + '</div>' +
       '</div><div class="col"><div class="card" id="rc1"><h2>Récupération à 1 min</h2><div class="grid4">' + field('rec.1.spo2', 'SpO2 %', '') + field('rec.1.fc', 'FC /min', '') + field('rec.1.pas', 'PAS', '') + field('rec.1.pad', 'PAD', '') + '</div></div>' +
@@ -1060,14 +1071,14 @@ function table(rows) {
 function pauseWithin(a, b) { var t = 0; S.pauses.forEach(function (p) { var e = p.e == null ? S.stop.t : p.e; t += Math.max(0, Math.min(b, e) - Math.max(a, p.s)); }); return t; }
 function speedSegs() {
   var segs = [], prev = 0;
-  S.laps.forEach(function (t) { var w = (t - prev) - pauseWithin(prev, t); if (w >= 1) segs.push({ a: prev, b: t, v: corridor() / w * 3.6 }); prev = t; });
+  S.laps.forEach(function (t, i) { var w = (t - prev) - pauseWithin(prev, t); if (w >= 1) segs.push({ a: prev, b: t, v: lapLen(i) / w * 3.6 }); prev = t; });
   return segs;
 }
 // Distance cumulée à l'instant t (s) : entre deux passages, répartie au prorata du temps de marche (arrêts exclus) ;
 // après le dernier passage, les mètres partiels sont répartis jusqu'à la fin.
 function distAt(t) {
-  var c = corridor(), mk = [{ t: 0, d: 0 }];
-  S.laps.forEach(function (lt, i) { mk.push({ t: lt, d: (i + 1) * c }); });
+  var mk = [{ t: 0, d: 0 }];
+  S.laps.forEach(function (lt, i) { mk.push({ t: lt, d: cumDist(i + 1) }); });
   mk.push({ t: S.stop.t, d: dist() });
   if (t >= S.stop.t) return dist();
   for (var i = 1; i < mk.length; i++) if (t <= mk[i].t) {
@@ -1165,7 +1176,7 @@ function figure(A) {
   var byT = function (a, b) { return a.t - b.t; }; spts.sort(byT); fpts.sort(byT);
   var srec = [{ t: endM + 1, v: num(S.rec[1].spo2) }, { t: endM + 3, v: num(S.rec[3].spo2) }], frec = [{ t: endM + 1, v: num(S.rec[1].fc) }, { t: endM + 3, v: num(S.rec[3].fc) }];
   var vpts = A.segs.map(function (g) { return { t: (g.a + g.b) / 120, v: g.v }; });
-  var dpts = [{ t: 0, v: 0 }]; S.laps.forEach(function (lt, i) { dpts.push({ t: lt / 60, v: (i + 1) * corridor() }); }); dpts.push({ t: endM, v: Math.round(A.dist) });
+  var dpts = [{ t: 0, v: 0 }]; S.laps.forEach(function (lt, i) { dpts.push({ t: lt / 60, v: cumDist(i + 1) }); }); dpts.push({ t: endM, v: Math.round(A.dist) });
   var dHi = Math.ceil(Math.max(A.dist, A.pr ? A.pr.p : 0) / 100) * 100 || 100;
   var tracks = [
     { lbl: 'SpO2 %', cls: 'sp', pts: spts, rec: srec, lo: 80, hi: 100, h: 150 },
@@ -1288,7 +1299,7 @@ function renderTest(light) {
   $('clk').textContent = mmss(t);
   $('rem').textContent = S.running ? 'reste ' + mmss(TEST - t) : (S.stop && S.stop.reason ? 'arrêté à ' + mmss(S.stop.t) : 'terminé');
   $('prog').style.width = (t / TEST * 100) + '%';
-  $('lapD').textContent = S.laps.length * corridor() + ' m, ' + S.laps.length + ' aller' + (S.laps.length > 1 ? 's' : '');
+  $('lapD').textContent = cumDist(S.laps.length) + ' m, ' + S.laps.length + ' aller' + (S.laps.length > 1 ? 's' : '');
   renderTrack();
   $('pauseBtn').textContent = paused() ? 'Arrêt en cours…' : 'Le patient s\'arrête';
   $('pinfo').textContent = S.pauses.length ? S.pauses.length + ' arrêt' + (S.pauses.length > 1 ? 's' : '') + ', ' + Math.round(pauseTotal()) + ' s au total. Le chronomètre continue pendant les arrêts.' : 'Le chronomètre continue pendant les arrêts.';
@@ -1308,13 +1319,16 @@ function renderTest(light) {
   }
 }
 // Couloir vu de dessus : un plot à chaque bout, le patient au plot qu'il vient d'atteindre (départ si nombre d'allers pair).
+// Départ au milieu : la ligne de départ est tracée à sa distance du premier plot atteint (dessiné à droite).
 function renderTrack() {
-  var n = S.laps.length, atFar = n % 2 === 1, W = 600, x0 = 40, x1 = W - 40;
+  var n = S.laps.length, atFar = n % 2 === 1, W = 600, x0 = 40, x1 = W - 40, dp = depart(), xs = dp ? x1 - (x1 - x0) * dp / corridor() : x0;
   var g = '<line class="lane" x1="' + x0 + '" y1="40" x2="' + x1 + '" y2="40"/>';
   for (var i = 1; i < 6; i++) { var x = x0 + (x1 - x0) * i / 6; g += '<line class="tick" x1="' + x + '" y1="30" x2="' + x + '" y2="50"/>'; }
   [x0, x1].forEach(function (x) { g += '<path class="cone" d="M' + (x - 13) + ' 54 L' + x + ' 18 L' + (x + 13) + ' 54 Z"/>'; });
-  g += '<circle class="pt" cx="' + (atFar ? x1 : x0) + '" cy="40" r="11"/>';
-  g += '<text x="' + x0 + '" y="78" text-anchor="middle">départ</text><text x="' + x1 + '" y="78" text-anchor="middle">' + corridor() + ' m</text>';
+  if (dp) g += '<line class="startl" x1="' + xs + '" y1="22" x2="' + xs + '" y2="58"/>';
+  g += '<circle class="pt" cx="' + (n === 0 ? xs : atFar ? x1 : x0) + '" cy="40" r="11"/>';
+  g += '<text x="' + xs + '" y="78" text-anchor="middle">départ</text>';
+  if (!dp) g += '<text x="' + x1 + '" y="78" text-anchor="middle">' + corridor() + ' m</text>';
   var t = $('track'); if (t) t.innerHTML = '<svg viewBox="0 0 ' + W + ' 86" role="img" aria-label="Position au couloir">' + g + '</svg>';
 }
 function renderRecup() {
@@ -1366,7 +1380,7 @@ function openStop() {
 function openSettings() {
   S.sheet = 'cfg';
   $('sheet').innerHTML = '<div class="sheet"><div class="pane"><h2>Réglages</h2>' +
-    '<div class="card"><h2>Couloir</h2><div class="grid2">' + field('couloir', 'Longueur par défaut', 'm') + '<span></span></div></div>' +
+    '<div class="card"><h2>Couloir</h2><div class="grid2">' + field('couloir', 'Longueur par défaut', 'm') + field('depart', 'Départ, distance au 1er plot', 'm') + '</div><p class="hint">Vide si le patient part d\'un plot.</p></div>' +
     '<div class="card"><h2>En-tête du compte rendu</h2>' + tfield('cfg.etab', 'Établissement') + tfield('cfg.service', 'Service') +
     '<label class="f tf"><span>Adresse, une ligne par ligne</span><textarea class="ta" data-k="cfg.adresse" rows="2">' + esc(S.cfg.adresse) + '</textarea></label>' + tfield('cfg.operateur', 'Opérateur') + '</div>' +
     '<div class="card"><h2>Envoi par mail</h2>' + tfield('cfg.mailTo', 'Destinataire', 'email') + tfield('cfg.mailSubject', 'Objet') +
@@ -1394,7 +1408,7 @@ document.addEventListener('input', function (e) {
   var lab = e.target.parentNode && e.target.parentNode.parentNode;
   if (lab && lab.className && lab.className.indexOf('f') === 0) lab.className = 'f' + (e.target.value === '' ? ' empty' : '');
   if (k === 'end.partiel') $('partV').textContent = e.target.value + ' m';
-  if (k === 'couloir' || k.indexOf('cfg.') === 0) saveCfg();
+  if (k === 'couloir' || k === 'depart' || k.indexOf('cfg.') === 0) saveCfg();
   if ((k === 'age' || k === 'taille' || k === 'poids') && $('pred')) { $('pred').innerHTML = predText(); }
   renderSteps();
 });
@@ -1544,7 +1558,7 @@ var Report = (function () {
     pauseVals = S.pauses.map(p => ({ t: p.s / 60, s: pf(p.spo2), f: pf(p.fc) })); endT = S.stop ? S.stop.t : 0; stopReason = S.stop ? S.stop.reason : null;
     examType = S.exam || null; t0 = S.t0 || 0; cfg = S.cfg;
     V = {
-      age: S.age, taille: S.taille, poids: S.poids, couloir: S.couloir,
+      age: S.age, taille: S.taille, poids: S.poids, couloir: S.couloir, depart: S.depart,
       o2mode: S.o2 === 'air' ? 'air' : S.o2if, o2type: S.o2mode, o2debit: S.o2debit, o2src: S.o2src, o2dev: S.o2dev || '', aide: S.aide,
       m0spo2: S.rest.spo2, m0fc: S.rest.fc, ta0s: S.rest.pas, ta0d: S.rest.pad,
       spo2End: S.end.spo2, fcEnd: S.end.fc, ta1s: S.end.pas, ta1d: S.end.pad, partiel: S.end.partiel, nadirIn: S.nadir,
@@ -1602,6 +1616,10 @@ function o2At(sec) { let v = num('o2debit'); o2changes.forEach(ch => { if (ch.t 
 
 const taStr = (sId, dId) => ok(num(sId)) && ok(num(dId)) ? `${num(sId)}/${num(dId)} mmHg` : null;
 const corridor = () => ok(num('couloir')) && num('couloir') > 0 ? num('couloir') : 30;
+// Départ ailleurs qu'à un plot : le premier aller ne vaut que la distance de la ligne de départ au premier plot.
+const depart = () => { const d = num('depart'), c = corridor(); return ok(d) && d > 0 && d < c ? d : 0; };
+const lapLen = i => i === 0 && depart() ? depart() : corridor();
+const departTxt = () => depart() ? `, départ à ${fr(depart())} m d'un plot` : '';
 
 const mmss = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
@@ -1620,7 +1638,7 @@ function series() {
 }
 function compute() {
   const { pts, rec, rec3 } = series();
-  const dist = laps * corridor() + (ok(num('partiel')) ? num('partiel') : 0);
+  const dist = (laps > 0 ? (depart() ? depart() + (laps - 1) * corridor() : laps * corridor()) : 0) + (ok(num('partiel')) ? num('partiel') : 0);
   const pr = predicted();
   // Pendant le test (ERS/ATS 2014 : « lowest SpO2 recorded during a 6MWT ») : relevés, arrêts compris, sans le repos (t = 0).
   const during = pts.filter(p => p.t > 0).concat(pauseVals);
@@ -1661,8 +1679,8 @@ function buildText(c, desat) {
   const aide = { aucune: 'sans aide à la marche', canne: 'avec une canne', deambulateur: 'avec un déambulateur', rollator: 'avec un rollator' }[$('aide').value];
   const out = [];
   out.push(titr() && o2m !== 'air'
-    ? `Titration de l'oxygène à l'effort (test de marche de 6 minutes) réalisée ${o2}, ${aide}, sur un couloir de ${corridor()} m.`
-    : `Test de marche de 6 minutes réalisé ${o2}, ${aide}, sur un couloir de ${corridor()} m.`);
+    ? `Titration de l'oxygène à l'effort (test de marche de 6 minutes) réalisée ${o2}, ${aide}, sur un couloir de ${corridor()} m${departTxt()}.`
+    : `Test de marche de 6 minutes réalisé ${o2}, ${aide}, sur un couloir de ${corridor()} m${departTxt()}.`);
   if (o2m !== 'air') {
     const rest = restSteps().map(st => `${fr(st.s)} % ${pulsed() ? `au réglage ${fr(st.d)}` : `sous ${fr(st.d)} L/min`}`);
     if (rest.length) out.push(`Titration en oxygène au repos : SpO2 à ${rest.join(', puis ')}.`);
@@ -1850,7 +1868,7 @@ function speedStats(dist) {
 function speedSegments() {
   const segs = []; let prev = 0;
   const add = (a, b, metres) => { const w = (b - a) - pauseWithin(a, b); if (w >= 1 && metres > 0) segs.push({ a, b, v: metres / w * 60 }); };
-  lapTimes.forEach(t => { if (t > prev) add(prev, t, corridor()); prev = t; });
+  lapTimes.forEach((t, i) => { if (t > prev) add(prev, t, lapLen(i)); prev = t; });
   return segs;
 }
 function speedSvg(st, dim = {}) {
@@ -1990,7 +2008,7 @@ async function buildDocx() {
   body.push(tbl([tr([cell(
     line(sex === 'F' ? 'Patiente' : 'Patient', `${ageTxt}.`) +
     line('Oxygène', `${o2txt}.`) +
-    line('Marche', `${aideTxt}, couloir de ${corridor()} m.`), BODY_W)])], [BODY_W]));
+    line('Marche', `${aideTxt}, couloir de ${corridor()} m${departTxt()}.`), BODY_W)])], [BODY_W]));
 
   // Performance, juste après : le tableau le plus parlant.
   const c = compute(), desat = ok(c.sRest) && ok(c.nadir) ? c.sRest - c.nadir : NaN, sp = speedStats(c.dist);
