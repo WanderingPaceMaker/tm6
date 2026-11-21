@@ -1,0 +1,2174 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="TM6">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#edf1ed">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>TM6</title>
+<style>
+@font-face{font-family:"Atkinson Hyperlegible";src:url("AtkinsonHyperlegible-Regular.ttf");font-weight:400}
+@font-face{font-family:"Atkinson Hyperlegible";src:url("AtkinsonHyperlegible-Bold.ttf");font-weight:700}
+@font-face{font-family:"Atkinson Hyperlegible Mono";src:url("AtkinsonHyperlegibleMono.ttf");font-weight:200 800}
+:root{padding-bottom:env(safe-area-inset-bottom,0px)}
+.top{top:0!important;padding-top:env(safe-area-inset-top,0px)}
+@media (min-width:700px){.wrap{padding-top:calc(14px + env(safe-area-inset-top,0px))!important}}
+/* Parcours guidé du TM6. Univers : instrument de mesure dans un couloir d'hôpital.
+   Fond lino clair, pétrole pour la navigation et les actions, jaune de ruban de signalisation réservé aux plots et au comptage. */
+:root{
+  --bg:#edf1ed; --surface:#ffffff; --fg:#15232b; --muted:#56646a; --line:#c5cfca; --field:#f7f9f7;
+  --accent:#0e4f5e; --accent-fg:#ffffff; --accent-soft:#dbe9ec;
+  --tape:#f2c230; --tape-ink:#1d1a10; --rail:#0e4f5e; --rail-fg:#e4eef0; --rail-muted:#9fbcc3;
+  --spo2:#1e66a8; --fc:#b8501f; --alert:#b42318; --alert-soft:#fbe7e4; --warn:#8a5a00; --warn-soft:#fdf1d4; --ok:#1d7a46;
+  --f-body:"Atkinson Hyperlegible",-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+  --f-num:"Atkinson Hyperlegible Mono","SF Mono",Menlo,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1517; --surface:#172126; --fg:#e7eeea; --muted:#9eaeb0; --line:#33444a; --field:#1c282d;
+  --accent:#4fb0bf; --accent-fg:#06222a; --accent-soft:#173a42;
+  --tape:#e9bb2c; --tape-ink:#1d1a10; --rail:#0b2a31; --rail-fg:#e4eef0; --rail-muted:#7f9ea5;
+  --spo2:#5cb0ee; --fc:#ef8a4f; --alert:#ff7a6c; --alert-soft:#3b1814; --warn:#e5a845; --warn-soft:#352a12; --ok:#55c98a;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1517; --surface:#172126; --fg:#e7eeea; --muted:#9eaeb0; --line:#33444a; --field:#1c282d;
+  --accent:#4fb0bf; --accent-fg:#06222a; --accent-soft:#173a42;
+  --tape:#e9bb2c; --tape-ink:#1d1a10; --rail:#0b2a31; --rail-fg:#e4eef0; --rail-muted:#7f9ea5;
+  --spo2:#5cb0ee; --fc:#ef8a4f; --alert:#ff7a6c; --alert-soft:#3b1814; --warn:#e5a845; --warn-soft:#352a12; --ok:#55c98a;
+  color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font:17px/1.4 var(--f-body);margin:0;-webkit-text-size-adjust:100%}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:720px;margin:0 auto;padding:0 16px 120px}
+
+/* Bandeau maquette et barre d'étapes */
+.toast{position:fixed;left:50%;bottom:110px;-webkit-transform:translateX(-50%);transform:translateX(-50%);background:var(--fg);color:var(--bg);border-radius:12px;padding:10px 16px;font-weight:700;z-index:60;display:none;max-width:90%}
+.toast.on{display:block}
+.rtg{display:grid;grid-template-columns:auto repeat(5,minmax(0,1fr));grid-gap:6px 6px;-webkit-align-items:center;align-items:center}
+.rtg .f{margin:0}
+.rtg .f .box{padding:0 6px}
+.rtg .f input{padding:7px 0;font-size:20px!important;text-align:center}
+.rth{font-size:14px;color:var(--muted);font-weight:700;padding-right:4px;line-height:1.15}
+.rtn{font-size:14px;font-weight:700;color:var(--muted);text-align:center}
+.o2ok{width:100%;margin-top:14px}
+.sp12{height:12px}
+.hint.corr{margin:-4px 0 14px}
+.o2btn{width:100%;min-height:56px;border:2px solid var(--accent);border-radius:var(--r);background:var(--surface);color:var(--accent);font-size:18px;font-weight:700;margin-bottom:4px}
+.fig .o2c{stroke:var(--accent);stroke-width:1.5;stroke-dasharray:4 3}
+.newtest{display:block;width:100%;margin-top:14px}
+.demo{background:var(--warn-soft);color:var(--warn);font-size:14px;padding:8px 16px;text-align:center}
+.top{position:-webkit-sticky;position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.topin{max-width:720px;margin:0 auto;padding:10px 16px 8px;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center}
+.steps{display:-webkit-flex;display:flex;-webkit-flex:1;flex:1;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.step{-webkit-flex:0 0 auto;flex:0 0 auto;margin-right:6px;border:2px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:15px;font-weight:700;color:var(--muted)}
+.step.done{border-color:var(--accent);color:var(--accent)}
+.step.cur{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.step .num{display:none}
+.step.miss::after{content:" !";color:var(--warn)}
+.step.cur.miss::after{color:var(--accent-fg)}
+.gobar{font-size:24px;letter-spacing:.05em;line-height:1.1}
+.gobar small{display:block;font-size:13px;letter-spacing:0;font-weight:400;margin-top:2px}
+.gear svg{display:block;margin:auto}
+.gear{-webkit-flex:0 0 auto;flex:0 0 auto;width:44px;height:44px;border-radius:50%;border:2px solid var(--line);background:var(--surface);font-size:20px;line-height:1;margin-left:6px}
+.runbar{display:none;background:var(--accent);color:var(--accent-fg);text-align:center;font-weight:700;padding:10px;border:0;width:100%}
+.runbar.on{display:block}
+
+h1{font-size:28px;line-height:1.15;margin:20px 0 4px;text-wrap:balance}
+.lead{color:var(--muted);margin:0 0 16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px}
+.card h2{font-size:18px;margin:0 0 12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;grid-gap:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;grid-gap:10px}
+.grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;grid-gap:8px}
+@media (max-width:420px){.grid4{grid-template-columns:1fr 1fr}}
+
+/* Champs : grands, bordure visible, unité à droite */
+.f{display:block}
+.f span{display:block;font-size:15px;color:var(--muted);margin-bottom:6px}
+.f .box{display:grid;grid-template-columns:minmax(0,1fr) auto;-webkit-align-items:center;align-items:center;border:2px solid var(--line);border-radius:12px;background:var(--field);padding:0 12px}
+.f input{border:0;background:transparent;width:100%;min-width:0;padding:12px 0;font:700 24px/1.1 var(--f-num);font-variant-numeric:tabular-nums}
+.f input:focus{outline:none}
+.tf{margin-bottom:12px}
+.f input.tin{border:2px solid var(--line);border-radius:12px;background:var(--field);padding:12px;font:17px/1.3 var(--f-body)}
+.f input.tin:focus{border-color:var(--accent)}
+/* Modèle du dispositif : même gabarit que les champs chiffrés (et leurs tailles par écran), police du texte. */
+.f input.dev{font-family:var(--f-body);font-weight:400;font-variant-numeric:normal}
+.f .box:focus-within{border-color:var(--accent)}
+.f .u{display:inline;color:var(--muted);font-size:15px;margin:0 0 0 6px;white-space:nowrap}
+
+/* Choix par boutons */
+.choice{display:grid;grid-gap:10px}
+.choice.c2{grid-template-columns:1fr 1fr}
+.choice.c3{grid-template-columns:1fr 1fr 1fr}
+.opt{border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:14px 10px;font-weight:700;font-size:17px;min-height:56px;text-align:center}
+.opt small{display:block;font-weight:400;font-size:14px;color:var(--muted);margin-top:2px}
+.opt.on{border-color:var(--accent);background:var(--accent-soft)}
+.borg{display:grid;grid-template-columns:repeat(4,1fr);grid-gap:6px}
+.borg .opt{padding:8px 4px;min-height:58px;font:700 20px/1.1 var(--f-num)}
+.borg .opt small{font:400 12px/1.15 var(--f-body);margin-top:3px}
+.borgrow{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:space-between;justify-content:space-between;border:2px solid var(--line);border-radius:12px;padding:12px;background:var(--field);margin-bottom:10px}
+.borgrow .bl{min-width:0;margin-right:10px}
+.borgrow .bv{display:block;font:700 22px/1.2 var(--f-num);margin-top:4px}
+.borgrow .bw{font:700 18px/1.2 var(--f-body);margin-left:6px}
+.showscale{border:0;border-radius:12px;background:var(--accent);color:var(--accent-fg);font-weight:700;padding:14px 16px;min-height:56px;-webkit-flex:0 0 auto;flex:0 0 auto}
+/* Échelle présentée au patient : plein écran, très gros caractères (l'ATS demande une échelle imprimée en grand). */
+.scale{position:fixed;left:0;right:0;top:0;bottom:0;z-index:30;background:var(--surface);overflow-y:auto;padding:calc(12px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.scop{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:10px 12px;font-size:15px}
+.scq{font-size:30px;line-height:1.2;font-weight:700;margin:16px 0 8px;text-wrap:balance}
+.scbefore{font-size:22px;margin:0 0 10px;color:var(--accent);font-weight:700}
+.sclist{display:grid;grid-gap:6px}
+.scitem{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;text-align:left;border:2px solid var(--line);border-radius:12px;background:var(--surface);padding:8px 14px;min-height:64px}
+.scitem .n{font:700 34px/1 var(--f-num);width:72px;-webkit-flex:0 0 72px;flex:0 0 72px}
+.scitem .w{font-size:24px;font-weight:700;line-height:1.15}
+.scitem.on{border-color:var(--accent);background:var(--accent-soft)}
+.scexpl{font-size:15px;color:var(--muted);margin:14px 0 0}
+.scclose{width:100%;margin-top:14px}
+.scbar{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--line)}
+.scbar .ghost{width:100%}
+.nadirrow{margin-top:12px}
+.nadirrow .f{display:grid;grid-template-columns:minmax(0,1fr) 130px;grid-gap:12px;-webkit-align-items:center;align-items:center}
+.nadirrow .f span:first-child{margin:0}
+.guide{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);margin-top:14px}
+.guide summary{padding:14px 16px;font-weight:700;cursor:pointer}
+.guide .gtxt{padding:0 16px 16px;white-space:pre-wrap;font-size:16px;line-height:1.5}
+
+.hint{font-size:15px;color:var(--muted);margin:8px 0 0}
+.alert{background:var(--alert-soft);color:var(--alert);border:2px solid var(--alert);border-radius:12px;padding:10px 12px;font-weight:700;margin-bottom:12px}
+.flag{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:10px 12px;font-size:15px;margin-top:10px}
+
+.next{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--bg);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px))}
+.next .in{max-width:720px;margin:0 auto;display:grid;grid-template-columns:auto 1fr;grid-gap:10px}
+.big{border:0;border-radius:var(--r);background:var(--accent);color:var(--accent-fg);font-weight:700;font-size:20px;padding:16px;min-height:60px}
+.ghost{border:2px solid var(--line);border-radius:var(--r);background:var(--surface);font-weight:700;padding:14px 18px}
+
+/* Écran Prêt */
+.check{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;width:100%;text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:14px;margin-bottom:10px;font-weight:700}
+.check i{-webkit-flex:0 0 32px;flex:0 0 32px;height:32px;border-radius:8px;border:2px solid var(--line);margin-right:12px;font-style:normal;text-align:center;line-height:28px}
+.check.on{border-color:var(--accent)}
+.check.on i{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.go{width:100%;border:0;border-radius:24px;background:var(--accent);color:var(--accent-fg);font-weight:700;font-size:40px;letter-spacing:.06em;padding:42px 16px;margin-top:8px}
+.go small{display:block;font-size:18px;letter-spacing:0;font-weight:700;margin-top:8px}
+.go small+small{font-weight:400;margin-top:2px}
+.consignes{font-size:19px;line-height:1.5;background:var(--field);border-radius:12px;padding:14px;border-left:4px solid var(--accent)}
+.ta{width:100%;border:2px solid var(--line);border-radius:12px;background:var(--field);padding:12px;font:17px/1.45 var(--f-body);color:var(--fg)}
+.linkbtn{border:0;background:none;color:var(--accent);font-weight:700;text-decoration:underline;padding:4px}
+.readout{border-left:5px solid var(--tape);padding:4px 0 4px 14px;margin:4px 0 14px}
+.readout .rl{display:block;color:var(--muted);font-size:15px}
+.readout .rv{display:block;font:700 36px/1.1 var(--f-num)}
+.readout .rs{display:block;font-size:16px}
+.readout.na .rv{color:var(--muted)}
+.pred .na{color:var(--muted)}
+.testinfo{text-align:center;color:var(--muted);font-size:15px;margin:12px 0 0}
+
+/* Écran Test */
+.track{margin:4px 0 14px}
+.track svg{display:block;width:100%;height:auto}
+.track .lane{stroke:var(--line);stroke-width:10;stroke-linecap:round}
+.track .cone{fill:var(--tape);stroke:var(--tape-ink);stroke-width:2}
+.track .pt{fill:var(--accent)}
+.track .tick{stroke:var(--muted);stroke-width:2}
+.track text{font:700 15px var(--f-body);fill:var(--muted)}
+.clock{text-align:center;margin-top:12px}
+.clock .t{font:700 72px/1 var(--f-num);font-variant-numeric:tabular-nums}
+.clock .r{color:var(--muted);font-size:17px;margin-top:4px}
+.bar{position:relative;height:14px;border-radius:7px;background:var(--line);margin:12px 0 4px;overflow:hidden}
+.bar b{position:absolute;left:0;top:0;bottom:0;background:var(--rail)}
+.bar em{position:absolute;top:0;bottom:0;width:2px;background:var(--bg)}
+.phrase{min-height:48px;text-align:center;font-size:17px;margin:8px 0 12px;padding:8px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--line)}
+.minstrip{display:grid;grid-template-columns:repeat(6,1fr);grid-gap:6px;margin-bottom:12px}
+.mn{border:2px solid var(--line);background:var(--surface);border-radius:10px;padding:6px 0;text-align:center;font-size:13px;color:var(--muted);min-height:54px}
+.mn b{display:block;font:700 17px var(--f-num);color:var(--fg)}
+.mn.due{border-color:var(--warn);background:var(--warn-soft);color:var(--warn)}
+.mn.ok{border-color:var(--ok)}
+.prompt{border:3px solid var(--warn);background:var(--warn-soft);border-radius:var(--r);padding:12px;margin-bottom:12px}
+.prompt h3{margin:0 0 8px;font-size:19px;color:var(--warn)}
+.prompt .grid2{grid-gap:10px}
+.prompt .row{display:grid;grid-template-columns:1fr auto;grid-gap:10px;margin-top:10px}
+.prow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;grid-gap:10px;-webkit-align-items:end;align-items:end}
+.prow .ghost{min-height:52px}
+.lap{width:100%;border:0;border-radius:24px;background:var(--tape);color:var(--tape-ink);box-shadow:inset 0 -6px 0 rgba(0,0,0,.12);padding:26px 16px;min-height:200px;font-weight:700}
+.lap .p{display:block;font-size:44px;line-height:1}
+.lap .d{display:block;font:700 22px var(--f-body);margin-top:10px}
+.ctl{display:grid;grid-template-columns:1fr 1.3fr 1.3fr;grid-gap:10px;margin-top:12px}
+.ctl button{border-radius:var(--r);font-weight:700;font-size:17px;min-height:64px;padding:8px}
+.b-undo{border:2px solid var(--line);background:var(--surface)}
+.b-pause{border:3px solid var(--warn);background:var(--surface);color:var(--warn)}
+.b-stop{border:3px solid var(--alert);background:var(--surface);color:var(--alert)}
+
+/* Panneaux pleine largeur (pause, arrêt, minute) */
+.sheet{position:fixed;left:0;right:0;bottom:0;top:0;z-index:20;background:rgba(5,12,16,.45);display:-webkit-flex;display:flex;-webkit-align-items:flex-end;align-items:flex-end}
+.sheet .pane{width:100%;max-width:720px;margin:0 auto;background:var(--bg);border-radius:22px 22px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:92%;overflow-y:auto}
+.pane h2{margin:0 0 4px;font-size:24px}
+.pane .sub{color:var(--muted);margin:0 0 14px}
+.pausebig{font:700 56px/1 var(--f-num);text-align:center;color:var(--warn);margin:4px 0 12px}
+.b-resume{width:100%;border:0;border-radius:var(--r);background:var(--warn);color:var(--surface);font-weight:700;font-size:22px;min-height:72px;margin-top:14px}
+.b-confirm{width:100%;border:0;border-radius:var(--r);background:var(--alert);color:#fff;font-weight:700;font-size:20px;min-height:64px;margin-top:14px}
+.b-cancel{width:100%;margin-top:10px}
+
+/* Récupération */
+.rtabs{display:none}
+.rtstop{display:none}
+.rec{display:grid;grid-template-columns:1fr 1fr;grid-gap:10px;margin-bottom:12px}
+.rt{border:2px solid var(--line);border-radius:12px;background:var(--surface);padding:12px;text-align:center}
+.rt b{display:block;font:700 34px/1 var(--f-num)}
+
+.rt.due{border-color:var(--warn);background:var(--warn-soft)}
+.rt.ok{border-color:var(--ok)}
+.slider{width:100%;height:44px}
+
+/* Bilan */
+.fig{display:block;width:100%;height:auto}
+.fig .recz{fill:var(--line);opacity:.35}
+.fig .pz{fill:var(--tape);opacity:.28}
+.fig .ax{stroke:var(--line);stroke-width:1}
+.fig .ln{fill:none;stroke-width:2.5}
+.fig .ln.sp,.fig .pt.sp{stroke:var(--spo2)} .fig .pt.sp{fill:var(--spo2)}
+.fig .ln.fc,.fig .pt.fc{stroke:var(--fc)} .fig .pt.fc{fill:var(--fc)}
+.fig .ln.vt,.fig .pt.vt{stroke:var(--accent)} .fig .pt.vt{fill:var(--accent)}
+.fig .ln.ds,.fig .pt.ds{stroke:var(--fg)} .fig .pt.ds{fill:var(--fg)}
+.fig .ref{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:6 5}
+.fig .pt.rc{fill:var(--surface);stroke:var(--muted);stroke-width:2}
+.fig .fin{stroke:var(--fg);stroke-width:2}
+.fig text{font-family:var(--f-body);fill:var(--muted)}
+.fig .lbl{font-size:13px} .fig .lbl.b{font-weight:700;fill:var(--fg)}
+.fig .vl{font-size:12px;fill:var(--fg)}
+.fig .tk{font-size:14px;font-weight:700} .fig .tk.sp{fill:var(--spo2)} .fig .tk.fc{fill:var(--fc)} .fig .tk.vt{fill:var(--accent)} .fig .tk.ds{fill:var(--fg)}
+.vals{width:100%;border-collapse:collapse}
+.vals th{text-align:left;font-weight:700;font-size:15px;padding:8px 10px 8px 0;vertical-align:top;width:38%;border-bottom:1px solid var(--line)}
+.vals td{font:700 16px/1.3 var(--f-num);padding:8px 0;border-bottom:1px solid var(--line)}
+.vals td small{display:block;font:400 13px/1.35 var(--f-body);color:var(--muted);margin-top:2px}
+.vals .na,.ix .na{color:var(--muted)}
+.ix{display:-webkit-flex;display:flex;border-bottom:1px solid var(--line);padding:8px 0;-webkit-column-break-inside:avoid;break-inside:avoid;page-break-inside:avoid}
+.ix > b{-webkit-flex:0 0 38%;flex:0 0 38%;font-size:15px;padding-right:10px}
+.ix > div{-webkit-flex:1 1 auto;flex:1 1 auto;min-width:0}
+.ix .v{font:700 16px/1.3 var(--f-num)}
+.ix small{display:block;font:400 13px/1.35 var(--f-body);color:var(--muted);margin-top:2px}
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-gap:10px;margin-bottom:14px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px}
+.kpi b{display:block;font:700 28px/1.1 var(--f-num);font-variant-numeric:tabular-nums}
+.kpi span{color:var(--muted);font-size:14px}
+.kpi.bad b{color:var(--alert)}
+.todo{color:var(--muted);font-size:16px;margin:0 0 6px}
+.todo .linkbtn{padding:2px 4px}
+.f.sel select{width:100%;-webkit-appearance:none;appearance:none;border:2px solid var(--line);border-radius:12px;background:var(--field);padding:12px 36px 12px 12px;font:17px/1.3 var(--f-body);color:var(--fg);
+  background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 18px) 50%,calc(100% - 12px) 50%;background-size:6px 6px;background-repeat:no-repeat}
+.f.sel select:focus{outline:none;border-color:var(--accent)}
+.sels{grid-row-gap:12px}
+.sels .wide{grid-column:1/-1}
+.text{white-space:pre-wrap;font-size:16px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+.disabled{opacity:.55}
+/* Tablette (portrait et paysage) : en fin de feuille pour primer sur les styles de base. */
+@media (min-width:700px){
+  body{font-size:18px}
+  .top{position:fixed!important;left:0;top:0!important;bottom:0;width:104px;border:0;background:var(--rail);color:var(--rail-fg)}
+  .topin{max-width:none;height:100%;-webkit-flex-direction:column;flex-direction:column;-webkit-align-items:stretch;align-items:stretch;padding:14px 8px calc(14px + env(safe-area-inset-bottom,0px))}
+  .steps{-webkit-flex-direction:column;flex-direction:column;overflow:visible;-webkit-flex:0 0 auto;flex:0 0 auto}
+  .step{display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;-webkit-align-items:center;align-items:center;position:relative;margin:0 0 4px;border:0;border-radius:12px;background:transparent;color:var(--rail-muted);padding:10px 4px;font-size:13px;line-height:1.15;text-align:center}
+  .step .num{display:block;width:36px;height:36px;border-radius:50%;border:2px solid currentColor;margin:0 0 5px;text-align:center;line-height:32px;font-size:17px}
+  .step.done{color:var(--rail-fg)}
+  .step.cur{background:var(--tape);color:var(--tape-ink)}
+  .step.miss::after{content:"";position:absolute;top:8px;right:16px;width:9px;height:9px;border-radius:50%;background:var(--tape)}
+  .step.cur.miss::after{background:var(--tape-ink)}
+  .gear{margin:auto auto 0;width:56px;height:56px;border-radius:50%;border:2px solid var(--rail-muted);background:transparent;color:var(--rail-fg);font-size:24px}
+  .gobar{display:none}
+  .runbar{border-radius:12px;margin-top:10px;background:var(--tape);color:var(--tape-ink)}
+  .wrap{max-width:none;margin:0 0 0 104px;padding:22px 28px 120px;min-height:100%}
+  .next{left:104px;padding-left:28px;padding-right:28px}
+  .next .in{max-width:none}
+  h1{font-size:34px;margin:0 0 18px}
+  .lead{margin-top:-10px}
+  .cols{display:grid;grid-template-columns:1fr 1fr;grid-gap:24px;-webkit-align-items:start;align-items:start}
+  .card{background:transparent;border:0;border-top:2px solid var(--line);border-radius:0;padding:16px 0 4px;margin-bottom:10px}
+  .card h2{font-size:20px}
+  .f input{font-size:30px;padding:14px 0}
+  .opt{min-height:68px;font-size:19px}
+  .readout{border-left:6px solid var(--tape);padding:6px 0 6px 22px;margin-top:6px}
+  .readout .rl{display:block;color:var(--muted);font-size:18px}
+  .readout .rv{display:block;font:700 64px/1.05 var(--f-num);margin:6px 0}
+  .readout .rs{display:block;font-size:20px}
+  .readout.na .rv{color:var(--line)}
+  .cols.test{grid-template-columns:1.05fr 1fr}
+  .kpis{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .bilan{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);grid-column-gap:24px;-webkit-align-items:start;align-items:start;grid-template-areas:"fig syn" "usu exp"}
+  .b-fig{grid-area:fig} .b-syn{grid-area:syn} .b-usu{grid-area:usu} .b-exp{grid-area:exp}
+  .cols.rcp{grid-template-columns:1fr 1fr}
+  .cols.rcp > .col:nth-child(2),.cols.test > .col:nth-child(1){grid-row:span 2}
+
+  .scale{display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;overflow:hidden}
+  .sclist{-webkit-flex:1 1 auto;flex:1 1 auto;min-height:0;grid-template-rows:repeat(12,minmax(0,1fr));margin-top:12px}
+  .scitem{min-height:0}
+  .grid4 .f .box{padding:0 8px}
+  .grid4 .f input{font-size:22px!important}
+  .cols.pat{grid-template-columns:1fr;grid-gap:6px}
+  .cols.pat .readout{margin-top:18px}
+  .f input{font-size:28px}
+  .clock{margin-top:0}
+  .clock .t{font-size:120px}
+  .lap{min-height:560px}
+  .lap .p{font-size:64px}
+  .testinfo{text-align:left;margin:0 0 6px}
+  .sheet{left:104px;-webkit-align-items:center;align-items:center}
+  .sheet .pane{border-radius:22px;max-width:640px;max-height:90%}
+  .scale{left:104px}
+}
+@media (min-width:700px) and (max-height:1100px){
+  .wrap{padding-top:14px}
+  h1{font-size:30px;margin-bottom:10px}
+  .clock .t{font-size:92px}
+  .lap{min-height:390px}
+  .track{margin:0 0 6px}
+  .rec{margin-bottom:6px}
+  .slider{height:34px}
+  .lead{margin-bottom:10px}
+  .card h2{margin-bottom:8px}
+  .card{padding-top:10px;margin-bottom:6px}
+  .f input{padding:9px 0;font-size:24px}
+  .borgrow{padding:8px 12px;margin-bottom:6px}
+  .showscale{min-height:48px;padding:10px 14px}
+  .rt{padding:8px}
+  .rt b{font-size:28px}
+  .prompt{padding:10px}
+  .guide summary{padding:10px 14px}
+}
+@media (min-width:700px) and (orientation:landscape){
+  .wrap{padding-bottom:100px}
+  h1{font-size:30px;margin-bottom:10px}
+  .lead{margin-bottom:8px}
+  .cols{grid-gap:28px}
+  .cols.rcp{grid-template-columns:1fr 1fr 1fr;grid-gap:20px}
+  .cols.rcp > .col:nth-child(2){grid-row:auto}
+  .cols.rcp .grid4{grid-template-columns:1fr 1fr}
+  .cols.rcp .choice .opt{min-height:44px;font-size:15px;padding:8px 6px}
+  .cols.rcp .say{font-size:15px;margin-bottom:8px}
+  .cols.test{grid-template-columns:1fr 1.15fr}
+  .bilan{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);grid-column-gap:28px;grid-template-areas:"fig syn" "fig usu" "exp exp";grid-template-rows:auto 1fr auto}
+  .ixs{-webkit-column-count:2;column-count:2;-webkit-column-gap:28px;column-gap:28px}
+  .clock .t{font-size:96px}
+  .lap{min-height:400px}
+  .card{padding-top:10px;margin-bottom:6px}
+  .f input{padding:9px 0;font-size:24px}
+  .consignes{font-size:18px}
+  .scale{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);grid-gap:28px;-webkit-align-items:stretch;align-items:stretch;padding-left:32px;padding-right:32px}
+  .schead{-webkit-align-self:center;align-self:center}
+  .sclist{margin-top:0;height:100%}
+  .scq{font-size:34px}
+
+  .scitem .n{font-size:30px}
+  .scitem .w{font-size:22px}
+  .sclist{grid-gap:5px}
+}
+@media (min-width:700px) and (orientation:landscape) and (max-height:800px){
+  .clock .t{font-size:80px}
+  .lap{min-height:300px}
+  .cols.rcp .choice .opt{font-size:14px;min-height:40px;padding:6px}
+  .cols.rcp .showscale{padding:8px 10px;font-size:15px}
+  .phrase{min-height:0;padding:6px 10px}
+  .rec{grid-gap:8px}
+  .borgrow{padding:7px 10px}
+  .showscale{min-height:44px;padding:8px 12px}
+  .opt{min-height:52px;padding:10px 8px}
+  .step{padding:7px 4px}
+  .step .num{width:32px;height:32px;line-height:28px;margin-bottom:3px}
+}
+/* Bilan en portrait sur tablette : une seule colonne, sans trou ; indices sur deux colonnes. */
+@media (min-width:700px) and (orientation:portrait){
+  .bilan{grid-template-columns:minmax(0,1fr);grid-template-areas:"fig" "syn" "usu" "exp"}
+  .ixs{-webkit-column-count:2;column-count:2;-webkit-column-gap:24px;column-gap:24px}
+}
+/* Téléphone en portrait : étapes en pastilles numérotées (le titre nomme l'étape), filets plutôt que cartes, tailles resserrées. */
+@media (max-width:699px){
+  .topin{padding:8px 12px 6px}
+  .steps{overflow:visible;-webkit-justify-content:space-between;justify-content:space-between}
+  .step{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;position:relative;width:38px;height:38px;margin:0;padding:0;border-radius:50%;font:700 16px/1 var(--f-num)}
+  .step .num{display:inline}
+  .step .lbl{display:none}
+  .step.cur{background:var(--tape);border-color:var(--tape);color:var(--tape-ink)}
+  .step.miss::after{content:"";position:absolute;top:-2px;right:-2px;width:10px;height:10px;border-radius:50%;background:var(--tape);border:2px solid var(--bg)}
+  .step.cur.miss::after{background:var(--tape-ink)}
+  .gear{width:40px;height:40px;margin-left:8px}
+  .wrap{padding:0 16px 104px}
+  h1{font-size:26px;margin:12px 0 8px}
+  .card{background:transparent;border:0;border-top:2px solid var(--line);border-radius:0;padding:10px 0 2px;margin-bottom:6px}
+  .card h2{font-size:17px;margin:0 0 8px}
+  .opt{min-height:50px;padding:10px 8px}
+  .f input{padding:9px 0;font-size:22px}
+  .next{padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px))}
+  .big{min-height:54px;padding:12px}
+  .opt{min-height:46px;padding:7px 6px}
+  .opt small{font-size:13px;margin-top:0}
+  .choice{grid-gap:8px}
+  .grid4{grid-template-columns:repeat(4,minmax(0,1fr));grid-gap:6px}
+  .grid4 .f .box{padding:0 6px}
+  .grid4 .f input{font-size:20px}
+  .f span{font-size:14px;margin-bottom:4px}
+  /* Prêt : DÉPART dans la barre du bas */
+  .go{display:none}
+  .consignes{font-size:16px;line-height:1.4;padding:10px 12px}
+  .check{padding:8px 10px;margin-bottom:6px;font-size:16px}
+  .check i{-webkit-flex-basis:28px;flex-basis:28px;height:28px;line-height:24px}
+  .go{font-size:30px;padding:16px;border-radius:18px;margin-top:4px}
+  .go small{font-size:15px;margin-top:4px}
+  /* Test : « +1 aller » toujours au même endroit ; la carte de la minute remplace la bande des minutes */
+  .testinfo{font-size:13px;margin:6px 0 0}
+  .testinfo{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .o2run{display:flex;align-items:center;margin-top:8px}
+  .o2run .o2btn{flex:1 1 auto;min-height:46px;font-size:16px;margin:0}
+  .o2run .hint{flex:0 0 36%;margin:0 0 0 10px!important;font-size:13px;line-height:1.25}
+  /* SpO2 sous 80 % : la marche s'arrête, l'alerte prend la place de l'encouragement */
+  .alert{padding:6px 10px;font-size:14px;line-height:1.3;margin:6px 0 8px}
+  #alertBox:not(:empty) + .phrase{display:none}
+  .spo2low .track{display:none}
+  .sheet .pausebig{font-size:44px;margin:0 0 6px}
+  .sheet .o2run{margin-top:10px}
+  .sheet .b-resume{min-height:56px;margin-top:10px}
+  .clock{margin-top:2px}
+  .clock .t{font-size:56px}
+  .clock .r{font-size:15px;margin-top:0}
+  .bar{margin:6px 0 2px;height:10px}
+  .phrase{min-height:0;font-size:15px;margin:6px 0 8px;padding:6px 10px}
+  .mn{min-height:44px;padding:3px 0}
+  #promptBox:not(:empty) + .minstrip{display:none}
+  .prompt{padding:8px 10px;margin-bottom:8px}
+  .prompt h3{font-size:16px;margin:0 0 4px}
+  .prompt .row{margin-top:6px}
+  .track{margin:0 0 4px}
+  .lap{min-height:120px;padding:12px}
+  .clock .t{font-size:52px}
+  .nadirrow .f{grid-template-columns:minmax(0,1fr) 110px}
+  .nadirrow .f span:first-child{font-size:13px}
+  .hint{font-size:13px;margin-top:4px}
+  .lap .p{font-size:40px}
+  .lap .d{font-size:19px;margin-top:6px}
+  .ctl{grid-gap:8px;margin-top:8px}
+  .ctl button{min-height:52px;font-size:15px}
+  .guide{margin-top:8px}
+  .guide summary{padding:10px 14px}
+  .nadirrow{margin-top:6px}
+  /* Récupération */
+  .rec{grid-gap:8px;margin-bottom:6px}
+  .rt{padding:8px}
+  .rt b{font-size:28px}
+  .borgrow{padding:8px 10px;margin-bottom:6px}
+  .showscale{min-height:46px;padding:8px 12px}
+  .rtabs{display:grid;grid-template-columns:1fr 1fr 1fr;grid-gap:6px;margin:0 0 8px}
+  .rtclk{grid-column:1/-1;text-align:center;font:700 17px var(--f-num);color:var(--warn);background:var(--warn-soft);border-radius:10px;padding:6px}
+  .rtab{border:2px solid var(--line);background:var(--surface);border-radius:10px;font-weight:700;font-size:14px;min-height:44px;padding:4px}
+  .rtab.on{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+  .cols.rcp > .col{display:none}
+  .cols.rcp[data-pane="0"] > .col:nth-child(1),.cols.rcp[data-pane="1"] > .col:nth-child(2),.cols.rcp[data-pane="2"] > .col:nth-child(3){display:block}
+  .cols.rcp .rec{display:none}
+  .lead{font-size:14px;margin-bottom:6px}
+  .lead.rcl{display:none}
+  .next .big{font-size:17px}
+  /* Conditions sous oxygène : tout l'écran sans défiler (sous-titres d'unité masqués, l'unité est dans le champ) */
+  .cond .card{padding-top:6px;margin-bottom:2px}
+  .cond .card h2{font-size:16px;margin-bottom:5px}
+  .cond .opt{min-height:40px;padding:5px}
+  .cond .nosm small{display:none}
+  .cond .sp12{height:6px}
+  .cond .hint.corr{margin:0 0 4px}
+  .cond .f input{padding:6px 0}
+  /* Repos en titration : paliers plus bas, Borg dyspnée et fatigue côte à côte, pour tenir sans défiler */
+  .rtg .f input{padding:5px 0;font-size:18px!important}
+  .borgpair{display:grid;grid-template-columns:1fr 1fr;grid-column-gap:8px}
+  .borgpair h2{grid-column:1/-1}
+  .borgpair .borgrow{display:block;padding:8px;margin-bottom:4px}
+  .borgpair .borgrow .bl{margin:0 0 6px}
+  .borgpair .borgrow .bv{font-size:17px;margin-top:0}
+  .borgpair .showscale{width:100%;min-height:42px;padding:6px 8px;font-size:15px}
+  .rtclk{font:700 15px var(--f-body)}
+  .rtstop{grid-column:1/-1;font-size:14px;color:var(--muted)}
+  .cols.rcp .card h2{margin-bottom:6px}
+  .cols.rcp .borgrow .bv{font-size:18px;margin-top:2px}
+  .cols.rcp .borgrow .bw{font-size:15px}
+  .cols.rcp .say{font-size:14px;margin:0 0 6px}
+  .cols.rcp .choice .opt{min-height:40px;font-size:14px;padding:5px}
+  /* Échelle de Borg : les 12 niveaux visibles d'un coup */
+  .scale{display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;overflow:hidden;padding-top:calc(8px + env(safe-area-inset-top,0px))}
+  .scop{font-size:13px;padding:6px 10px}
+  .scq{font-size:22px;margin:8px 0 4px}
+  .scbefore{font-size:17px;margin:0 0 4px}
+  .scexpl{font-size:13px;margin:4px 0 0;line-height:1.3}
+  .scclose{min-height:40px;margin-top:6px;padding:6px}
+  .sclist{-webkit-flex:1 1 auto;flex:1 1 auto;min-height:0;grid-template-rows:repeat(12,minmax(0,1fr));grid-gap:4px;margin-top:8px}
+  .scitem{min-height:0;padding:2px 12px}
+  .scitem .n{font-size:26px;width:52px;-webkit-flex-basis:52px;flex-basis:52px}
+  .scitem .w{font-size:18px}
+  .cols.rcp .borgrow .showscale{min-height:40px}
+}
+/* Téléphone couché (environ 874 × 402 pt) : rail étroit du côté de l'encoche, contenu en colonnes,
+   tailles resserrées pour tenir sans défiler (sauf bilan et réglages). Placé après les règles tablette pour les primer. */
+@media (orientation:landscape) and (max-height:500px){
+  body{font-size:15px}
+  .top{width:calc(76px + env(safe-area-inset-left,0px));padding-left:env(safe-area-inset-left,0px)}
+  .topin{padding:4px 6px calc(4px + env(safe-area-inset-bottom,0px))}
+  .steps{-webkit-flex:1 1 auto;flex:1 1 auto;-webkit-justify-content:space-around;justify-content:space-around}
+  .step{padding:0;margin:0 auto;width:46px;height:44px;-webkit-justify-content:center;justify-content:center;border-radius:50%}
+  .step .num{width:40px;height:40px;line-height:36px;font-size:20px;margin:0;border-width:2px}
+  .step .lbl{display:none}
+  .step.miss::after{top:0;right:0}
+  .gear{width:44px;height:44px;margin:0 auto}
+  .wrap{margin-left:calc(76px + env(safe-area-inset-left,0px));padding:6px calc(14px + env(safe-area-inset-right,0px)) 58px 16px}
+  .next{left:auto;right:0;background:transparent;border:0;padding:0 calc(10px + env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) 0;pointer-events:none}
+  .next .in{display:-webkit-flex;display:flex;-webkit-justify-content:flex-end;justify-content:flex-end;grid-gap:8px;gap:8px}
+  .next .in > *{pointer-events:auto}
+  .next .in > span:empty{display:none}
+  .big{min-height:44px;padding:6px 18px;font-size:17px;box-shadow:0 2px 8px rgba(14,79,94,.25)}
+  .ghost{padding:6px 14px;min-height:44px}
+  .gobar small{font-size:12px}
+  h1{font-size:21px;margin:0 0 4px}
+  .lead{font-size:13px;margin:0 0 4px}
+  .cols{grid-gap:18px}
+  .card{padding-top:6px;margin-bottom:4px}
+  .card h2{font-size:15px;margin:0 0 5px}
+  .opt{min-height:40px;font-size:15px;padding:5px 6px}
+  .opt small{font-size:12px;margin-top:0}
+  .choice{grid-gap:6px}
+  .f span{font-size:13px;margin-bottom:2px}
+  .f input{font-size:20px!important;padding:6px 0}
+  .grid2,.grid3{grid-gap:8px}
+  .grid4 .f input{font-size:18px!important}
+  .hint{font-size:12px;margin-top:2px}
+  /* Patient */
+  .cols.pat{grid-template-columns:1.3fr 1fr;grid-gap:18px}
+  .cols.pat .readout{margin-top:4px}
+  .readout .rl{font-size:14px}
+  .readout .rv{font-size:44px;margin:2px 0}
+  .readout .rs{font-size:15px}
+  /* Repos */
+  .borgrow{padding:5px 10px;margin-bottom:4px}
+  .borgrow .bv{font-size:17px;margin-top:0}
+  .borgrow .bw{font-size:14px}
+  .showscale{min-height:38px;padding:6px 10px;font-size:14px}
+  /* Prêt */
+  .consignes{font-size:14px;line-height:1.35;padding:8px 10px}
+  .check{padding:5px 8px;margin-bottom:4px;font-size:14px}
+  .check i{-webkit-flex-basis:24px;flex-basis:24px;height:24px;line-height:20px}
+  .go{font-size:26px;padding:10px;border-radius:16px;margin-top:2px}
+  .go small{font-size:13px;margin-top:2px}
+  /* Test : trois colonnes, « +1 aller » au centre sous le pouce */
+  .testinfo{font-size:12px;margin:0 0 2px}
+  .cols.test{grid-template-columns:1fr 1.15fr 0.9fr;grid-gap:14px}
+  .cols.test > .col:nth-child(1){grid-row:auto}
+  .clock{margin:0}
+  .clock .t{font-size:46px}
+  .clock .r{font-size:13px;margin:0}
+  .bar{height:8px;margin:4px 0 2px}
+  .phrase{min-height:0;font-size:13px;margin:4px 0;padding:4px 8px}
+  .minstrip{grid-template-columns:repeat(3,1fr);grid-gap:4px;margin-bottom:4px}
+  .mn{min-height:34px;padding:1px 0;font-size:11px}
+  .mn b{font-size:14px}
+  #promptBox:not(:empty) + .minstrip{display:none}
+  .prompt{padding:6px 8px;margin-bottom:4px}
+  .prompt h3{font-size:14px;margin:0 0 2px}
+  .prow{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-gap:6px}
+  .prow .ghost{grid-column:1/-1;min-height:36px;padding:4px}
+  .track{margin:0}
+  .track text{font-size:13px}
+  .lap{min-height:120px;padding:8px}
+  .lap .p{font-size:38px}
+  .lap .d{font-size:17px;margin-top:4px}
+  .ctl{grid-template-columns:1fr 1.2fr 1.2fr;grid-gap:6px;margin-top:6px}
+  .ctl button{min-height:44px;font-size:13px;padding:2px 4px}
+  .guide{margin-top:6px}
+  .guide summary{padding:7px 10px;font-size:14px}
+  .nadirrow{margin-top:4px}
+  .nadirrow .f{grid-template-columns:minmax(0,1fr) 80px;grid-gap:6px}
+  .nadirrow .f span:first-child{font-size:12px}
+  /* Panneaux */
+  .sheet{left:calc(76px + env(safe-area-inset-left,0px));padding-right:env(safe-area-inset-right,0px)}
+  .sheet .pane{max-height:96%;max-width:none;border-radius:16px;padding:10px 14px}
+  .pane h2{font-size:19px}
+  .pane .sub{margin:0 0 6px}
+  .sheet .choice.c2{grid-template-columns:repeat(4,1fr)}
+  .pausebig{font-size:38px;margin:0 0 4px}
+  .b-resume,.b-confirm{min-height:46px;margin-top:6px;font-size:17px}
+  .b-cancel{margin-top:6px}
+  /* Échelle de Borg : question à gauche, échelle sur deux colonnes de six niveaux */
+  .scale{left:0;display:grid;grid-template-columns:minmax(0,0.85fr) minmax(0,1.4fr);grid-gap:16px;padding:8px calc(12px + env(safe-area-inset-right,0px)) 8px calc(12px + env(safe-area-inset-left,0px));overflow:hidden}
+  .schead{-webkit-align-self:center;align-self:center}
+  .scop{font-size:13px;padding:6px 8px}
+  .scq{font-size:22px;margin:8px 0 4px}
+  .scbefore{font-size:17px;margin:0 0 4px}
+  .scexpl{font-size:12px;margin:6px 0 0}
+  .scclose{margin-top:8px;min-height:40px}
+  .sclist{height:100%;margin:0;grid-template-rows:repeat(6,minmax(0,1fr));grid-template-columns:1fr 1fr;grid-auto-flow:column;grid-gap:4px}
+  .scitem{min-height:0;padding:2px 10px}
+  .scitem .n{font-size:24px;width:60px;-webkit-flex-basis:60px;flex-basis:60px}
+  .scitem .w{font-size:16px}
+  /* Récupération : onglets comme sur téléphone en portrait, chaque volet étalé en largeur */
+  .rtabs{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;grid-gap:6px;margin:0 0 6px;-webkit-align-items:center;align-items:center}
+  .rtstop{display:none}
+  .rtclk{text-align:center;font:700 14px var(--f-body);color:var(--warn);background:var(--warn-soft);border-radius:10px;padding:6px 4px}
+  .rtab{border:2px solid var(--line);background:var(--surface);border-radius:10px;font-weight:700;font-size:13px;min-height:38px;padding:2px 4px}
+  .rtab.on{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+  .lead.rcl{display:none}
+  .cols.rcp{display:block}
+  .cols.rcp > .col{display:none}
+  .cols.rcp[data-pane="0"] > .col:nth-child(1),.cols.rcp[data-pane="1"] > .col:nth-child(2),.cols.rcp[data-pane="2"] > .col:nth-child(3){display:grid;grid-template-columns:1fr 1fr;grid-gap:16px;-webkit-align-items:start;align-items:start}
+  .cols.rcp .rec{display:none}
+  .cols.rcp .card{margin:0}
+  .cols.rcp .grid2{grid-template-columns:1fr 1fr}
+  .cols.rcp .grid4{grid-template-columns:1fr 1fr 1fr 1fr}
+  .cols.rcp[data-pane="0"] > .col:nth-child(1){display:block}
+  .cols.rcp[data-pane="0"] .grid2{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .cols.rcp .say{font-size:13px;margin:0 0 4px}
+  .cols.rcp .choice .opt{min-height:36px;font-size:13px;padding:3px}
+  .slider{height:30px}
+  /* Bilan (défile) : quatre chiffres sur une ligne, figure et textes côte à côte */
+  .kpis{grid-template-columns:repeat(4,minmax(0,1fr));grid-gap:8px;margin-bottom:6px}
+  .kpi{padding:6px 8px}
+  .kpi b{font-size:20px}
+  .kpi span{font-size:12px}
+  .bilan{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);grid-template-areas:"fig syn" "fig usu" "exp exp";grid-template-rows:auto 1fr auto;grid-column-gap:18px}
+  .ixs{-webkit-column-count:2;column-count:2;-webkit-column-gap:18px;column-gap:18px}
+  .text{font-size:14px;padding:8px 10px}
+  .vals th,.ix > b{font-size:13px}
+  .vals td,.ix .v{font-size:14px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style></head><body>
+
+<div class="top"><div class="topin"><div class="steps" id="steps"></div><button class="gear" id="gear" type="button" aria-label="Réglages"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M19.84 10.41 L22.41 10.64 L22.41 13.36 L19.84 13.59 L18.67 16.42 L20.32 18.40 L18.40 20.32 L16.42 18.67 L13.59 19.84 L13.36 22.41 L10.64 22.41 L10.41 19.84 L7.58 18.67 L5.60 20.32 L3.68 18.40 L5.33 16.42 L4.16 13.59 L1.59 13.36 L1.59 10.64 L4.16 10.41 L5.33 7.58 L3.68 5.60 L5.60 3.68 L7.58 5.33 L10.41 4.16 L10.64 1.59 L13.36 1.59 L13.59 4.16 L16.42 5.33 L18.40 3.68 L20.32 5.60 L18.67 7.58 Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></button></div>
+<button class="runbar" id="runbar" type="button">Test en cours, revenir au chronomètre</button></div>
+<main class="wrap" id="main"></main>
+<div class="next" id="next"><div class="in" id="nextIn"></div></div>
+<div id="sheet"></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ES5 volontairement (pas de flèches ni de ?.), pour pouvoir ouvrir la maquette dans le Safari d'un vieil iPad. */
+var STEPS = [
+  { id: 'patient', label: 'Patient' }, { id: 'cond', label: 'Conditions' }, { id: 'repos', label: 'Repos' },
+  { id: 'pret', label: 'Prêt' }, { id: 'test', label: 'Test' }, { id: 'recup', label: 'Récupération' }, { id: 'bilan', label: 'Bilan' }
+];
+// Encouragements standardisés de la norme ERS/ATS 2014 (Holland, Eur Respir J 2014;44:1428-46, tableau 6), traduction de travail.
+// La phrase de l'ATS 2002 à 15 s de la fin a disparu en 2014 : à 6 min, seulement « Arrêtez-vous là où vous êtes. »
+var PHRASES = {
+  60: 'Vous vous débrouillez bien. Il vous reste 5 minutes.',
+  120: 'Continuez comme ça. Il vous reste 4 minutes.',
+  180: 'Vous vous débrouillez bien. Vous êtes à la moitié du test.',
+  240: 'Continuez comme ça. Il ne vous reste plus que 2 minutes.',
+  300: 'Vous vous débrouillez bien. Il ne vous reste plus qu\'une minute.'
+};
+var END_PHRASE = 'Arrêtez-vous là où vous êtes.';
+// Pendant un arrêt : toutes les 30 s, une fois la SpO2 remontée à 85 % ou plus (ERS/ATS 2014, tableau 6).
+var PAUSE_PHRASE = 'Reprenez la marche dès que vous vous en sentez capable.';
+var MOTIFS = ['dyspnée', 'fatigue des membres inférieurs', 'douleur des membres inférieurs', 'douleur thoracique', 'désaturation', 'malaise ou vertiges', 'décision de l\'opérateur', 'refus de poursuivre'];
+var SYMPT = ['dyspnée', 'fatigue des membres inférieurs', 'douleur des membres inférieurs', 'douleur thoracique', 'malaise ou vertiges'];
+var BORG = ['0', '0,5', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+// Échelle de Borg modifiée telle que donnée par l'ATS 2002 (Am J Respir Crit Care Med 2002;166:111-7, tableau 2).
+// Traduction française de travail : aucune version française validée n'a été trouvée ; à remplacer par celle du service.
+var BORG_LBL = { '0': 'Rien du tout', '0,5': 'Très, très léger (à peine perceptible)', '1': 'Très léger', '2': 'Léger', '3': 'Modéré', '4': 'Un peu sévère', '5': 'Sévère', '6': '', '7': 'Très sévère', '8': '', '9': '', '10': 'Très, très sévère (maximal)' };
+// Déroulé ATS 2002 : au départ, montrer l'échelle imprimée en gros caractères et demander d'abord l'essoufflement, puis la fatigue ;
+// à la fin, rappeler au patient la cote qu'il avait donnée avant, puis lui redemander.
+var BORG_Q = {
+  bd: 'Indiquez votre niveau d\'essoufflement à l\'aide de cette échelle.',
+  bf: 'Indiquez votre niveau de fatigue à l\'aide de cette échelle.'
+};
+// Explication à donner avant la première cotation : proposition (non tirée de l'ATS), à valider.
+var BORG_EXPL = {
+  bd: '0 veut dire que vous n\'êtes pas du tout essoufflé. 10 veut dire l\'essoufflement le plus fort que vous puissiez imaginer. Montrez-moi le chiffre, ou les mots, qui correspondent à ce que vous ressentez maintenant.',
+  bf: '0 veut dire aucune fatigue. 10 veut dire la fatigue la plus forte que vous puissiez imaginer. Montrez-moi le chiffre, ou les mots, qui correspondent à ce que vous ressentez maintenant.'
+};
+var TEST = 360;
+
+// Un nouveau test commence vide : aucune valeur d'exemple ne doit pouvoir passer dans un compte rendu.
+var S = {
+  step: 'patient', seen: { patient: 1 },
+  sex: '', age: '', taille: '', poids: '',
+  exam: 'tm6', couloir: '30', o2: 'air', o2mode: 'continu', o2if: 'lunettes', o2debit: '', o2src: 'porte', aide: 'aucune',
+  o2dev: '', rt: [{ d: '', s: '' }, { d: '', s: '' }, { d: '', s: '' }, { d: '', s: '' }, { d: '', s: '' }], o2ch: [],
+  rest: { spo2: '', fc: '', pas: '', pad: '', bd: '', bf: '' },
+  ready: { oxy: false, line: false, consignes: false },
+  running: false, started: false, t: 0, t0: 0, laps: [], pauses: [], mins: {}, fired: {}, nadir: '',
+  stop: null, end: { spo2: '', fc: '', pas: '', pad: '', bd: '', bf: '', partiel: 0, sympt: [] },
+  rec: { 1: { spo2: '', fc: '', pas: '', pad: '' }, 3: { spo2: '', fc: '', pas: '', pad: '' } },
+  recT: 0, recFired: {}, sheet: null, minOpen: null,
+  // Rappel opérateur : proposition à adapter (affichage activable dans les réglages).
+  opGuide: true,
+  // Consignes à l'opérateur : norme ERS/ATS 2014 (Holland, Eur Respir J 2014;44:1428-46), complétée par l'ATS 2002 là où
+  // 2014 ne dit rien (ne parler à personne, ton égal). Décision d'Allan (12 octobre 2026) : en cas de divergence, 2014.
+  opText: '• Ne parler à personne pendant la marche. N\'utiliser que les phrases standardisées, d\'un ton égal : chaque minute ; pendant un arrêt, toutes les 30 s une fois la SpO2 à 85 % ou plus.\n' +
+    '• Marcher derrière le patient, sans lui imposer l\'allure, pour relever la SpO2 la plus basse et la FC de fin.\n' +
+    '• Si le patient s\'arrête : il se repose assis ou debout, comme il préfère ; le chronomètre continue.\n' +
+    '• Arrêter la marche si la SpO2 passe sous 80 % ; reprise possible quand elle remonte à 85 % ou plus.\n' +
+    '• Arrêter aussi pour douleur thoracique, dyspnée intolérable, crampes, démarche titubante, sueurs, pâleur : faire asseoir ou allonger, mesurer PA, pouls, SpO2, avis médical, oxygène si besoin.\n' +
+    '• Oxygène porté par l\'opérateur : marcher légèrement derrière le patient.\n' +
+    '• À la fin : SpO2 et pouls, Borg, puis demander pourquoi il n\'a pas pu marcher plus loin.',
+  // Consignes standardisées de la norme ERS/ATS 2014 (tableau 5), traduction de travail : à remplacer par celle du service.
+  consignes: 'Le but de ce test est de marcher le plus loin possible pendant 6 minutes. Vous allez marcher dans ce couloir, entre les plots, autant de fois que possible en 6 minutes. Je vous indiquerai chaque minute qui passe, puis, à 6 minutes, je vous demanderai de vous arrêter là où vous êtes. Six minutes, c\'est long : vous allez faire un effort. Vous avez le droit de ralentir, de vous arrêter et de vous reposer si nécessaire, mais reprenez la marche dès que vous le pouvez. N\'oubliez pas : le but est de marcher LE PLUS LOIN POSSIBLE pendant 6 minutes, sans courir ni trottiner. Avez-vous des questions ?',
+  speed: 1, beeps: true, vibr: true,
+  // Compte rendu et envoi : mêmes réglages que l'app d'origine (même clé de stockage, donc repris sur l'appareil).
+  cfg: { etab: '', service: '', adresse: '', operateur: '', mailTo: '', mailSubject: 'TM6 – test du {date} {heure}',
+    mailBody: "Résultats du test de marche de 6 minutes du {date_longue}, en pièce jointe (document Word).\n\nLe document ne contient aucune identité : coller l'étiquette du patient dans l'espace prévu en haut à droite." }
+};
+var CFG_KEY = 'tm6-config';
+function stored() { try { return JSON.parse(localStorage.getItem(CFG_KEY)) || {}; } catch (e) { return {}; } }
+(function () {
+  var c = stored();
+  for (var k in S.cfg) if (typeof c[k] === 'string') S.cfg[k] = c[k];
+  if (ok(c.couloir)) S.couloir = String(c.couloir);
+  if (typeof c.bips === 'boolean') S.beeps = c.bips;
+  if (typeof c.vibrations === 'boolean') S.vibr = c.vibrations;
+})();
+// La clé de l'app d'origine absente ici (thème) est conservée telle quelle.
+function saveCfg() {
+  var c = stored(); for (var k in S.cfg) c[k] = S.cfg[k];
+  c.couloir = S.couloir; c.bips = S.beeps; c.vibrations = S.vibr;
+  try { localStorage.setItem(CFG_KEY, JSON.stringify(c)); } catch (e) { }
+}
+// Écran allumé pendant le test (pont natif de l'app).
+var DEV_KEY = 'tm6-devices';
+function devices() { try { return JSON.parse(localStorage.getItem(DEV_KEY)) || []; } catch (e) { return []; } }
+function saveDevice() {
+  var d = String(S.o2dev || '').replace(/^\s+|\s+$/g, ''); if (!d || S.o2 !== 'o2' || S.o2mode !== 'pulse') return;
+  var l = [d].concat(devices().filter(function (x) { return x !== d; })).slice(0, 10);
+  try { localStorage.setItem(DEV_KEY, JSON.stringify(l)); } catch (e) { }
+}
+// Pont natif dans l'app iOS ; dans la version web (Safari, écran d'accueil), équivalents du navigateur quand ils existent.
+var HAS_NATIVE = !!(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.native);
+var wakeOn = false, wakeLock = null;
+function webWake() {
+  if (!wakeOn || wakeLock || !navigator.wakeLock || document.visibilityState !== 'visible') return;
+  navigator.wakeLock.request('screen').then(function (l) { wakeLock = l; l.addEventListener('release', function () { wakeLock = null; }); }, function () { });
+}
+document.addEventListener('visibilitychange', webWake);
+function awake(on) {
+  if (HAS_NATIVE) { try { window.webkit.messageHandlers.native.postMessage({ action: 'awake', on: on }); } catch (e) { } return; }
+  wakeOn = on;
+  if (on) webWake(); else if (wakeLock) { try { wakeLock.release(); } catch (e) { } wakeLock = null; }
+}
+function haptic(kind) {
+  if (S.vibr === false) return;
+  if (HAS_NATIVE) { try { window.webkit.messageHandlers.native.postMessage({ action: 'haptic', kind: kind }); } catch (e) { } return; }
+  try { if (navigator.vibrate) navigator.vibrate(kind === 'alert' ? [200, 100, 200] : kind === 'end' ? 400 : 40); } catch (e) { }
+}
+
+function $(id) { return document.getElementById(id); }
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
+function num(v) { var n = parseFloat(String(v).replace(',', '.')); return isNaN(n) ? NaN : n; }
+function ok(v) { return !isNaN(num(v)); }
+function mmss(s) { s = Math.max(0, Math.floor(s)); var m = Math.floor(s / 60), r = s % 60; return m + ':' + (r < 10 ? '0' : '') + r; }
+function get(path) { var p = path.split('.'), o = S; for (var i = 0; i < p.length; i++) { o = o[p[i]]; if (o === undefined) return ''; } return o; }
+function set(path, v) { var p = path.split('.'), o = S; for (var i = 0; i < p.length - 1; i++) o = o[p[i]]; o[p[p.length - 1]] = v; }
+
+/* ---------- Son ---------- */
+var ac = null;
+function beep(freq, dur, n) {
+  if (!S.beeps) return;
+  try {
+    if (!ac) {
+      // Version web : session audio « lecture » pour que les bips sonnent même en mode silencieux (Safari 16.4+).
+      try { if (!HAS_NATIVE && navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { }
+      var C = window.AudioContext || window.webkitAudioContext; if (!C) return; ac = new C();
+    }
+    if (ac.state === 'suspended' && ac.resume) ac.resume();
+    for (var k = 0; k < (n || 1); k++) {
+      var o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime + k * (dur + 0.12);
+      o.frequency.value = freq; o.connect(g); g.connect(ac.destination);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.4, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.start(t); o.stop(t + dur + 0.02);
+    }
+  } catch (e) { }
+}
+
+/* ---------- Calculs ---------- */
+function corridor() { return ok(S.couloir) ? num(S.couloir) : 30; }
+function dist() { return S.laps.length * corridor() + (S.stop ? num(S.end.partiel) || 0 : 0); }
+function predicted() {
+  var a = num(S.age), h = num(S.taille), w = num(S.poids);
+  if (isNaN(a) || isNaN(h) || isNaN(w) || (S.sex !== 'F' && S.sex !== 'M')) return null;
+  var p = S.sex === 'M' ? 7.57 * h - 5.02 * a - 1.76 * w - 309 : 2.11 * h - 2.29 * w - 5.78 * a + 667;
+  return { p: Math.round(p), lin: Math.round(p - (S.sex === 'M' ? 153 : 139)) };
+}
+function spo2Values() {
+  var v = [];
+  for (var m = 1; m <= 6; m++) if (S.mins[m] && ok(S.mins[m].s)) v.push(num(S.mins[m].s));
+  if (ok(S.end.spo2)) v.push(num(S.end.spo2));
+  if (ok(S.nadir)) v.push(num(S.nadir));
+  S.pauses.forEach(function (p) { if (ok(p.spo2)) v.push(num(p.spo2)); });
+  return v;
+}
+function fcValues() {
+  var v = [];
+  for (var m = 1; m <= 6; m++) if (S.mins[m] && ok(S.mins[m].f)) v.push(num(S.mins[m].f));
+  if (ok(S.end.fc)) v.push(num(S.end.fc));
+  S.pauses.forEach(function (p) { if (ok(p.fc)) v.push(num(p.fc)); });
+  return v;
+}
+function paused() { return S.pauses.length && S.pauses[S.pauses.length - 1].e == null; }
+function pauseTotal() { var s = 0; S.pauses.forEach(function (p) { s += (p.e == null ? S.t : p.e) - p.s; }); return s; }
+
+// Ce qui manque, étape par étape : jamais bloquant, toujours rattrapable.
+function missing() {
+  var m = [];
+  if (!S.sex || !ok(S.age) || !ok(S.taille) || !ok(S.poids)) m.push({ step: 'patient', txt: 'Sexe, âge, taille ou poids manquant : pas de valeur théorique' });
+  if (S.o2 === 'o2' && !ok(S.o2debit)) m.push({ step: 'cond', txt: 'Débit ou réglage d\'oxygène manquant' });
+  if (!ok(S.rest.spo2) || !ok(S.rest.fc)) m.push({ step: 'repos', txt: 'SpO2 ou FC de repos manquante' });
+  if (S.stop) {
+    if (!ok(S.end.spo2) || !ok(S.end.fc)) m.push({ step: 'recup', txt: 'SpO2 ou FC à l\'arrêt manquante' });
+    var last = S.stop.t >= TEST ? 6 : Math.floor(S.stop.t / 60), miss = [];
+    for (var k = 1; k <= last; k++) if (!S.mins[k] || !ok(S.mins[k].s) || !ok(S.mins[k].f)) miss.push(k);
+    if (miss.length) m.push({ step: 'test', txt: 'Relevé incomplet à la minute ' + miss.join(', ') });
+    if (!ok(S.rec[1].spo2) || !ok(S.rec[1].fc)) m.push({ step: 'recup', txt: 'Récupération à 1 min non saisie' });
+  }
+  return m;
+}
+
+/* ---------- Barre d'étapes ---------- */
+function renderSteps() {
+  var h = '';
+  STEPS.forEach(function (st) {
+    var cls = 'step' + (st.id === S.step ? ' cur' : S.seen[st.id] ? ' done' : '');
+    h += '<button type="button" class="' + cls + '" data-go="' + st.id + '"><span class="num">' + (STEPS.indexOf(st) + 1) + '</span><span class="lbl">' + st.label + '</span></button>';
+  });
+  $('steps').innerHTML = h;
+  $('runbar').className = 'runbar' + (S.running && S.step !== 'test' ? ' on' : '');
+}
+
+/* ---------- Petits constructeurs ---------- */
+function field(path, label, unit, wide) {
+  var v = get(path), cls = 'f' + (v === '' ? ' empty' : '');
+  return '<label class="' + cls + '"' + (wide ? ' style="grid-column:1/-1"' : '') + '><span>' + label + '</span><span class="box">' +
+    '<input type="text" inputmode="decimal" pattern="[0-9]*" autocomplete="off" data-k="' + path + '" value="' + esc(v) + '">' +
+    (unit ? '<span class="u">' + unit + '</span>' : '') + '</span></label>';
+}
+function choice(path, opts, cols) {
+  var v = get(path), h = '<div class="choice c' + (cols || 2) + '">';
+  opts.forEach(function (o) { h += '<button type="button" class="opt' + (v === o[0] ? ' on' : '') + '" data-set="' + path + '" data-v="' + esc(o[0]) + '">' + o[1] + (o[2] ? '<small>' + o[2] + '</small>' : '') + '</button>'; });
+  return h + '</div>';
+}
+// Liste déroulante native (sélecteur d'iOS).
+function sel(k, label, v, opts, wide) {
+  return '<label class="f sel' + (wide ? ' wide' : '') + '"><span>' + label + '</span><select data-sel="' + k + '">' +
+    opts.map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === v ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>';
+}
+// Champ de texte libre (réglages).
+function tfield(path, label, type) {
+  return '<label class="f tf"><span>' + label + '</span><input class="tin" type="' + (type || 'text') + '" autocomplete="off" autocapitalize="' + (type ? 'off' : 'sentences') + '" spellcheck="false" data-k="' + path + '" value="' + esc(get(path)) + '"></label>';
+}
+// Cotation de Borg : l'opérateur présente l'échelle au patient en plein écran ; la valeur choisie s'affiche ici, modifiable.
+function borg(path, label) {
+  var v = get(path), kind = path.split('.').pop();
+  var h = '<div class="borgrow"><div class="bl"><b>' + label + '</b><span class="bv">' + (v === '' ? '<span class="bw" style="margin:0">non coté</span>' : v + (BORG_LBL[v] ? '<span class="bw">' + BORG_LBL[v] + '</span>' : '')) + '</span></div>' +
+    '<button type="button" class="showscale" data-scale="' + path + '">' + (v === '' ? 'Présenter l\'échelle' : 'Recoter') + '</button></div>';
+  return h;
+}
+function openScale(path) {
+  var kind = path.split('.').pop(), atEnd = path.indexOf('end.') === 0, before = atEnd ? S.rest[kind] : '';
+  var opText = atEnd
+    ? (before !== '' ? 'Rappeler au patient sa cote d\'avant le test (' + before + (BORG_LBL[before] ? ', ' + BORG_LBL[before].toLowerCase() : '') + '), puis poser la question.' : 'Poser la question.')
+    : 'Montrer l\'échelle au patient, puis poser la question.';
+  var h = '<div class="scale"><div class="schead"><div class="scop">' + opText + '</div>' +
+    '<p class="scq">' + BORG_Q[kind] + '</p>' +
+    (atEnd && before !== '' ? '<p class="scbefore">Avant le test : ' + before + (BORG_LBL[before] ? ', ' + BORG_LBL[before].toLowerCase() : '') + '</p>' : '') +
+    (atEnd ? '' : '<p class="scexpl">À dire avant la première cotation : « ' + BORG_EXPL[kind] + ' »</p>') +
+    '<button type="button" class="ghost scclose" id="scaleClose">Fermer sans coter</button></div>' +
+    '<div class="sclist">';
+  BORG.slice().reverse().forEach(function (b) {
+    h += '<button type="button" class="scitem' + (get(path) === b ? ' on' : '') + '" data-pick="' + path + '" data-v="' + b + '"><span class="n">' + b + '</span><span class="w">' + (BORG_LBL[b] || '') + '</span></button>';
+  });
+  h += '</div></div>';
+  S.sheet = 'scale'; $('sheet').innerHTML = h;
+}
+function flags(step) {
+  return '';
+  var h = '';
+  missing().forEach(function (m) { if (m.step === step) h += '<div class="flag">' + m.txt + '.</div>'; });
+  return h;
+}
+function nextBar(backTo, label, goTo, extra) {
+  $('next').style.display = 'block';
+  $('nextIn').innerHTML = (backTo ? '<button type="button" class="ghost" data-go="' + backTo + '">Retour</button>' : '<span></span>') +
+    '<button type="button" class="big" data-go="' + goTo + '"' + (extra || '') + '>' + label + '</button>';
+}
+
+/* ---------- Écrans ---------- */
+var SCREENS = {
+  patient: function () {
+    var pr = predicted();
+    nextBar(null, 'Suivant : conditions', 'cond');
+    return '<h1>Patient</h1>' +
+      '<div class="cols pat"><div class="col"><div class="card"><h2>Sexe</h2>' + choice('sex', [['F', 'Femme'], ['M', 'Homme']]) + '</div>' +
+      '<div class="card"><div class="grid3">' + field('age', 'Âge', 'ans') + field('taille', 'Taille', 'cm') + field('poids', 'Poids', 'kg') + '</div>' +
+      '</div></div><div class="col"><div id="pred">' + predText() + '</div></div></div>';
+  },
+  cond: function () {
+    // Listes déroulantes, comme l'app d'origine (branche main) : une seule carte, rien à déplier.
+    nextBar('patient', 'Suivant : repos', 'repos');
+    var oxy = S.o2 === 'air' ? 'air' : S.o2if, pulse = S.o2mode === 'pulse';
+    var h = '<h1>Conditions</h1><div class="card"><h2>Examen</h2><div class="nosm">' + choice('exam', [['tm6', 'Test de marche', '6 minutes'], ['titr', 'Titration', 'oxygène à l\'effort']]) + '</div></div>' +
+      '<div class="card"><div class="grid2 sels">' +
+      sel('oxy', 'Oxygène', oxy, [['air', 'Air ambiant'], ['lunettes', 'Lunettes'], ['masque', 'Masque'], ['autre', 'Autre interface']]) +
+      sel('aide', 'Aide à la marche', S.aide, [['aucune', 'Aucune'], ['canne', 'Canne'], ['deambulateur', 'Déambulateur'], ['rollator', 'Rollator']]);
+    if (S.o2 === 'o2') {
+      h += sel('o2mode', 'Mode', S.o2mode, [['continu', 'Continu'], ['pulse', 'Pulsé']]) +
+        field('o2debit', pulse ? 'Réglage' : 'Débit', pulse ? 'pos.' : 'L/min') +
+        sel('o2src', 'Source d\'oxygène', S.o2src, [['porte', 'Portée par le patient'], ['chariot', 'Chariot poussé par le patient'], ['operateur', 'Portée par l\'opérateur']], true) +
+        (pulse ? '<label class="f' + (S.o2dev ? '' : ' empty') + '"><span>Dispositif (modèle)</span><span class="box"><input class="dev" list="devList" autocomplete="off" autocapitalize="off" spellcheck="false" data-k="o2dev" value="' + esc(S.o2dev) + '"></span><datalist id="devList">' +
+          devices().map(function (d) { return '<option value="' + esc(d) + '"></option>'; }).join('') + '</datalist></label>' : '<span></span>');
+    }
+    h += '</div><p class="hint corr">Couloir : ' + corridor() + ' m. <button type="button" class="linkbtn" id="gearInline">Modifier</button></p>';
+    if (S.exam === 'titr' && S.o2 === 'air') h += '<p class="hint" style="margin-top:10px">La titration se fait sous oxygène : choisir une interface d\'oxygène.</p>';
+    return h + '</div>';
+  },
+  repos: function () {
+    nextBar('cond', 'Suivant : préparer le départ', 'pret');
+    return '<h1>Repos, avant le départ</h1><p class="lead">Patient assis près de la ligne de départ, au repos au moins 15 minutes avant le test. Vérifier les contre-indications ; relever SpO2, FC et pression artérielle, puis dyspnée et fatigue.</p>' +
+      '<div class="cols"><div class="col"><div class="card"><div class="grid2">' + field('rest.spo2', 'SpO2', '%') + field('rest.fc', 'FC', '/min') + field('rest.pas', 'PAS', 'mmHg') + field('rest.pad', 'PAD', 'mmHg') + '</div>' + flags('repos') + '</div>' + restTitr() + '</div>' +
+      '<div class="col"><div class="card' + (titrOn() ? ' borgpair' : '') + '"><h2>Borg avant le test</h2>' + borg('rest.bd', 'Dyspnée') + borg('rest.bf', 'Fatigue') + '</div></div></div>';
+  },
+  pret: function () {
+    $('next').style.display = 'block';
+    // Sur téléphone, DÉPART passe dans la barre du bas pour rester visible sans défiler.
+    $('nextIn').innerHTML = '<button type="button" class="ghost" data-go="repos">Retour</button><button type="button" class="big gobar" id="goBar">DÉPART<small>' + examLabel() + ', ' + o2Lc() + '</small></button>';
+    if (S.started) $('nextIn').innerHTML = '<button type="button" class="ghost" data-go="repos">Retour</button><button type="button" class="big" data-go="test">Revenir au test</button>';
+    var c = function (k, t) { return '<button type="button" class="check' + (S.ready[k] ? ' on' : '') + '" data-ready="' + k + '"><i>' + (S.ready[k] ? '✓' : '') + '</i>' + t + '</button>'; };
+    return '<h1>Prêt au départ</h1><div class="cols"><div class="col">' +
+      '<div class="card"><h2>Consignes à lire au patient</h2><div class="consignes">' + esc(S.consignes) + '</div>' +
+      '</div></div><div class="col">' +
+      '<div class="card">' + c('consignes', 'Consignes lues au patient') + c('oxy', 'Oxymètre en place, signal stable') + c('line', 'Patient sur la ligne de départ') +
+      '</div>' +
+      (S.started ? '' : '<button type="button" class="go" id="goBtn">DÉPART<small>' + examLabel() + '</small><small>' + o2Label() + '</small></button>') + '</div></div>';
+  },
+  test: function () {
+    $('next').style.display = 'none';
+    if (!S.started) return '<h1>Test</h1><div class="card"><p>Le test n\'a pas commencé.</p><button type="button" class="big" style="width:100%" data-go="pret">Aller au départ</button></div>';
+    var ticks = ''; for (var m = 1; m < 6; m++) ticks += '<em style="left:' + (m / 6 * 100) + '%"></em>';
+    return '<p class="testinfo">' + examLabel() + ', ' + o2Lc() + ', couloir de ' + corridor() + ' m</p>' +
+      '<div class="cols test"><div class="col"><div class="clock"><div class="t" id="clk">0:00</div><div class="r" id="rem"></div></div>' +
+      '<div class="bar"><b id="prog" style="width:0"></b>' + ticks + '</div>' +
+      '<div id="alertBox"></div><div class="phrase" id="phrase">' + esc(S.lastPhrase || 'Départ. Marchez aussi loin que possible pendant 6 minutes.') + '</div>' +
+      '<div id="promptBox"></div><div class="minstrip" id="minstrip"></div></div><div class="col">' +
+      '<div class="track" id="track"></div><button type="button" class="lap' + (S.running ? '' : ' disabled') + '" id="lapBtn"><span class="p">+1 aller</span><span class="d" id="lapD">0 m · 0 aller</span></button>' +
+      '<div class="ctl"><button type="button" class="b-undo" id="undoBtn">Annuler 1</button>' +
+      '<button type="button" class="b-pause' + (S.running ? '' : ' disabled') + '" id="pauseBtn">Le patient s\'arrête</button>' +
+      '<button type="button" class="b-stop" id="stopBtn">' + (S.running ? 'Arrêter le test' : 'Aller à la récupération') + '</button></div>' +
+      '<p class="hint" id="pinfo"></p></div><div class="col">' + o2Run() +
+      (S.opGuide ? '<details class="guide"><summary>Rappel pour l\'opérateur</summary><div class="gtxt">' + esc(S.opText) + '</div></details>' : '') +
+      '<div class="nadirrow">' + field('nadir', 'Nadir lu sur l\'oxymètre, s\'il est plus bas qu\'un relevé', '%') + '</div></div></div>';
+  },
+  recup: function () {
+    nextBar('test', 'Suivant : bilan', 'bilan');
+    if (!S.stop) return '<h1>Arrêt et récupération</h1><div class="card"><p>Le test n\'est pas terminé.</p></div>';
+    var stopTxt = S.stop.reason ? 'Arrêt prématuré à ' + mmss(S.stop.t) + ' (' + S.stop.reason + ')' : 'Test mené à son terme (6 min)';
+    var sy = '<div class="choice c2">';
+    SYMPT.forEach(function (s) { sy += '<button type="button" class="opt' + (S.end.sympt.indexOf(s) >= 0 ? ' on' : '') + '" data-sympt="' + esc(s) + '">' + s + '</button>'; });
+    sy += '</div>';
+    return '<h1>Arrêt et récupération</h1><p class="lead rcl">' + stopTxt + (S.stop.reason ? '.' : '. À dire : « ' + END_PHRASE + ' »') + ' Le minuteur de récupération tourne.</p>' +
+      '<div class="rtabs"><span class="rtstop">' + stopTxt + '</span><span class="rtclk" id="rtClk"></span>' + ['Arrêt', 'Borg, symptômes', 'Récupération'].map(function (t, i) { return '<button type="button" class="rtab' + ((S.rpane || 0) === i ? ' on' : '') + '" data-rpane="' + i + '">' + t + '</button>'; }).join('') + '</div>' +
+      '<div class="cols rcp" data-pane="' + (S.rpane || 0) + '"><div class="col"><div class="rec"><div class="rt" id="rt1"><span>Récupération</span><b id="recClk">0:00</b></div><div class="rt" id="rt3"><span id="recLbl">Relevé à 1 min dans</span><b id="recNext">1:00</b></div></div>' +
+      '<div class="card"><h2>À l\'arrêt</h2><div class="grid2">' + field('end.spo2', 'SpO2', '%') + field('end.fc', 'FC', '/min') + field('end.pas', 'PAS', 'mmHg') + field('end.pad', 'PAD', 'mmHg') + '</div>' +
+      '<div style="height:12px"></div><div class="f"><span>Mètres depuis le dernier cône : <b id="partV">' + (S.end.partiel || 0) + ' m</b></span>' +
+      '<input class="slider" type="range" min="0" max="' + corridor() + '" step="1" value="' + (S.end.partiel || 0) + '" data-k="end.partiel"></div>' + flags('recup') + '</div></div><div class="col">' +
+      '<div class="card"><h2>Borg à la fin</h2>' + borg('end.bd', 'Dyspnée') + borg('end.bf', 'Fatigue') + '</div>' +
+      '<div class="card"><h2>Symptômes limitants</h2><p class="say">Après le Borg : « Qu\'est-ce qui vous a empêché de marcher plus loin ? »</p>' + sy + '</div>' +
+      '</div><div class="col"><div class="card" id="rc1"><h2>Récupération à 1 min</h2><div class="grid4">' + field('rec.1.spo2', 'SpO2 %', '') + field('rec.1.fc', 'FC /min', '') + field('rec.1.pas', 'PAS', '') + field('rec.1.pad', 'PAD', '') + '</div></div>' +
+      '<div class="card" id="rc3"><h2>Récupération à 3 min</h2><div class="grid4">' + field('rec.3.spo2', 'SpO2 %', '') + field('rec.3.fc', 'FC /min', '') + field('rec.3.pas', 'PAS', '') + field('rec.3.pad', 'PAD', '') + '</div></div></div></div>';
+  },
+  bilan: function () {
+    $('next').style.display = 'block';
+    $('nextIn').innerHTML = '<button type="button" class="ghost" data-go="recup">Retour</button><button type="button" class="big' + (S.stop ? '' : ' disabled') + '" id="sendBtn">Envoyer le compte rendu</button>';
+    if (!S.stop) return '<h1>Bilan</h1><div class="card"><p>Le bilan apparaît une fois le test terminé.</p></div>';
+    var A = analysis();
+    var k = '<div class="kpis">' +
+      kpi(Math.round(A.dist) + ' m', A.pr ? A.pct + ' % de la théorique, LIN ' + A.pr.lin + ' m' : 'pas de valeur théorique', A.pr && A.dist < A.pr.lin) +
+      kpi(isNaN(A.nadir) ? '—' : A.nadir + ' %', 'SpO2 la plus basse' + (isNaN(A.desat) ? '' : ', baisse de ' + A.desat + ' points'), A.desat >= 4) +
+      kpi(isNaN(A.fPeak) ? '—' : A.fPeak + '/min', 'FC la plus haute' + (isNaN(A.pFmt) ? '' : ', ' + A.pFmt + ' % de la FMT'), false) +
+      kpi(isNaN(A.vWalk) ? '—' : fr1(A.vWalk) + ' km/h', 'vitesse pendant la marche', false) + '</div>';
+    var todo = '';
+    missing().forEach(function (m) { todo += '<p class="todo">' + m.txt + '. <button type="button" class="linkbtn" data-go="' + m.step + '">Compléter</button></p>'; });
+    // Grille à zones : portrait = figure | synthèse, puis usuelles | indices ; paysage = figure à gauche sur deux rangées, indices sur toute la largeur.
+    return '<h1>Bilan</h1>' + k + '<div class="bilan">' +
+      '<div class="card b-fig"><h2>Évolution au cours du test</h2>' + figure(A) + '</div>' +
+      '<div class="b-syn"><div class="card"><h2>Synthèse</h2><div class="text">' + esc(Report.brief()) + '</div></div>' +
+      (todo ? '<div class="card"><h2>À compléter avant l\'envoi</h2>' + todo + '</div>' : '') + '</div>' +
+      '<div class="card b-usu"><h2>Valeurs usuelles</h2>' + table(A.usual) + '</div>' +
+      '<div class="card b-exp"><h2>Indices exploratoires</h2><p class="hint" style="margin:0 0 8px">Repères publiés, établis dans d\'autres populations et souvent avec une SpO2 enregistrée en continu : à lire comme des descriptions, pas comme des seuils diagnostiques.</p>' + entries(A.explo) + '</div></div>' +
+      '<button type="button" class="ghost newtest" data-new="1">Nouveau test</button>';
+  }
+};
+
+// Titration au repos : cinq paliers facultatifs (débit ou réglage, SpO2), dans l'ordre où ils ont été faits.
+function titrOn() { return S.exam === 'titr' && S.o2 === 'o2'; }
+function o2Unit() { return S.o2mode === 'pulse' ? 'pos.' : 'L/min'; }
+function o2Val(v) { return S.o2mode === 'pulse' ? 'position ' + v : v + ' L/min'; }
+function restTitr() {
+  if (!titrOn()) return '';
+  // Paliers en colonnes, deux lignes (valeur appliquée, SpO2) : tient sous les relevés de repos, même sur téléphone en paysage.
+  var cell = function (path) { var v = get(path); return '<label class="f' + (v === '' ? ' empty' : '') + '"><span class="box"><input type="text" inputmode="decimal" autocomplete="off" data-k="' + path + '" value="' + esc(v) + '"></span></label>'; };
+  var h = '<div class="card"><h2>Titration au repos</h2><div class="rtg"><span></span>', i;
+  for (i = 0; i < 5; i++) h += '<span class="rtn">' + (i + 1) + '</span>';
+  h += '<span class="rth">' + (S.o2mode === 'pulse' ? 'Réglage' : 'Débit, L/min') + '</span>';
+  for (i = 0; i < 5; i++) h += cell('rt.' + i + '.d');
+  h += '<span class="rth">SpO2 %</span>';
+  for (i = 0; i < 5; i++) h += cell('rt.' + i + '.s');
+  return h + '</div></div>';
+}
+// Oxygène pendant la marche (titration seulement : en test de marche, le débit reste constant, ERS/ATS 2014).
+function o2Now() { return S.o2ch.length ? S.o2ch[S.o2ch.length - 1].v : S.o2debit; }
+function o2Run() {
+  if (!titrOn()) return '';
+  return '<div class="o2run"><button type="button" class="o2btn" id="o2Btn">Oxygène : <b>' + (ok(o2Now()) ? o2Val(o2Now()) : '?') + '</b>, modifier</button>' +
+    '<p class="hint" style="margin:4px 0 0">' + (S.o2ch.length ? S.o2ch.length + ' changement' + (S.o2ch.length > 1 ? 's' : '') + ', le dernier à ' + mmss(S.o2ch[S.o2ch.length - 1].t) + '.' : 'Valeur de départ, inchangée.') + '</p></div>';
+}
+function openO2() {
+  S.sheet = 'o2'; S.o2new = '';
+  var list = S.o2ch.map(function (c) { return mmss(c.t) + ' : ' + o2Val(c.v); }).join(' ; ');
+  $('sheet').innerHTML = '<div class="sheet"><div class="pane"><h2>' + (S.o2mode === 'pulse' ? 'Changer le réglage' : 'Changer le débit') + '</h2>' +
+    '<p class="sub">Actuellement : ' + (ok(o2Now()) ? o2Val(o2Now()) : 'non renseigné') + (list ? '. Changements : ' + list : '') + '.</p>' +
+    '<div class="grid2">' + field('o2new', S.o2mode === 'pulse' ? 'Nouveau réglage' : 'Nouveau débit', o2Unit()) + '<span></span></div>' +
+    '<button type="button" class="big o2ok" id="o2Ok">Valider</button>' +
+    (S.o2ch.length ? '<button type="button" class="ghost b-cancel" id="o2Undo">Annuler le dernier changement</button>' : '') +
+    '<button type="button" class="ghost b-cancel" id="o2No">Fermer</button></div></div>';
+}
+function predText() {
+  var pr = predicted();
+  return pr ? '<div class="readout"><span class="rl">Distance théorique</span><span class="rv">' + pr.p + ' m</span><span class="rs">Limite inférieure de la normale : ' + pr.lin + ' m</span></div>'
+    : '';
+}
+function examLabel() { return S.exam === 'titr' ? 'Titration de l\'oxygène à l\'effort' : 'Test de marche de 6 minutes'; }
+// Dans une phrase : minuscule initiale, sauf pour « O2 ».
+function o2Lc() { var l = o2Label(); return l.indexOf('O2') === 0 ? l : l.charAt(0).toLowerCase() + l.slice(1); }
+function o2Label() {
+  if (S.o2 === 'air') return 'Air ambiant';
+  var v = ok(S.o2debit) ? S.o2debit : '?';
+  var src = { porte: 'portée par le patient', chariot: 'chariot poussé', operateur: 'portée par l\'opérateur' }[S.o2src];
+  return (S.o2mode === 'pulse' ? 'O2 pulsé, position ' + v + (S.o2dev ? ' (' + S.o2dev + ')' : '') : 'O2 continu, ' + v + ' L/min') + ', ' + src;
+}
+
+function fr1(v) { return (Math.round(v * 10) / 10).toString().replace('.', ','); }
+function kpi(v, l, bad) { return '<div class="kpi' + (bad ? ' bad' : '') + '"><b>' + v + '</b><span>' + l + '</span></div>'; }
+// Même rendu que table(), mais en blocs : peut se répartir sur plusieurs colonnes.
+function entries(rows) {
+  var h = '<div class="ixs">';
+  rows.forEach(function (r) { h += '<div class="ix"><b>' + r[0] + '</b><div><span class="v">' + (r[1] === null ? '<span class="na">—</span>' : r[1]) + '</span>' + (r[2] ? '<small>' + r[2] + '</small>' : '') + '</div></div>'; });
+  return h + '</div>';
+}
+function table(rows) {
+  var h = '<table class="vals"><tbody>';
+  rows.forEach(function (r) { h += '<tr><th>' + r[0] + '</th><td>' + (r[1] === null ? '<span class="na">—</span>' : r[1]) + (r[2] ? '<small>' + r[2] + '</small>' : '') + '</td></tr>'; });
+  return h + '</tbody></table>';
+}
+function pauseWithin(a, b) { var t = 0; S.pauses.forEach(function (p) { var e = p.e == null ? S.stop.t : p.e; t += Math.max(0, Math.min(b, e) - Math.max(a, p.s)); }); return t; }
+function speedSegs() {
+  var segs = [], prev = 0;
+  S.laps.forEach(function (t) { var w = (t - prev) - pauseWithin(prev, t); if (w >= 1) segs.push({ a: prev, b: t, v: corridor() / w * 3.6 }); prev = t; });
+  return segs;
+}
+// Distance cumulée à l'instant t (s) : entre deux passages, répartie au prorata du temps de marche (arrêts exclus) ;
+// après le dernier passage, les mètres partiels sont répartis jusqu'à la fin.
+function distAt(t) {
+  var c = corridor(), mk = [{ t: 0, d: 0 }];
+  S.laps.forEach(function (lt, i) { mk.push({ t: lt, d: (i + 1) * c }); });
+  mk.push({ t: S.stop.t, d: dist() });
+  if (t >= S.stop.t) return dist();
+  for (var i = 1; i < mk.length; i++) if (t <= mk[i].t) {
+    var a = mk[i - 1], b = mk[i], w = (b.t - a.t) - pauseWithin(a.t, b.t);
+    return w > 0 ? a.d + (b.d - a.d) * Math.max(0, (t - a.t) - pauseWithin(a.t, t)) / w : a.d;
+  }
+  return dist();
+}
+// Toutes les valeurs du bilan, calculées sur les seules données saisies (aucun enregistrement continu).
+function analysis() {
+  var A = {}, endT = S.stop.t, lastMin = endT >= TEST ? 6 : Math.floor(endT / 60), age = num(S.age);
+  A.pr = predicted(); A.dist = dist(); A.pct = A.pr ? Math.round(A.dist / A.pr.p * 100) : null;
+  var sv = spo2Values(), fv = fcValues();
+  A.nadir = sv.length ? Math.min.apply(null, sv) : NaN; A.fPeak = fv.length ? Math.max.apply(null, fv) : NaN;
+  A.sRest = num(S.rest.spo2); A.fRest = num(S.rest.fc);
+  A.desat = !isNaN(A.sRest) && !isNaN(A.nadir) ? A.sRest - A.nadir : NaN;
+  A.sEnd = ok(S.end.spo2) ? num(S.end.spo2) : (S.mins[lastMin] && ok(S.mins[lastMin].s) ? num(S.mins[lastMin].s) : NaN);
+  A.fEnd = ok(S.end.fc) ? num(S.end.fc) : (S.mins[lastMin] && ok(S.mins[lastMin].f) ? num(S.mins[lastMin].f) : NaN);
+  A.fmt = !isNaN(age) ? 220 - age : NaN; A.pFmt = !isNaN(A.fPeak) && !isNaN(A.fmt) ? Math.round(A.fPeak / A.fmt * 100) : NaN;
+  var walk = endT - pauseTotal();
+  A.vTot = endT > 0 ? A.dist / endT * 3.6 : NaN; A.vWalk = walk > 0 ? A.dist / walk * 3.6 : NaN;
+  var ms = []; for (var m = 1; m <= lastMin; m++) if (S.mins[m] && ok(S.mins[m].s)) ms.push(num(S.mins[m].s));
+  A.meanDesat = ms.length && !isNaN(A.sRest) ? A.sRest - ms.reduce(function (x, y) { return x + y; }, 0) / ms.length : NaN;
+  A.s1 = S.mins[1] && ok(S.mins[1].s) ? num(S.mins[1].s) : NaN;
+  A.chrono = !isNaN(A.fPeak) && !isNaN(A.fRest) ? A.fPeak - A.fRest : NaN;
+  A.chronoIdx = !isNaN(A.fEnd) && !isNaN(A.fRest) && !isNaN(A.fmt) && A.fmt - A.fRest > 0 ? (A.fEnd - A.fRest) / (A.fmt - A.fRest) : NaN;
+  A.hrr1 = !isNaN(A.fEnd) && ok(S.rec[1].fc) ? A.fEnd - num(S.rec[1].fc) : NaN;
+  A.dsp = !isNaN(A.nadir) ? A.dist * A.nadir / 100 : NaN;
+  var segs = speedSegs(), h1 = [], h2 = [];
+  segs.forEach(function (g) { ((g.a + g.b) / 2 < endT / 2 ? h1 : h2).push(g.v); });
+  var avg = function (a) { return a.length ? a.reduce(function (x, y) { return x + y; }, 0) / a.length : NaN; };
+  A.v1 = avg(h1); A.v2 = avg(h2); A.segs = segs;
+  A.perMin = []; for (var pm = 1; pm <= lastMin; pm++) A.perMin.push(distAt(pm * 60) - distAt((pm - 1) * 60));
+  A.fatig = A.perMin.length >= 2 && A.perMin[0] > 0 ? A.perMin[A.perMin.length - 1] / A.perMin[0] : NaN;
+  if (endT >= TEST && A.dist > 0) {
+    var ep = [0, 1, 2].map(function (k) { return (distAt((k + 1) * 120) - distAt(k * 120)) / 120; });
+    A.pv = (Math.max.apply(null, ep) - Math.min.apply(null, ep)) / (A.dist / TEST); A.epochs = ep;
+  } else A.pv = NaN;
+  var bd0 = num(S.rest.bd), bd1 = num(S.end.bd), bf0 = num(S.rest.bf), bf1 = num(S.end.bf);
+  var v = function (x, u) { return isNaN(x) ? null : x + (u || ''); };
+  A.usual = [
+    ['Distance', Math.round(A.dist) + ' m', A.pr ? A.pct + ' % de la valeur théorique (Enright), LIN ' + A.pr.lin + ' m' : ''],
+    ['Vitesse globale', isNaN(A.vTot) ? null : fr1(A.vTot) + ' km/h', ''],
+    ['Vitesse pendant la marche', isNaN(A.vWalk) ? null : fr1(A.vWalk) + ' km/h', S.pauses.length ? S.pauses.length + ' arrêt' + (S.pauses.length > 1 ? 's' : '') + ', ' + Math.round(pauseTotal()) + ' s' : 'sans arrêt'],
+    ['SpO2 repos, fin, nadir', isNaN(A.sRest) ? null : A.sRest + ' %, ' + (isNaN(A.sEnd) ? '—' : A.sEnd + ' %') + ', ' + (isNaN(A.nadir) ? '—' : A.nadir + ' %'), isNaN(A.desat) ? '' : 'baisse de ' + A.desat + ' points'],
+    ['FC repos, fin, pic', isNaN(A.fRest) ? null : A.fRest + ', ' + (isNaN(A.fEnd) ? '—' : A.fEnd) + ', ' + (isNaN(A.fPeak) ? '—' : A.fPeak) + ' /min', isNaN(A.pFmt) ? '' : 'pic à ' + A.pFmt + ' % de la FMT (220 − âge)'],
+    ['Pression artérielle', ok(S.rest.pas) ? S.rest.pas + '/' + S.rest.pad + ' → ' + (ok(S.end.pas) ? S.end.pas + '/' + S.end.pad : '—') + ' mmHg' : null, 'repos → arrêt'],
+    ['Borg dyspnée', isNaN(bd0) ? null : S.rest.bd + ' → ' + (isNaN(bd1) ? '—' : S.end.bd), ''],
+    ['Borg fatigue', isNaN(bf0) ? null : S.rest.bf + ' → ' + (isNaN(bf1) ? '—' : S.end.bf), ''],
+    ['Récupération à 1 min', ok(S.rec[1].spo2) ? 'SpO2 ' + S.rec[1].spo2 + ' %, FC ' + S.rec[1].fc + ' /min' : null, ''],
+    ['Oxygène', S.o2 === 'o2' ? (ok(S.o2debit) ? o2Val(S.o2debit) : '—') + (S.o2ch.length ? S.o2ch.map(function (c) { return ', ' + o2Val(c.v) + ' à ' + mmss(c.t); }).join('') : '') : 'air ambiant',
+      (function () { var r = S.rt.filter(function (x) { return ok(x.d) && ok(x.s); }); return titrOn() && r.length ? 'Au repos : ' + r.map(function (x) { return x.s + ' % à ' + o2Val(x.d); }).join(', ') : ''; })()],
+    ['Récupération à 3 min', ok(S.rec[3].spo2) ? 'SpO2 ' + S.rec[3].spo2 + ' %, FC ' + S.rec[3].fc + ' /min' : null, '']
+  ];
+  // ODDS (Nathan, Eur Respir J 2025;66:2402565, tableau 2) : Borg de dyspnée, débit d'O2, distance, nadir de SpO2.
+  // Choix validés par Allan le 12 octobre 2026 : borne à 350 ou 450 m dans la catégorie la plus favorable ; débit > 6 L/min
+  // compté 28 comme dans la cohorte de validation ; O2 pulsé non convertible en débit, donc pas de total ; Borg de fin de marche
+  // (le moment du Borg n'est pas précisé dans le texte de l'article) ; nadir = SpO2 la plus basse relevée (lue chaque minute).
+  A.odds = (function () {
+    var bd = num(S.end.bd), d = A.dist, pulse = S.o2 === 'o2' && S.o2mode === 'pulse', flow = S.o2 === 'o2' ? num(S.o2debit) : 0;
+    var miss = [];
+    if (isNaN(bd)) miss.push('Borg de dyspnée de fin');
+    if (isNaN(A.nadir)) miss.push('SpO2 la plus basse');
+    if (!pulse && isNaN(flow)) miss.push('débit d\'oxygène');
+    if (pulse || miss.length) return { total: NaN, pulse: pulse, miss: miss };
+    var pb = bd > 5 ? 19 : bd >= 2 ? 3 : 0, po = flow >= 3 ? 28 : 0, pd = d < 300 ? 34 : d < 350 ? 26 : d < 450 ? 15 : 0, pn = A.nadir < 90 ? 19 : 0;
+    return { total: pb + po + pd + pn, txt: 'Borg ' + S.end.bd + ' : ' + pb + ', O2 ' + (S.o2 === 'o2' ? fr1(flow) + ' L/min' : 'air') + ' : ' + po + ', ' + Math.round(d) + ' m : ' + pd + ', nadir ' + A.nadir + ' % : ' + pn + '.' };
+  })();
+  var oddsRef = 'Score pronostique de la FPI seulement (décès ou hospitalisation respiratoire), dérivé de 1251 patients des essais ISABELA et validé dans une cohorte de 295 patients d\'un seul centre (Nathan, Eur Respir J 2025). Repère : ≥ 28 (sensibilité 85 %, spécificité 48 % en validation) ; quartiles 0–18, 19–37, 38–56, 57–100. Borg de fin de marche ; nadir lu chaque minute.';
+  A.explo = [
+    ['Score ODDS', isNaN(A.odds.total) ? null : A.odds.total + ' / 100', (A.odds.pulse ? 'Non calculable sous O2 pulsé : le score repose sur un débit continu. ' : A.odds.miss && A.odds.miss.length ? 'Manque : ' + A.odds.miss.join(', ') + '. ' : A.odds.txt + ' ') + oddsRef],
+    ['SpO2 à 1 min', v(A.s1, ' %'), 'Repère : < 88 % dès la 1re minute associé à la mortalité dans la BPCO (García-Talavera, Lung 2023). Approximation : délai réel avant 88 % non mesuré.'],
+    ['Désaturation moyenne', isNaN(A.meanDesat) ? null : fr1(A.meanDesat) + ' points', 'Repos moins moyenne des relevés minute par minute. Repère : ≥ 6,7 % dans l\'insuffisance cardiaque du sujet âgé (Sunayama, 2024).'],
+    ['Réponse chronotrope', v(A.chrono, ' /min'), 'FC pic − FC repos. Repère : < 20 /min associé à la survie dans les PID (Holland, 2013). Ininterprétable sous bêtabloquant.'],
+    ['Indice chronotrope', isNaN(A.chronoIdx) ? null : fr1(A.chronoIdx * 100) + ' %', '(FC fin − FC repos) / (220 − âge − FC repos). Associé aux exacerbations sévères dans la BPCO (COPDGene, 2022), sans seuil.'],
+    ['Récupération de la FC à 1 min', v(A.hrr1, ' /min'), 'FC fin − FC à 1 min. Repères : < 17 dans l\'HTAP (Rezende, 2022), ≤ 10 dans la BPCO (COPDGene, 2021) ; non pronostique dans l\'HTP de la sarcoïdose (2022).'],
+    ['Produit distance × saturation', isNaN(A.dsp) ? null : Math.round(A.dsp) + ' m·%', 'Distance × SpO2 la plus basse. Non pronostique dans l\'HTP de la sarcoïdose (Gupta, 2022) ; nadir lu chaque minute, donc surestimé.'],
+    ['Travail de marche (6MWW)', ok(S.poids) ? fr1(A.dist * num(S.poids) / 1000) + ' kg·km' : null, 'Distance × poids (moyenne de 27,5 kg·km dans l\'étude d\'origine). Mieux corrélé que la distance seule à la VO2 max et au seuil anaérobie dans la BPCO (Chuang, Respir Med 2001 ; 33 hommes), sans valeur de référence.'],
+    ['Distance par minute', A.perMin.length ? A.perMin.map(function (d) { return Math.round(d); }).join(', ') + ' m' : null, 'Allers répartis au prorata du temps de marche ; la dernière minute contient les mètres partiels estimés. Unité des études d\'allure (Dalgas, J Rehabil Med 2014, sclérose en plaques) ; sans repère dans les maladies respiratoires. Le sujet sain marche à allure presque constante.'],
+    ['Fatigabilité à la marche', isNaN(A.fatig) ? null : Math.round(A.fatig * 100) + ' %', 'Distance de la dernière minute rapportée à celle de la 1re. Indice de la littérature neurologique et gériatrique, sans référence admise (revue Van Geel, 2019) ; aucun repère respiratoire.'],
+    ['Variabilité de l\'allure', isNaN(A.pv) ? null : (Math.round(A.pv * 100) / 100).toString().replace('.', ','), 'Test en trois tranches de 2 min : (vitesse de la plus rapide − de la plus lente) ÷ vitesse moyenne. Repère : ≥ 0,39 associé à la mortalité ou à l\'hospitalisation à 1 an dans la BPCO (Huang, 2023 ; une seule cohorte, 163 patients). Calculé sur un test de 6 min complet.'],
+    ['Vitesse, 1re puis 2e moitié', isNaN(A.v1) ? null : fr1(A.v1) + ' puis ' + (isNaN(A.v2) ? '—' : fr1(A.v2)) + ' km/h', 'Ralentissement en fin de test : piste de recherche (Lancaster, 2018), sans valeur de référence.']
+  ];
+  return A;
+}
+// Figure : pistes empilées sur un même axe du temps (minutes), arrêts en bandes, trait de fin, récupération grisée.
+function figure(A) {
+  var endM = S.stop.t / 60, xMax = Math.max(6, endM) + 3.4, W = 640, L = 64, R = 18, x = function (m) { return L + m / xMax * (W - L - R); };
+  var lastMin = S.stop.t >= TEST ? 6 : Math.floor(S.stop.t / 60);
+  var spts = [{ t: 0, v: A.sRest }], fpts = [{ t: 0, v: A.fRest }];
+  for (var m = 1; m <= lastMin; m++) if (S.mins[m]) { spts.push({ t: m, v: num(S.mins[m].s) }); fpts.push({ t: m, v: num(S.mins[m].f) }); }
+  if (S.stop.t < TEST) { spts.push({ t: endM, v: num(S.end.spo2) }); fpts.push({ t: endM, v: num(S.end.fc) }); }
+  // Mesures prises pendant les arrêts : placées à l'heure du début de l'arrêt.
+  S.pauses.forEach(function (p) { if (ok(p.spo2)) spts.push({ t: p.s / 60, v: num(p.spo2) }); if (ok(p.fc)) fpts.push({ t: p.s / 60, v: num(p.fc) }); });
+  var byT = function (a, b) { return a.t - b.t; }; spts.sort(byT); fpts.sort(byT);
+  var srec = [{ t: endM + 1, v: num(S.rec[1].spo2) }, { t: endM + 3, v: num(S.rec[3].spo2) }], frec = [{ t: endM + 1, v: num(S.rec[1].fc) }, { t: endM + 3, v: num(S.rec[3].fc) }];
+  var vpts = A.segs.map(function (g) { return { t: (g.a + g.b) / 120, v: g.v }; });
+  var dpts = [{ t: 0, v: 0 }]; S.laps.forEach(function (lt, i) { dpts.push({ t: lt / 60, v: (i + 1) * corridor() }); }); dpts.push({ t: endM, v: Math.round(A.dist) });
+  var dHi = Math.ceil(Math.max(A.dist, A.pr ? A.pr.p : 0) / 100) * 100 || 100;
+  var tracks = [
+    { lbl: 'SpO2 %', cls: 'sp', pts: spts, rec: srec, lo: 80, hi: 100, h: 150 },
+    { lbl: 'FC /min', cls: 'fc', pts: fpts, rec: frec, lo: 50, hi: 150, h: 140 },
+    { lbl: 'm', cls: 'ds', pts: dpts, rec: [], lo: 0, hi: dHi, h: 130, fixed: true },
+    { lbl: 'km/h', cls: 'vt', pts: vpts, rec: [], lo: 0, hi: 6, h: 110 }
+  ];
+  var allv = function (t) { return t.pts.concat(t.rec).map(function (p) { return p.v; }).filter(function (v) { return !isNaN(v); }); };
+  tracks.forEach(function (t) { var a = allv(t); if (a.length && !t.fixed) { t.lo = Math.min(t.lo, Math.floor(Math.min.apply(null, a) - 2)); t.hi = Math.max(t.hi, Math.ceil(Math.max.apply(null, a) + 2)); } });
+  var y0 = 8, g = '', H = 0; tracks.forEach(function (t) { H += t.h + 30; }); H += 28;
+  g += '<rect class="recz" x="' + x(endM) + '" y="0" width="' + (x(xMax) - x(endM)) + '" height="' + (H - 28) + '"/>';
+  S.pauses.forEach(function (p) { var e = p.e == null ? S.stop.t : p.e; g += '<rect class="pz" x="' + x(p.s / 60) + '" y="0" width="' + Math.max(2, x(e / 60) - x(p.s / 60)) + '" height="' + (H - 28) + '"/>'; });
+  tracks.forEach(function (t) {
+    var Y = function (v) { return y0 + (t.hi - v) / (t.hi - t.lo) * t.h; };
+    g += '<line class="ax" x1="' + L + '" x2="' + (W - R) + '" y1="' + (y0 + t.h) + '" y2="' + (y0 + t.h) + '"/>';
+    g += '<text class="lbl" x="' + (L - 8) + '" y="' + (y0 + 14) + '" text-anchor="end">' + t.hi + '</text><text class="lbl" x="' + (L - 8) + '" y="' + (y0 + t.h) + '" text-anchor="end">' + t.lo + '</text>';
+    g += '<text class="tk ' + t.cls + '" x="4" y="' + (y0 + t.h / 2 + 5) + '">' + t.lbl + '</text>';
+    var pts = t.pts.filter(function (p) { return !isNaN(p.v); });
+    if (pts.length > 1) g += '<polyline class="ln ' + t.cls + '" points="' + pts.map(function (p) { return x(p.t) + ',' + Y(p.v); }).join(' ') + '"/>';
+    pts.forEach(function (p) { g += '<circle class="pt ' + t.cls + '" cx="' + x(p.t) + '" cy="' + Y(p.v) + '" r="4"/>' + (t.cls !== 'vt' && t.cls !== 'ds' ? '<text class="vl" x="' + x(p.t) + '" y="' + (Y(p.v) - 8) + '" text-anchor="middle">' + p.v + '</text>' : ''); });
+    // Distance cumulée : droites d'allure régulière menant à la valeur théorique et à la LIN à 6 min (repères, pas des normes minute par minute).
+    if (t.cls === 'ds') {
+      if (A.pr) [[A.pr.p, 'théorique ' + A.pr.p], [A.pr.lin, 'LIN ' + A.pr.lin]].forEach(function (r) {
+        g += '<line class="ref" x1="' + x(0) + '" y1="' + Y(0) + '" x2="' + x(6) + '" y2="' + Y(r[0]) + '"/><text class="lbl" x="' + (x(6) + 6) + '" y="' + (Y(r[0]) + 4) + '">' + r[1] + '</text>';
+      });
+    }
+    t.rec.forEach(function (p) { if (!isNaN(p.v)) g += '<circle class="pt rc" cx="' + x(p.t) + '" cy="' + Y(p.v) + '" r="4"/><text class="vl" x="' + x(p.t) + '" y="' + (Y(p.v) - 8) + '" text-anchor="middle">' + p.v + '</text>'; });
+    y0 += t.h + 30;
+  });
+  for (var mm = 0; mm <= Math.max(6, Math.floor(endM)); mm++) g += '<text class="lbl" x="' + x(mm) + '" y="' + (H - 8) + '" text-anchor="middle">' + mm + '</text>';
+  S.o2ch.forEach(function (c) { var xx = x(c.t / 60); g += '<line class="o2c" x1="' + xx + '" x2="' + xx + '" y1="0" y2="' + (H - 28) + '"/><text class="lbl" x="' + (xx + 4) + '" y="' + (H - 34) + '">O2 ' + o2Val(c.v) + '</text>'; });
+  g += '<line class="fin" x1="' + x(endM) + '" x2="' + x(endM) + '" y1="0" y2="' + (H - 28) + '"/><text class="lbl b" x="' + (x(endM) + 5) + '" y="14">fin</text>';
+  g += '<text class="lbl" x="' + x(endM + 1) + '" y="' + (H - 8) + '" text-anchor="middle">+1</text><text class="lbl" x="' + x(endM + 3) + '" y="' + (H - 8) + '" text-anchor="middle">+3</text>';
+  return '<svg class="fig" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="SpO2, FC, distance cumulée et vitesse au cours du test">' + g + '</svg>';
+}
+// Démonstration : un test complet d'exemple (patiente fictive), pour voir le bilan sans faire passer six minutes.
+function demoFill() {
+  S.sex = 'F'; S.age = '68'; S.taille = '162'; S.poids = '64'; S.rest = { spo2: '95', fc: '76', pas: '134', pad: '80', bd: '1', bf: '0,5' };
+  S.started = true; S.running = false; S.t = TEST; S.t0 = Date.now() - TEST * 1000; S.fired = {};
+  S.laps = []; var t = 0, step = [19, 19, 20, 20, 21, 21, 22, 23, 23, 24, 24, 25, 25, 26, 26];
+  for (var i = 0; i < step.length; i++) { t += step[i] + (i === 9 ? 25 : 0); if (t < TEST) S.laps.push(t); }
+  S.pauses = [{ s: 210, e: 235, spo2: '86', fc: '118', pas: '', pad: '' }];
+  S.mins = { 1: { s: '92', f: '98' }, 2: { s: '90', f: '106' }, 3: { s: '88', f: '112' }, 4: { s: '89', f: '110' }, 5: { s: '87', f: '116' }, 6: { s: '87', f: '118' } };
+  S.nadir = '85'; S.stop = { reason: null, t: TEST }; S.lastPhrase = END_PHRASE;
+  S.end = { spo2: '87', fc: '118', pas: '158', pad: '84', bd: '5', bf: '3', partiel: 12, sympt: ['dyspnée'] };
+  S.rec = { 1: { spo2: '91', fc: '104', pas: '146', pad: '82' }, 3: { spo2: '94', fc: '86', pas: '138', pad: '80' } };
+  S.recT = 200; S.recT0 = Date.now() - 200000 / S.speed; S.recFired = { 1: 1, 3: 1 }; S.alert = null;
+  ['patient', 'cond', 'repos', 'pret', 'test', 'recup', 'bilan'].forEach(function (k) { S.seen[k] = 1; });
+  closeSheet(); go('bilan');
+}
+
+/* ---------- Navigation ---------- */
+function go(step) {
+  if (step === 'test' && !S.started) step = 'pret';
+  S.step = step; S.seen[step] = 1;
+  $('main').innerHTML = SCREENS[step]();
+  renderSteps();
+  if (step === 'test') renderTest();
+  if (step === 'recup') renderRecup();
+  window.scrollTo(0, 0);
+}
+
+/* ---------- Chronomètre (accéléré pour la démonstration) ---------- */
+var last = 0, timer = null;
+function start() {
+  S.started = true; S.running = true; S.t = 0; S.t0 = Date.now(); S.alert = null; S.o2ch = []; saveDevice(); awake(true); S.laps = []; S.pauses = []; S.mins = {}; S.fired = {}; S.stop = null; S.lastPhrase = '';
+  last = Date.now(); beep(660, 0.25); timer = setInterval(tick, 200); go('test');
+}
+// Le temps se calcule depuis l'heure de départ (et non par cumul), pour rester juste après une mise en veille ou une fermeture.
+function tick() {
+  var now = Date.now();
+  if (S.running) {
+    S.t = Math.min(TEST, (now - S.t0) / 1000 * S.speed);
+    if (paused()) { var pz = S.pauses[S.pauses.length - 1], k30 = Math.floor((S.t - pz.s) / 30); if (k30 > (pz.n30 || 0)) { pz.n30 = k30; beep(620, 0.12); } }
+    for (var k in PHRASES) if (S.t >= +k && !S.fired[k]) {
+      S.fired[k] = 1;
+      if (+k % 60 === 0) { var m = +k / 60; if (!S.mins[m]) S.mins[m] = { s: '', f: '' }; S.mins[m].due = true; if (S.minOpen == null) S.minOpen = m; beep(880, 0.2); haptic('minute'); }
+      else beep(880, 0.15, 2);
+      say(PHRASES[k]);
+    }
+    if (S.t >= TEST) { finish(null); return; }
+  } else if (S.stop) {
+    S.recT = (now - S.recT0) / 1000 * S.speed;
+    [1, 3].forEach(function (m) { if (S.recT >= m * 60 && !S.recFired[m]) { S.recFired[m] = 1; beep(740, 0.3, m === 1 ? 1 : 2); } });
+  }
+  if (S.step === 'test') renderTest(true);
+  if (S.step === 'recup') renderRecup();
+  if (S.sheet === 'pause') renderPauseSheet(true);
+}
+function say(t) { var p = $('phrase'); if (p) p.textContent = t; S.lastPhrase = t; }
+function finish(reason) {
+  if (!S.running) return;
+  S.running = false; awake(false);
+  if (paused()) S.pauses[S.pauses.length - 1].e = S.t;
+  if (S.t >= TEST && S.mins[6] == null) S.mins[6] = { s: '', f: '', due: true };
+  S.stop = { reason: reason, t: S.t }; S.recT = 0; S.recT0 = Date.now(); S.recFired = {}; S.rpane = 0; S.alert = null;
+  if (!reason) S.lastPhrase = END_PHRASE;
+  if (reason && reason !== 'décision de l\'opérateur' && reason !== 'refus de poursuivre' && reason !== 'désaturation' && S.end.sympt.indexOf(reason) < 0 && SYMPT.indexOf(reason) >= 0) S.end.sympt.push(reason);
+  beep(reason ? 440 : 988, reason ? 0.4 : 0.8, reason ? 2 : 1); haptic('end');
+  closeSheet(); go('recup');
+}
+
+// Alerte SpO2 (ERS/ATS 2014) : sous 80 %, arrêter la marche ; reprise possible quand la SpO2 remonte à 85 % ou plus.
+function alertHtml() {
+  document.body.className = document.body.className.replace(/ ?spo2low/g, '') + (S.alert ? ' spo2low' : '');
+  return S.alert ? '<div class="alert">SpO2 à ' + S.alert.v + ' % : arrêter la marche. Reprise possible quand la SpO2 remonte à 85 % ou plus.</div>' : '';
+}
+function checkSpo2(k, val) {
+  if (!S.running || !/^(mins\.\d\.s|nadir|pauses\.\d+\.spo2)$/.test(k)) return;
+  var v = num(val); if (isNaN(v) || v < 50 || v > 100) return;
+  if (v < 80) { S.alert = { v: v }; beep(440, 0.3, 3); haptic('alert'); }
+  else if (v >= 85) S.alert = null;
+  if ($('alertBox')) $('alertBox').innerHTML = alertHtml();
+  if (S.sheet === 'pause') pauseHint();
+}
+function renderTest(light) {
+  var t = S.t;
+  if (!$('clk')) return;
+  if ($('alertBox').innerHTML !== alertHtml()) $('alertBox').innerHTML = alertHtml();
+  $('clk').textContent = mmss(t);
+  $('rem').textContent = S.running ? 'reste ' + mmss(TEST - t) : (S.stop && S.stop.reason ? 'arrêté à ' + mmss(S.stop.t) : 'terminé');
+  $('prog').style.width = (t / TEST * 100) + '%';
+  $('lapD').textContent = S.laps.length * corridor() + ' m, ' + S.laps.length + ' aller' + (S.laps.length > 1 ? 's' : '');
+  renderTrack();
+  $('pauseBtn').textContent = paused() ? 'Arrêt en cours…' : 'Le patient s\'arrête';
+  $('pinfo').textContent = S.pauses.length ? S.pauses.length + ' arrêt' + (S.pauses.length > 1 ? 's' : '') + ', ' + Math.round(pauseTotal()) + ' s au total. Le chronomètre continue pendant les arrêts.' : 'Le chronomètre continue pendant les arrêts.';
+  var strip = '';
+  for (var m = 1; m <= 6; m++) {
+    var r = S.mins[m], st = !r ? '' : (ok(r.s) && ok(r.f) ? ' ok' : r.due ? ' due' : '');
+    strip += '<button type="button" class="mn' + st + '" data-min="' + m + '">' + m + ' min<b>' + (r && ok(r.s) ? r.s : '·') + '</b>' + (r && ok(r.f) ? r.f : '') + '</button>';
+  }
+  if ($('minstrip').innerHTML !== strip) $('minstrip').innerHTML = strip;
+  var want = S.minOpen;
+  var box = $('promptBox');
+  if (want == null) { if (box.innerHTML) box.innerHTML = ''; }
+  else if (box.getAttribute('data-m') !== String(want) || !box.innerHTML) {
+    box.setAttribute('data-m', want);
+    box.innerHTML = '<div class="prompt"><h3>Minute ' + want + ' : note SpO2 et FC</h3><div class="prow">' + field('mins.' + want + '.s', 'SpO2', '%') + field('mins.' + want + '.f', 'FC', '/min') +
+      '<button type="button" class="ghost" id="minDone">Fait</button></div></div>';
+  }
+}
+// Couloir vu de dessus : un plot à chaque bout, le patient au plot qu'il vient d'atteindre (départ si nombre d'allers pair).
+function renderTrack() {
+  var n = S.laps.length, atFar = n % 2 === 1, W = 600, x0 = 40, x1 = W - 40;
+  var g = '<line class="lane" x1="' + x0 + '" y1="40" x2="' + x1 + '" y2="40"/>';
+  for (var i = 1; i < 6; i++) { var x = x0 + (x1 - x0) * i / 6; g += '<line class="tick" x1="' + x + '" y1="30" x2="' + x + '" y2="50"/>'; }
+  [x0, x1].forEach(function (x) { g += '<path class="cone" d="M' + (x - 13) + ' 54 L' + x + ' 18 L' + (x + 13) + ' 54 Z"/>'; });
+  g += '<circle class="pt" cx="' + (atFar ? x1 : x0) + '" cy="40" r="11"/>';
+  g += '<text x="' + x0 + '" y="78" text-anchor="middle">départ</text><text x="' + x1 + '" y="78" text-anchor="middle">' + corridor() + ' m</text>';
+  var t = $('track'); if (t) t.innerHTML = '<svg viewBox="0 0 ' + W + ' 86" role="img" aria-label="Position au couloir">' + g + '</svg>';
+}
+function renderRecup() {
+  if (!$('recClk')) return;
+  $('recClk').textContent = mmss(S.recT);
+  $('recLbl').textContent = S.recT < 60 ? 'Relevé à 1 min dans' : S.recT < 180 ? 'Relevé à 3 min dans' : 'Relevés';
+  $('recNext').textContent = S.recT < 60 ? mmss(60 - S.recT) : S.recT < 180 ? mmss(180 - S.recT) : 'terminé';
+  $('rc1').style.borderColor = S.recT >= 60 && !ok(S.rec[1].spo2) ? 'var(--warn)' : '';
+  $('rc3').style.borderColor = S.recT >= 180 && !ok(S.rec[3].spo2) ? 'var(--warn)' : '';
+  if ($('rtClk')) $('rtClk').textContent = S.recT < 180 ? $('recLbl').textContent + ' ' + $('recNext').textContent : 'Récupération ' + mmss(S.recT) + ' : relevés à 1 et 3 min passés';
+}
+
+/* ---------- Panneaux ---------- */
+function closeSheet() { S.sheet = null; $('sheet').innerHTML = ''; }
+function openPause() {
+  if (!S.running) return;
+  if (!paused()) { S.pauses.push({ s: S.t, e: null, spo2: '', fc: '', pas: '', pad: '' }); say(PAUSE_PHRASE); beep(520, 0.2); }
+  S.sheet = 'pause'; renderPauseSheet();
+}
+function renderPauseSheet(light) {
+  var p = S.pauses[S.pauses.length - 1], i = S.pauses.length - 1;
+  if (light && $('pclk')) {
+    $('pclk').textContent = mmss(S.t - p.s); $('ptot').textContent = 'Chronomètre du test : ' + mmss(S.t) + ' (il continue)';
+    $('pnext').textContent = 'Prochaine phrase dans ' + mmss(30 - (S.t - p.s) % 30);
+    return;
+  }
+  $('sheet').innerHTML = '<div class="sheet"><div class="pane"><h2>Arrêt n°' + (i + 1) + '</h2><p class="sub" id="ptot"></p>' +
+    '<div class="pausebig" id="pclk">0:00</div><div id="palert"></div>' +
+    '<p class="hint" style="margin-top:0"><span id="phint"></span> <b id="pnext"></b></p>' +
+    '<div class="card"><h2>Mesures pendant l\'arrêt (facultatif)</h2><div class="grid4">' + field('pauses.' + i + '.spo2', 'SpO2 %', '') + field('pauses.' + i + '.fc', 'FC /min', '') + field('pauses.' + i + '.pas', 'PAS', '') + field('pauses.' + i + '.pad', 'PAD', '') + '</div></div>' +
+    o2Run() + '<button type="button" class="b-resume" id="resumeBtn">Le patient repart</button>' +
+    '<button type="button" class="ghost b-cancel" id="pauseToStop">Il ne repartira pas : arrêter le test</button></div></div>';
+  pauseHint(); renderPauseSheet(true);
+}
+function pauseHint() {
+  var p = S.pauses[S.pauses.length - 1]; if (!p || !$('phint')) return;
+  var low = S.alert || (ok(p.spo2) && num(p.spo2) < 85);
+  $('palert').innerHTML = alertHtml();
+  $('phint').textContent = 'Repos assis ou debout, comme le patient préfère. ' + (low ? 'SpO2 sous 85\u00a0% : attendre qu\'elle remonte avant de proposer la reprise.' : 'Toutes les 30 s, une fois la SpO2 à 85 % ou plus : « ' + PAUSE_PHRASE + ' »');
+}
+function openStop() {
+  if (!S.running) { go('recup'); return; }
+  S.sheet = 'stop';
+  var h = '<div class="sheet"><div class="pane"><h2>Arrêter le test ?</h2><p class="sub">Motif de l\'arrêt :</p><div class="choice c2" id="motifs">';
+  MOTIFS.forEach(function (m) { h += '<button type="button" class="opt" data-motif="' + esc(m) + '">' + m + '</button>'; });
+  h += '</div><button type="button" class="b-confirm disabled" id="stopOk">Choisir un motif</button><button type="button" class="ghost b-cancel" id="stopNo">Continuer le test</button></div></div>';
+  $('sheet').innerHTML = h; S.motif = null;
+}
+function openSettings() {
+  S.sheet = 'cfg';
+  $('sheet').innerHTML = '<div class="sheet"><div class="pane"><h2>Réglages</h2>' +
+    '<div class="card"><h2>Couloir</h2><div class="grid2">' + field('couloir', 'Longueur par défaut', 'm') + '<span></span></div></div>' +
+    '<div class="card"><h2>En-tête du compte rendu</h2>' + tfield('cfg.etab', 'Établissement') + tfield('cfg.service', 'Service') +
+    '<label class="f tf"><span>Adresse, une ligne par ligne</span><textarea class="ta" data-k="cfg.adresse" rows="2">' + esc(S.cfg.adresse) + '</textarea></label>' + tfield('cfg.operateur', 'Opérateur') + '</div>' +
+    '<div class="card"><h2>Envoi par mail</h2>' + tfield('cfg.mailTo', 'Destinataire', 'email') + tfield('cfg.mailSubject', 'Objet') +
+    '<label class="f tf"><span>Texte du mail ({date}, {heure}, {date_longue})</span><textarea class="ta" data-k="cfg.mailBody" rows="4">' + esc(S.cfg.mailBody) + '</textarea></label></div>' +
+    '<div class="card"><h2>Consignes au patient</h2><textarea class="ta" id="consTa" data-k="consignes" rows="7">' + esc(S.consignes) + '</textarea></div>' +
+    '<div class="card"><h2>Rappel pour l\'opérateur pendant le test</h2>' + choice('opGuide', [['on', 'Affiché'], ['off', 'Masqué']]) +
+    '<div style="height:10px"></div><textarea class="ta" data-k="opText" rows="8">' + esc(S.opText) + '</textarea></div>' +
+    '<div class="card"><h2>Vitesse du chronomètre (démonstration)</h2>' + choice('speed', [['1', '×1', 'temps réel'], ['10', '×10', '36 s'], ['30', '×30', '12 s']], 3) + '</div>' +
+    '<div class="card"><h2>Bips</h2>' + choice('beeps', [['on', 'Activés'], ['off', 'Coupés']]) + '</div>' +
+    '<div class="card"><h2>Vibrations</h2>' + choice('vibr', [['on', 'Activées'], ['off', 'Coupées']]) + '</div>' +
+    '<div class="card"><h2>Test</h2><button type="button" class="ghost" style="width:100%" data-new="1">Nouveau test</button></div>' +
+    '<div class="card"><h2>Démonstration</h2><button type="button" class="ghost" style="width:100%" id="demoBtn">Remplir un test d\'exemple et ouvrir le bilan</button></div>' +
+    '<button type="button" class="big" style="width:100%" id="cfgClose">Fermer</button></div></div>';
+  var sp = String(S.speed); [].forEach.call(document.querySelectorAll('[data-set="speed"]'), function (b) { b.className = 'opt' + (b.getAttribute('data-v') === sp ? ' on' : ''); });
+  [].forEach.call(document.querySelectorAll('[data-set="beeps"]'), function (b) { b.className = 'opt' + ((b.getAttribute('data-v') === 'on') === S.beeps ? ' on' : ''); });
+  [].forEach.call(document.querySelectorAll('[data-set="vibr"]'), function (b) { b.className = 'opt' + ((b.getAttribute('data-v') === 'on') === S.vibr ? ' on' : ''); });
+  [].forEach.call(document.querySelectorAll('[data-set="opGuide"]'), function (b) { b.className = 'opt' + ((b.getAttribute('data-v') === 'on') === S.opGuide ? ' on' : ''); });
+}
+
+/* ---------- Événements ---------- */
+document.addEventListener('input', function (e) {
+  var k = e.target.getAttribute('data-k'); if (!k) return;
+  if (k.indexOf('mins.') === 0) { var m = k.split('.')[1]; if (!S.mins[m]) S.mins[m] = { s: '', f: '' }; }
+  set(k, e.target.value);
+  var lab = e.target.parentNode && e.target.parentNode.parentNode;
+  if (lab && lab.className && lab.className.indexOf('f') === 0) lab.className = 'f' + (e.target.value === '' ? ' empty' : '');
+  if (k === 'end.partiel') $('partV').textContent = e.target.value + ' m';
+  if (k === 'couloir' || k.indexOf('cfg.') === 0) saveCfg();
+  if ((k === 'age' || k === 'taille' || k === 'poids') && $('pred')) { $('pred').innerHTML = predText(); }
+  renderSteps();
+});
+document.addEventListener('change', function (e) {
+  var sk = e.target.getAttribute('data-sel');
+  if (sk) {
+    var v = e.target.value;
+    if (sk === 'oxy') { if (v === 'air') S.o2 = 'air'; else { S.o2 = 'o2'; S.o2if = v; } } else S[sk] = v;
+    go(S.step); return;
+  }
+  var k = e.target.getAttribute('data-k'); if (k) checkSpo2(k, e.target.value);
+});
+document.addEventListener('click', function (e) {
+  var b = e.target.closest ? e.target.closest('button') : null;
+  if (!b) return;
+  var g = b.getAttribute('data-go');
+  if (g) { closeSheet(); go(g); return; }
+  var sp = b.getAttribute('data-set');
+  if (sp) {
+    var v = b.getAttribute('data-v');
+    if (sp === 'speed') { S.speed = +v; openSettings(); return; }
+    if (sp === 'beeps') { S.beeps = v === 'on'; saveCfg(); openSettings(); return; }
+    if (sp === 'vibr') { S.vibr = v === 'on'; saveCfg(); openSettings(); return; }
+    if (sp === 'opGuide') { S.opGuide = v === 'on'; openSettings(); return; }
+    if (b.getAttribute('data-toggle') && get(sp) === v) v = '';
+    set(sp, v);
+    if (sp === 'o2' || sp === 'o2mode' || sp === 'couloir' || sp === 'exam') { go(S.step); return; }
+    [].forEach.call(b.parentNode.querySelectorAll('.opt'), function (x) { x.className = 'opt' + (x === b && v !== '' ? ' on' : ''); });
+    if (sp === 'sex') { if ($('pred')) $('pred').innerHTML = predText(); }
+    renderSteps(); return;
+  }
+  var r = b.getAttribute('data-ready');
+  if (r) { S.ready[r] = !S.ready[r]; go('pret'); return; }
+  var sy = b.getAttribute('data-sympt');
+  if (sy) { var i = S.end.sympt.indexOf(sy); if (i >= 0) S.end.sympt.splice(i, 1); else S.end.sympt.push(sy); b.className = 'opt' + (i >= 0 ? '' : ' on'); return; }
+  var rp = b.getAttribute('data-rpane');
+  if (rp != null) { S.rpane = +rp; go('recup'); return; }
+  var mn = b.getAttribute('data-min');
+  if (mn) { if (!S.mins[mn]) S.mins[mn] = { s: '', f: '' }; S.minOpen = +mn; $('promptBox').innerHTML = ''; renderTest(); return; }
+  var sc = b.getAttribute('data-scale');
+  if (sc) { openScale(sc); return; }
+  var pk = b.getAttribute('data-pick');
+  if (pk) { set(pk, b.getAttribute('data-v')); closeSheet(); go(S.step); return; }
+  if (b.getAttribute('data-new')) { askNewTest(); return; }
+  var mo = b.getAttribute('data-motif');
+  if (mo) { S.motif = mo; [].forEach.call(document.querySelectorAll('[data-motif]'), function (x) { x.className = 'opt' + (x === b ? ' on' : ''); }); $('stopOk').className = 'b-confirm'; $('stopOk').textContent = 'Arrêter le test : ' + mo; return; }
+  switch (b.id) {
+    case 'goBtn': case 'goBar': start(); break;
+    case 'lapBtn': if (S.running) { S.laps.push(S.t); beep(1200, 0.05); haptic('tap'); renderTest(); } break;
+    case 'undoBtn': if (S.laps.length) { S.laps.pop(); beep(300, 0.12, 2); haptic('undo'); renderTest(); } break;
+    case 'pauseBtn': openPause(); break;
+    case 'o2Btn': openO2(); break;
+    // Pendant un arrêt, la fenêtre d'oxygène revient au panneau d'arrêt (le patient n'est pas reparti).
+    case 'o2No': closeSheet(); if (paused()) S.sheet = 'pause', renderPauseSheet(); break;
+    case 'o2Ok': if (ok(S.o2new) && S.running) { S.o2ch.push({ t: Math.round(S.t), v: String(num(S.o2new)) }); haptic('tap'); } closeSheet(); go('test'); if (paused()) S.sheet = 'pause', renderPauseSheet(); break;
+    case 'o2Undo': S.o2ch.pop(); haptic('undo'); closeSheet(); go('test'); if (paused()) S.sheet = 'pause', renderPauseSheet(); break;
+    case 'resumeBtn': S.pauses[S.pauses.length - 1].e = S.t; S.alert = null; say('Reprise de la marche.'); closeSheet(); renderTest(); break;
+    case 'pauseToStop': openStop(); break;
+    case 'stopBtn': openStop(); break;
+    case 'stopNo': closeSheet(); if (paused()) S.sheet = 'pause', renderPauseSheet(); break;
+    case 'stopOk': if (S.motif) finish(S.motif); break;
+    case 'minDone': var cur = S.minOpen; S.minOpen = null; for (var m = 1; m <= 6; m++) if (m !== cur && S.mins[m] && S.mins[m].due && !(ok(S.mins[m].s) && ok(S.mins[m].f))) { S.minOpen = m; break; } renderTest(); break;
+    case 'gear': openSettings(); break;
+    case 'cfgClose': closeSheet(); go(S.step); break;
+    case 'demoBtn': demoFill(); break;
+    case 'newOk': newTest(); break;
+    case 'newNo': closeSheet(); break;
+    case 'sendBtn': Report.send(); break;
+    case 'gearInline': openSettings(); break;
+    case 'scaleClose': closeSheet(); break;
+    case 'runbar': go('test'); break;
+  }
+});
+/* ---------- Sauvegarde du test sur l'appareil ---------- */
+// Un appel, une bascule d'app ou une purge mémoire par iOS ne doivent pas faire perdre un test. Même clé que l'app
+// d'origine (« tm6-test ») mais version 3 : chacune ignore les sauvegardes de l'autre. Restauration jusqu'à 12 h.
+var SAVE_KEY = 'tm6-test', SAVE_MAX_AGE = 12 * 3600 * 1000;
+var TEST_KEYS = ['step', 'seen', 'sex', 'age', 'taille', 'poids', 'exam', 'o2', 'o2mode', 'o2if', 'o2debit', 'o2src', 'o2dev', 'aide', 'rest', 'rt', 'ready',
+  'running', 'started', 't', 't0', 'laps', 'pauses', 'mins', 'fired', 'nadir', 'stop', 'end', 'rec', 'recT', 'recT0', 'recFired', 'rpane', 'lastPhrase', 'alert', 'o2ch', 'speed'];
+var FRESH = (function () { var o = {}; TEST_KEYS.forEach(function (k) { o[k] = S[k]; }); return JSON.stringify(o); })();
+function saveTest() {
+  var o = { v: 3, at: Date.now() }; TEST_KEYS.forEach(function (k) { o[k] = S[k]; });
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(o)); } catch (e) { }
+}
+function toast(t) { var d = $('toast'); d.textContent = t; d.className = 'toast on'; setTimeout(function () { d.className = 'toast'; }, 4000); }
+function restoreTest() {
+  var d = null;
+  try { d = JSON.parse(localStorage.getItem(SAVE_KEY)); } catch (e) { }
+  if (!d || d.v !== 3 || Date.now() - d.at > SAVE_MAX_AGE) return false;
+  TEST_KEYS.forEach(function (k) { if (d[k] !== undefined) S[k] = d[k]; });
+  if (S.started) timer = setInterval(tick, 200);
+  if (S.running) {
+    awake(true);
+    if ((Date.now() - S.t0) / 1000 * S.speed >= TEST) {
+      S.t = TEST; finish(null); S.recT0 = S.t0 + TEST * 1000 / S.speed;
+      toast('Test restauré : les 6 minutes se sont écoulées pendant la fermeture.');
+      return true;
+    }
+    toast('Test en cours restauré.');
+  } else if (S.started) toast('Dernier test restauré.');
+  go(S.step);
+  return true;
+}
+function askNewTest() {
+  S.sheet = 'new';
+  $('sheet').innerHTML = '<div class="sheet"><div class="pane"><h2>Nouveau test ?</h2><p class="sub">Les données du test actuel seront effacées de l\'appareil' +
+    (S.stop ? ' : envoyer le compte rendu avant' : '') + '. Les réglages sont conservés.</p>' +
+    '<button type="button" class="b-confirm" id="newOk">Effacer et commencer un nouveau test</button><button type="button" class="ghost b-cancel" id="newNo">Annuler</button></div></div>';
+}
+function newTest() {
+  clearInterval(timer); timer = null; awake(false);
+  var f = JSON.parse(FRESH); TEST_KEYS.forEach(function (k) { if (k !== 'speed') S[k] = f[k]; });
+  S.seen = { patient: 1 }; S.minOpen = null; S.motif = null;
+  try { localStorage.removeItem(SAVE_KEY); } catch (e) { }
+  closeSheet(); go('patient');
+}
+setInterval(saveTest, 1000);
+document.addEventListener('visibilitychange', saveTest);
+window.addEventListener('pagehide', saveTest);
+// Après le chargement des deux blocs de script : un test restauré sur le bilan a besoin du compte rendu (Report).
+document.addEventListener('DOMContentLoaded', function () { if (!restoreTest()) go('patient'); });
+</script>
+<script>
+/* ---------- Compte rendu Word et envoi par mail ---------- */
+// Les fonctions de calcul, de synthèse (règles validées le 4 octobre 2026) et de construction du .docx sont reprises
+// telles quelles de l'app d'origine (branche main, TM6/tm6.html) : seule l'origine des valeurs change. L'app d'origine
+// lisait des champs de formulaire par identifiant ; ici, chaque identifiant renvoie la valeur correspondante de l'état S.
+// Seul écart voulu avec l'app d'origine (décision d'Allan du 12 octobre 2026, norme ERS/ATS 2014) : le nadir et la FC pic
+// sont pris pendant le test, arrêts compris, sans la valeur de repos, comme dans le bilan.
+var Report = (function () {
+  'use strict';
+  const NATIVE = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.native;
+  const native = msg => { try { NATIVE && NATIVE.postMessage(msg); } catch (e) { } };
+  const LABELS = {
+    o2mode: { air: 'Air ambiant', lunettes: 'Lunettes', masque: 'Masque', autre: 'Autre interface' },
+    o2src: { porte: 'Portée par le patient', chariot: 'Chariot poussé par le patient', operateur: "Portée par l'opérateur" },
+    aide: { aucune: 'Aucune', canne: 'Canne', deambulateur: 'Déambulateur', rollator: 'Rollator' }
+  };
+  const running = false; let o2changes = [];
+  let pauseVals = [], sex, laps, lapTimes, pauses, endT, stopReason, examType, t0, cfg, V = {};
+  // Valeurs de l'état S, sous les identifiants des champs de l'app d'origine.
+  function load() {
+    const b = v => String(v == null ? '' : v).replace(',', '.'); // Borg : « 0,5 » saisi, « 0.5 » attendu
+    sex = S.sex; lapTimes = S.laps.slice(); laps = lapTimes.length;
+    pauses = S.pauses.map(p => ({ s: p.s, e: p.e }));
+    const pf = v => parseFloat(String(v == null ? '' : v).replace(',', '.'));
+    pauseVals = S.pauses.map(p => ({ t: p.s / 60, s: pf(p.spo2), f: pf(p.fc) })); endT = S.stop ? S.stop.t : 0; stopReason = S.stop ? S.stop.reason : null;
+    examType = S.exam || null; t0 = S.t0 || 0; cfg = S.cfg;
+    V = {
+      age: S.age, taille: S.taille, poids: S.poids, couloir: S.couloir,
+      o2mode: S.o2 === 'air' ? 'air' : S.o2if, o2type: S.o2mode, o2debit: S.o2debit, o2src: S.o2src, o2dev: S.o2dev || '', aide: S.aide,
+      m0spo2: S.rest.spo2, m0fc: S.rest.fc, ta0s: S.rest.pas, ta0d: S.rest.pad,
+      spo2End: S.end.spo2, fcEnd: S.end.fc, ta1s: S.end.pas, ta1d: S.end.pad, partiel: S.end.partiel, nadirIn: S.nadir,
+      spo2Rec: S.rec[1].spo2, fcRec: S.rec[1].fc, taRs: S.rec[1].pas, taRd: S.rec[1].pad,
+      spo2Rec3: S.rec[3].spo2, fcRec3: S.rec[3].fc, taR3s: S.rec[3].pas, taR3d: S.rec[3].pad,
+      borgD0: b(S.rest.bd), borgD1: b(S.end.bd), borgF0: b(S.rest.bf), borgF1: b(S.end.bf)
+    };
+    for (let i = 1; i <= 6; i++) { const r = S.mins[i] || {}; V[`m${i}spo2`] = r.s || ''; V[`m${i}fc`] = r.f || ''; }
+    S.rt.forEach((r, i) => { V[`rt${i + 1}d`] = r.d; V[`rt${i + 1}s`] = r.s; });
+    o2changes = S.exam === 'titr' && S.o2 === 'o2' ? S.o2ch.map(c => ({ t: c.t, v: parseFloat(String(c.v).replace(',', '.')) })) : [];
+  }
+  const $ = id => ({
+    get value() { return id === 'txt' ? reportText() : String(V[id] == null ? '' : V[id]); },
+    get textContent() { return id === 'endStatus' ? endStatus() : ''; },
+    get selectedOptions() { return [{ textContent: (LABELS[id] || {})[V[id]] || '' }]; }
+  });
+  const num = id => { const v = parseFloat(String($(id).value).replace(',', '.')); return isFinite(v) ? v : NaN; };
+  const symptoms = () => SYMPT.filter(s => S.end.sympt.indexOf(s) >= 0);
+  const elapsed = () => endT;
+  const refresh = () => { };
+  // Texte de l'état de fin, comme l'écran de fin de l'app d'origine.
+  function endStatus() {
+    const lastMin = Math.floor(endT / 60);
+    return stopReason ? `Test interrompu à ${mmss(endT)} (${stopReason}). Relevés au-delà de ${lastMin} min ignorés.` : 'Test mené à son terme (6 min).';
+  }
+  function reportText() { const c = compute(); return buildText(c, ok(c.sRest) && ok(c.nadir) ? c.sRest - c.nadir : NaN); }
+
+  /* ----- Repris de l'app d'origine ----- */
+const ok = v => isFinite(v);
+const fr = v => String(Math.round(v * 10) / 10).replace('.', ',');
+const TEST = 360;
+
+/* ---------- Enright & Sherrill 1998 ---------- */
+function predicted() {
+  const a = num('age'), h = num('taille'), w = num('poids');
+  if (!ok(a) || !ok(h) || !ok(w) || (sex !== 'F' && sex !== 'M')) return null; // sexe requis (seul ajout à l'app d'origine)
+  const p = sex === 'M' ? 7.57 * h - 5.02 * a - 1.76 * w - 309 : 2.11 * h - 2.29 * w - 5.78 * a + 667;
+  const lin = p - (sex === 'M' ? 153 : 139);
+  return { p: Math.round(p), lin: Math.round(lin), outOfRange: a < 40 || a > 80 };
+}
+
+const titr = () => examType === 'titr';
+
+const o2dev = () => ($('o2mode').value !== 'air' && $('o2type').value === 'pulse') ? $('o2dev').value.trim() : '';
+
+const pulsed = () => $('o2type').value === 'pulse';
+const o2Fmt = v => pulsed() ? `réglage ${fr(v)}` : `${fr(v)} L/min`;
+
+function restSteps() {
+  const out = [];
+  for (let i = 1; i <= 5; i++) { const dv = num(`rt${i}d`), sv = num(`rt${i}s`); if (ok(dv) && ok(sv)) out.push({ d: dv, s: sv }); }
+  return out;
+}
+function o2At(sec) { let v = num('o2debit'); o2changes.forEach(ch => { if (ch.t <= sec) v = ch.v; }); return v; }
+
+const taStr = (sId, dId) => ok(num(sId)) && ok(num(dId)) ? `${num(sId)}/${num(dId)} mmHg` : null;
+const corridor = () => ok(num('couloir')) && num('couloir') > 0 ? num('couloir') : 30;
+
+const mmss = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+
+function pauseTotal() { return pauses.reduce((a, p) => a + ((p.e ?? elapsed()) - p.s), 0); }
+
+/* ---------- Calculs ---------- */
+function series() {
+  const pts = [], lastMin = endT >= TEST ? 6 : Math.floor(endT / 60);
+  pts.push({ t: 0, s: num('m0spo2'), f: num('m0fc') });
+  for (let i = 1; i <= lastMin; i++) pts.push({ t: i, s: num(`m${i}spo2`), f: num(`m${i}fc`) });
+  if (endT < TEST) pts.push({ t: endT / 60, s: num('spo2End'), f: num('fcEnd'), end: true });
+  else if (ok(num('spo2End')) || ok(num('fcEnd'))) { const p6 = pts[pts.length - 1]; if (!ok(p6.s)) p6.s = num('spo2End'); if (!ok(p6.f)) p6.f = num('fcEnd'); }
+  const rec = { t: endT / 60 + 1, s: num('spo2Rec'), f: num('fcRec'), rec: true };
+  const rec3 = { t: endT / 60 + 3, s: num('spo2Rec3'), f: num('fcRec3'), rec: true };
+  return { pts, rec, rec3 };
+}
+function compute() {
+  const { pts, rec, rec3 } = series();
+  const dist = laps * corridor() + (ok(num('partiel')) ? num('partiel') : 0);
+  const pr = predicted();
+  // Pendant le test (ERS/ATS 2014 : « lowest SpO2 recorded during a 6MWT ») : relevés, arrêts compris, sans le repos (t = 0).
+  const during = pts.filter(p => p.t > 0).concat(pauseVals);
+  const sVals = during.map(p => p.s).filter(ok); if (ok(num('nadirIn'))) sVals.push(num('nadirIn'));
+  const fVals = during.map(p => p.f).filter(ok);
+  const sEnd = ok(num('spo2End')) ? num('spo2End') : (endT >= TEST ? num('m6spo2') : NaN);
+  if (ok(sEnd)) sVals.push(sEnd);
+  const fEnd = ok(num('fcEnd')) ? num('fcEnd') : (endT >= TEST ? num('m6fc') : NaN);
+  if (ok(fEnd)) fVals.push(fEnd);
+  const age = num('age');
+  return {
+    pts, rec, rec3, dist, pr, pct: pr ? Math.round(dist / pr.p * 100) : null,
+    sRest: num('m0spo2'), sEnd, nadir: sVals.length ? Math.min(...sVals) : NaN,
+    fRest: num('m0fc'), fEnd, fPeak: fVals.length ? Math.max(...fVals) : NaN,
+    fmt: ok(age) ? 220 - age : NaN
+  };
+}
+
+// dim : W, H, xMax (minutes en abscisse), fs (taille des textes). Par défaut, le format de l'écran.
+// Au trait de fin d'un test complet, on trace la valeur saisie à l'arrêt si elle existe (au lieu du relevé de la 6e minute).
+function endOverride(pts, key) {
+  const v = num(key === 's' ? 'spo2End' : 'fcEnd');
+  return endT >= TEST && ok(v) ? pts.map(p => p.t === 6 ? { ...p, [key]: v, v } : p) : pts;
+}
+
+/* ---------- Texte du courrier ---------- */
+function buildText(c, desat) {
+  const F = sex === 'F', Sj = F ? 'La patiente' : 'Le patient';
+  const m = v => ok(v) ? v : null;
+  const br = (v, label, unit = '') => m(v) != null ? fr(v) + unit : `[${label}]`;
+  const o2m = $('o2mode').value, deb = num('o2debit');
+  const iface = { lunettes: 'aux lunettes', masque: 'au masque', autre: '[interface]' }[o2m];
+  const lePat = F ? 'la patiente' : 'le patient';
+  const src = { porte: `source portée par ${lePat}`, chariot: `chariot poussé par ${lePat}`, operateur: "source portée par l'opérateur" }[$('o2src').value];
+  const o2 = o2m === 'air' ? 'sous air ambiant' : ($('o2type').value === 'pulse'
+    ? `sous oxygène en débit pulsé, réglage ${ok(deb) ? fr(deb) : '[réglage]'}${o2dev() ? ` (dispositif ${o2dev()})` : ''}, ${iface}`
+    : `sous oxygène en débit continu à ${ok(deb) ? fr(deb) : '[débit]'} L/min ${iface}`) + ` (${src})`;
+  const aide = { aucune: 'sans aide à la marche', canne: 'avec une canne', deambulateur: 'avec un déambulateur', rollator: 'avec un rollator' }[$('aide').value];
+  const out = [];
+  out.push(titr() && o2m !== 'air'
+    ? `Titration de l'oxygène à l'effort (test de marche de 6 minutes) réalisée ${o2}, ${aide}, sur un couloir de ${corridor()} m.`
+    : `Test de marche de 6 minutes réalisé ${o2}, ${aide}, sur un couloir de ${corridor()} m.`);
+  if (o2m !== 'air') {
+    const rest = restSteps().map(st => `${fr(st.s)} % ${pulsed() ? `au réglage ${fr(st.d)}` : `sous ${fr(st.d)} L/min`}`);
+    if (rest.length) out.push(`Titration en oxygène au repos : SpO2 à ${rest.join(', puis ')}.`);
+    if (o2changes.length) {
+      let prev = num('o2debit');
+      const parts = o2changes.map(ch => {
+        const when = `${Math.floor(ch.t / 60)} min ${String(ch.t % 60).padStart(2, '0')} s`;
+        const p = `${pulsed() ? 'réglage porté' : 'débit porté'} de ${ok(prev) ? fr(prev) : '[valeur]'} à ${pulsed() ? fr(ch.v) : `${fr(ch.v)} L/min`} à ${when}`;
+        prev = ch.v; return p;
+      });
+      out.push(`Titration en oxygène au cours du test : ${parts.join(', puis ')}.`);
+    }
+  }
+  let d = `Distance parcourue de ${Math.round(c.dist)} m`;
+  if (c.pr) d += `, soit ${c.pct} % de la valeur théorique (${c.pr.p} m), ${c.dist < c.pr.lin ? 'en dessous' : 'au-dessus'} de la limite inférieure de la normale (${c.pr.lin} m).`;
+  else d += ` [valeur théorique non calculée, âge, taille ou poids manquant].`;
+  out.push(d);
+  if (stopReason) out.push(`Test interrompu à ${Math.floor(endT / 60)} min ${String(Math.round(endT % 60)).padStart(2, '0')} s pour ${stopReason}.`);
+  if (pauses.length) out.push(`${Sj} a marqué ${pauses.length === 1 ? 'un arrêt' : pauses.length + ' arrêts'} d'une durée totale de ${Math.round(pauseTotal())} s, chronomètre maintenu.`);
+  else if (!stopReason) out.push('Test mené à son terme sans arrêt.');
+  let s = `La SpO2 passe de ${br(c.sRest, 'SpO2 de repos', ' %')} au repos à ${br(c.sEnd, 'SpO2 de fin', ' %')} en fin de test`;
+  if (ok(c.nadir) && ok(desat)) s += desat > 0 ? `, avec un nadir à ${c.nadir} %, soit une désaturation de ${desat} point${desat > 1 ? 's' : ''}.` : ', sans désaturation.';
+  else if (ok(c.nadir)) s += `, avec un nadir à ${c.nadir} % [SpO2 de repos manquante].`;
+  else s += ', [nadir non renseigné].';
+  out.push(s);
+  let f = `La fréquence cardiaque passe de ${br(c.fRest, 'FC de repos', '/min')} à ${br(c.fEnd, 'FC de fin', '/min')}`;
+  if (ok(c.fPeak)) f += `, avec un pic à ${c.fPeak}/min${ok(c.fmt) ? `, soit ${Math.round(c.fPeak / c.fmt * 100)} % de la FMT théorique` : ''}.`; else f += '.';
+  out.push(f);
+  const ta0 = taStr('ta0s', 'ta0d'), ta1 = taStr('ta1s', 'ta1d'), taR = taStr('taRs', 'taRd');
+  if (ta0 || ta1) out.push(`La pression artérielle passe de ${ta0 ?? '[TA de repos]'} au repos à ${ta1 ?? '[TA de fin]'} en fin de test.`);
+  const bv = id => $(id).value === '' ? null : fr(parseFloat($(id).value));
+  const bd0 = bv('borgD0'), bd1 = bv('borgD1'), bf0 = bv('borgF0'), bf1 = bv('borgF1');
+  out.push(`Borg dyspnée de ${bd0 ?? '[repos]'} à ${bd1 ?? '[fin]'}, Borg fatigue des membres inférieurs de ${bf0 ?? '[repos]'} à ${bf1 ?? '[fin]'}.`);
+  const sy = symptoms();
+  if (sy.length) out.push(`Symptôme${sy.length > 1 ? 's' : ''} limitant${sy.length > 1 ? 's' : ''} rapporté${sy.length > 1 ? 's' : ''} : ${sy.join(', ')}.`);
+  if (ok(num('spo2Rec')) || ok(num('fcRec'))) out.push(`Après une minute de récupération, SpO2 à ${br(num('spo2Rec'), 'non relevée', ' %')} et FC à ${br(num('fcRec'), 'non relevée', '/min')}${taR ? `, pression artérielle à ${taR}` : ''}.`);
+  else if (taR) out.push(`Après une minute de récupération, pression artérielle à ${taR}.`);
+  const taR3 = taStr('taR3s', 'taR3d');
+  if (ok(num('spo2Rec3')) || ok(num('fcRec3'))) out.push(`Après trois minutes de récupération, SpO2 à ${br(num('spo2Rec3'), 'non relevée', ' %')} et FC à ${br(num('fcRec3'), 'non relevée', '/min')}${taR3 ? `, pression artérielle à ${taR3}` : ''}.`);
+  else if (taR3) out.push(`Après trois minutes de récupération, pression artérielle à ${taR3}.`);
+  // Le texte commence par la synthèse brève ; la synthèse détaillée suit, après une ligne vide.
+  return `${buildBrief(c, desat)}\n\n${out.join(' ')}`;
+}
+
+/* ---------- Synthèse brève : quelques phrases en clair, envoyables sans retouche ---------- */
+// Règles validées par Allan (4 octobre 2026) : désaturation significative = baisse d'au moins 4 points
+// entre le repos et le nadir ; symptômes mentionnés seulement s'ils sont limitants ; FC et TA décrites
+// sans jugement ; distance « dans les limites de la normale » si elle atteint la limite inférieure.
+// Une donnée manquante supprime la phrase qui en dépend (pas de crochets ici).
+function buildBrief(c, desat) {
+  const out = [], o2 = $('o2mode').value !== 'air';
+  const cap = t => t.charAt(0).toUpperCase() + t.slice(1);
+  if (titr() && o2) {
+    const bits = [], u = v => pulsed() ? `au réglage ${fr(v)}` : `sous ${fr(v)} L/min`;
+    const steps = restSteps().map(st => `${fr(st.s)} % ${u(st.d)}`);
+    if (steps.length) bits.push(`au repos, SpO2 à ${steps.length > 1 ? steps.slice(0, -1).join(', ') + ' et ' + steps[steps.length - 1] : steps[0]}`);
+    const a = num('o2debit'), b = o2At(Infinity);
+    if (o2changes.length && ok(a) && ok(b) && a !== b) bits.push(`pendant la marche, ${pulsed() ? `réglage porté de la position ${fr(a)} à ${fr(b)}` : `débit porté de ${fr(a)} à ${fr(b)} L/min`}`);
+    else if (ok(a)) bits.push(`pendant la marche, ${pulsed() ? `réglage maintenu à la position ${fr(a)}` : `débit maintenu à ${fr(a)} L/min`}`);
+    out.push(`Titration de l'oxygène à l'effort${o2dev() ? ` (dispositif ${o2dev()})` : ''}${bits.length ? ' : ' + bits.join(' ; ') : ''}.`);
+  }
+  if (c.pr) {
+    out.push(`Distance parcourue de ${Math.round(c.dist)} m, soit ${c.pct} % de la valeur attendue : capacité de marche ${c.dist < c.pr.lin ? 'diminuée' : 'dans les limites de la normale'}.`);
+    if (c.pr.outOfRange) out.push("Âge hors de la population de référence des équations (40 à 80 ans).");
+  } else if (c.dist > 0) out.push(`Distance parcourue de ${Math.round(c.dist)} m.`);
+  if (ok(c.sRest) && ok(c.nadir)) {
+    const sous = o2 ? (o2dev() && !titr() ? ` sous oxygène pulsé (dispositif ${o2dev()})` : ' sous oxygène') : '';
+    out.push(ok(desat) && desat >= 4
+      ? `Désaturation significative à l'effort${sous}, de ${fr(c.sRest)} % au repos à ${fr(c.nadir)} % au plus bas.`
+      : `Pas de désaturation significative à l'effort${sous} (SpO2 de ${fr(c.sRest)} % à ${fr(c.nadir)} %).`);
+  }
+  if (o2 && o2changes.length && !titr()) {
+    const a = num('o2debit'), b = o2At(Infinity);
+    if (ok(a) && ok(b) && a !== b) {
+      const sens = b > a ? 'augmenté' : 'diminué';
+      out.push(pulsed() ? `Réglage d'oxygène ${sens} pendant la marche, de la position ${fr(a)} à ${fr(b)}.` : `Débit d'oxygène ${sens} pendant la marche, de ${fr(a)} à ${fr(b)} L/min.`);
+    }
+  }
+  const sy = symptoms();
+  const borgEnd = id => $(id).value === '' ? '' : `, cotée ${fr(parseFloat($(id).value))} sur 10 en fin de test`;
+  if (sy.includes('dyspnée')) out.push(`Dyspnée limitante${borgEnd('borgD1')}.`);
+  if (sy.includes('fatigue des membres inférieurs')) out.push(`Fatigue des membres inférieurs limitante${borgEnd('borgF1')}.`);
+  const other = sy.filter(v => v !== 'dyspnée' && v !== 'fatigue des membres inférieurs');
+  if (other.length) out.push(`Symptôme${other.length > 1 ? 's' : ''} limitant${other.length > 1 ? 's' : ''} : ${other.join(', ')}.`);
+  const hemo = [];
+  if (ok(c.fRest) && ok(c.fEnd)) hemo.push(`fréquence cardiaque de ${fr(c.fRest)} à ${fr(c.fEnd)}/min${ok(c.fPeak) && ok(c.fmt) ? ` (${Math.round(c.fPeak / c.fmt * 100)} % de la FMT théorique)` : ''}`);
+  const ta0 = taStr('ta0s', 'ta0d'), ta1 = taStr('ta1s', 'ta1d');
+  if (ta0 && ta1) hemo.push(`pression artérielle de ${ta0.replace(' mmHg', '')} à ${ta1}`);
+  if (hemo.length) out.push(`${cap(hemo.join(', '))}.`);
+  const fin = [];
+  if (stopReason) fin.push(`test interrompu à ${Math.floor(endT / 60)} min ${String(Math.round(endT % 60)).padStart(2, '0')} s pour ${stopReason}`);
+  if (pauses.length) fin.push(pauses.length === 1 ? `un arrêt de ${Math.round(pauseTotal())} s` : `${pauses.length} arrêts, ${Math.round(pauseTotal())} s au total`);
+  const rec = num('spo2Rec'), rec3 = num('spo2Rec3'), up = v => ok(c.sEnd) && v > c.sEnd ? 'remontée ' : '';
+  if (ok(rec) && ok(rec3)) fin.push(`SpO2 ${up(rec)}à ${fr(rec)} % après une minute et à ${fr(rec3)} % après trois minutes de récupération`);
+  else if (ok(rec)) fin.push(`SpO2 ${up(rec)}à ${fr(rec)} % après une minute de récupération`);
+  else if (ok(rec3)) fin.push(`SpO2 ${up(rec3)}à ${fr(rec3)} % après trois minutes de récupération`);
+  if (fin.length) out.push(`${cap(fin.join(' ; '))}.`);
+  return out.join(' ');
+}
+
+const xesc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const utf8 = s => new TextEncoder().encode(s);
+const pad2 = n => String(n).padStart(2, '0');
+
+const CRC_TABLE = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(b) { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC_TABLE[(c ^ b[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function zip(files) {
+  const parts = [], central = []; let off = 0;
+  for (const f of files) {
+    const name = utf8(f.name), crc = crc32(f.data), n = f.data.length;
+    const h = new DataView(new ArrayBuffer(30));
+    h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true);
+    h.setUint16(12, 0x21, true); // 1er janvier 1980 : la date n'a pas d'importance
+    h.setUint32(14, crc, true); h.setUint32(18, n, true); h.setUint32(22, n, true); h.setUint16(26, name.length, true);
+    parts.push(new Uint8Array(h.buffer), name, f.data);
+    const c = new DataView(new ArrayBuffer(46));
+    c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true);
+    c.setUint16(14, 0x21, true); c.setUint32(16, crc, true); c.setUint32(20, n, true); c.setUint32(24, n, true);
+    c.setUint16(28, name.length, true); c.setUint32(42, off, true);
+    central.push(new Uint8Array(c.buffer), name);
+    off += 30 + name.length + n;
+  }
+  const cdSize = central.reduce((a, p) => a + p.length, 0);
+  const e = new DataView(new ArrayBuffer(22));
+  e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true);
+  e.setUint32(12, cdSize, true); e.setUint32(16, off, true);
+  const all = [...parts, ...central, new Uint8Array(e.buffer)];
+  const out = new Uint8Array(all.reduce((a, p) => a + p.length, 0));
+  let p = 0; for (const a of all) { out.set(a, p); p += a.length; }
+  return out;
+}
+
+// Courbes : le SVG de l'écran, passé en noir et gris pour l'impression, rendu en PNG.
+const PRINT = { '--band': '#e0e0e0', '--rec': '#f2f2f2', '--ink': '#000000', '--spo2': '#000000', '--fc': '#000000', '--line': '#d9d9d9', '--muted': '#595959', '--alert': '#808080', '--surface': '#ffffff', '--f-num': 'Arial, Helvetica, sans-serif' };
+function svgPng(markup, cw = 960, ch = 390) {
+  return new Promise(resolve => {
+    const xml = markup.replace(/var\((--[\w-]+)\)/g, (m, v) => PRINT[v] || '#000000')
+      .replace('<svg ', `<svg font-family="${PRINT['--f-num']}" `);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+        const g = cv.getContext('2d'); g.fillStyle = '#ffffff'; g.fillRect(0, 0, cw, ch); g.drawImage(img, 0, 0, cw, ch);
+        cv.toBlob(b => b ? b.arrayBuffer().then(a => resolve(new Uint8Array(a)), () => resolve(null)) : resolve(null), 'image/png');
+      } catch (e) { resolve(null); }
+    };
+    img.onerror = () => resolve(null);
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml);
+  });
+}
+
+// Briques WordprocessingML (unités : twips pour la mise en page, EMU pour les images).
+// Mise en forme de compte rendu : noir et gris uniquement, tableaux à filets horizontaux.
+const tw = mm => Math.round(mm * 56.693), emu = mm => Math.round(mm * 36000);
+const PAGE_W = 11906, MARGIN = 1134, BODY_W = PAGE_W - 2 * MARGIN;
+const GREY = '595959';
+const run = (t, o = {}) => `<w:r><w:rPr>${o.b ? '<w:b/>' : ''}${o.i ? '<w:i/>' : ''}${o.color ? `<w:color w:val="${o.color}"/>` : ''}${o.sz ? `<w:sz w:val="${o.sz}"/><w:szCs w:val="${o.sz}"/>` : ''}</w:rPr><w:t xml:space="preserve">${xesc(t)}</w:t></w:r>`;
+const para = (runs, o = {}) => `<w:p><w:pPr>${o.keep ? '<w:keepNext/>' : ''}${o.pageBreak ? '<w:pageBreakBefore/>' : ''}${o.rule ? '<w:pBdr><w:bottom w:val="single" w:sz="6" w:space="2" w:color="000000"/></w:pBdr>' : ''}<w:spacing w:before="${o.before ?? 0}" w:after="${o.after ?? 80}"/>${o.jc ? `<w:jc w:val="${o.jc}"/>` : ''}</w:pPr>${[].concat(runs).join('')}</w:p>`;
+const P = (t, o = {}) => para(run(t, o), o);
+const H = t => para(run(t, { b: true, sz: 21 }), { before: 260, after: 100, keep: true, rule: true });
+const SIDES = ['top', 'left', 'bottom', 'right', 'insideH', 'insideV'];
+const RULES = `<w:tblBorders>${SIDES.map(s => `<w:${s} w:val="single" w:sz="4" w:space="0" w:color="000000"/>`).join('')}</w:tblBorders>`;
+const NOBORDER = `<w:tblBorders>${SIDES.map(s => `<w:${s} w:val="nil"/>`).join('')}</w:tblBorders>`;
+const HEADRULE = '<w:tcBorders><w:bottom w:val="single" w:sz="6" w:space="0" w:color="000000"/></w:tcBorders>';
+const cell = (content, w, o = {}) => `<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>${o.borders || ''}${o.vAlign ? `<w:vAlign w:val="${o.vAlign}"/>` : ''}</w:tcPr>${content || '<w:p/>'}</w:tc>`;
+const tr = (cells, o = {}) => `<w:tr>${o.h || o.hdr ? `<w:trPr><w:cantSplit/>${o.h ? `<w:trHeight w:val="${o.h}" w:hRule="${o.hRule || 'exact'}"/>` : ''}${o.hdr ? '<w:tblHeader/>' : ''}</w:trPr>` : '<w:trPr><w:cantSplit/></w:trPr>'}${cells.join('')}</w:tr>`;
+const tbl = (rows, widths, o = {}) => `<w:tbl><w:tblPr><w:tblW w:w="${widths.reduce((a, b) => a + b, 0)}" w:type="dxa"/>${o.borders ?? RULES}<w:tblLayout w:type="fixed"/><w:tblCellMar><w:top w:w="50" w:type="dxa"/><w:left w:w="80" w:type="dxa"/><w:bottom w:w="50" w:type="dxa"/><w:right w:w="80" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>${widths.map(w => `<w:gridCol w:w="${w}"/>`).join('')}</w:tblGrid>${rows.join('')}</w:tbl>`;
+const cols = fr => { const w = fr.map(f => Math.round(f * BODY_W)); w[w.length - 1] += BODY_W - w.reduce((a, b) => a + b, 0); return w; };
+// Tableau à filets : ligne d'en-tête en gras soulignée, lignes de données séparées par un filet gris.
+const ruled = (head, rows, widths) => tbl([
+  tr(head.map((t, i) => cell(P(t, { b: true, after: 0 }), widths[i], { borders: HEADRULE })), { hdr: true }),
+  ...rows.map(r => tr(r.map((t, i) => cell(P(t, { after: 0 }), widths[i]))))
+], widths);
+const picture = (n, wmm, hmm) => `<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${emu(wmm)}" cy="${emu(hmm)}"/><wp:docPr id="${n}" name="Figure ${n}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${n}" name="figure${n}.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rIdImg${n}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${emu(wmm)}" cy="${emu(hmm)}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`;
+const field = code => `<w:r><w:rPr><w:sz w:val="16"/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:sz w:val="16"/></w:rPr><w:instrText xml:space="preserve"> ${code} </w:instrText></w:r><w:r><w:rPr><w:sz w:val="16"/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:sz w:val="16"/></w:rPr><w:t>1</w:t></w:r><w:r><w:rPr><w:sz w:val="16"/></w:rPr><w:fldChar w:fldCharType="end"/></w:r>`;
+
+
+// Vitesse : globale (durée totale) et pendant la marche (arrêts exclus) ; vitesse de chaque aller sans ses arrêts.
+function pauseWithin(a, b) { return pauses.reduce((sum, p) => sum + Math.max(0, Math.min(b, p.e ?? endT) - Math.max(a, p.s)), 0); }
+function speedStats(dist) {
+  const walk = endT - pauseTotal();
+  if (!(endT > 0) || !(walk > 0)) return null;
+  return { total: endT, walk, mTot: dist / endT * 60, kmhTot: dist / endT * 3.6, mWalk: dist / walk * 60, kmhWalk: dist / walk * 3.6 };
+}
+function speedSegments() {
+  const segs = []; let prev = 0;
+  const add = (a, b, metres) => { const w = (b - a) - pauseWithin(a, b); if (w >= 1 && metres > 0) segs.push({ a, b, v: metres / w * 60 }); };
+  lapTimes.forEach(t => { if (t > prev) add(prev, t, corridor()); prev = t; });
+  return segs;
+}
+function speedSvg(st, dim = {}) {
+  // Un point par aller (au milieu de l'aller), relié comme les courbes de SpO2 et de FC ; en km/h.
+  const segs = speedSegments().map(sg => ({ t: (sg.a + sg.b) / 2, v: sg.v * 0.06 }));
+  if (!segs.length) return null;
+  const W = dim.W || 320, H = dim.H || 130, L = 30, R = 10, T = 8, B = 22, fs = dim.fs || 10, xMax = dim.xMax || 6;
+  const walk = st ? st.kmhWalk : 0, tot = st ? st.kmhTot : 0;
+  const both = st && pauses.length && Math.abs(walk - tot) > 0.05;
+  const hi = Math.max(2, Math.ceil(Math.max(...segs.map(sg => sg.v), walk) + 0.5)), step = hi > 8 ? 2 : 1;
+  const x = sec => L + Math.min(sec / 60, 6) / xMax * (W - L - R), y = v => T + (hi - v) / hi * (H - T - B);
+  let g = '';
+  pauses.forEach(p => { const e = p.e ?? endT; if (e > p.s) g += `<rect x="${x(p.s)}" y="${T}" width="${Math.max(1, x(e) - x(p.s))}" height="${H - T - B}" fill="var(--band)"/>`; });
+  for (let v = 0; v <= hi; v += step) g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L - 5}" y="${y(v) + 3.5}" text-anchor="end" fill="var(--muted)" font-size="${fs}">${v}</text>`;
+  for (let t = 0; t <= 6; t++) g += `<text x="${x(t * 60)}" y="${H - 7}" text-anchor="middle" fill="var(--muted)" font-size="${fs}">${t}</text>`;
+  if (st) g += `<line x1="${L}" x2="${W - R}" y1="${y(walk)}" y2="${y(walk)}" stroke="var(--alert)" stroke-dasharray="5 3" stroke-width="1.2"/>`;
+  if (both) g += `<line x1="${L}" x2="${W - R}" y1="${y(tot)}" y2="${y(tot)}" stroke="var(--muted)" stroke-dasharray="1.5 2.5" stroke-width="1.2"/>`;
+  if (segs.length > 1) g += `<polyline fill="none" stroke="var(--fc)" stroke-width="2" points="${segs.map(sg => `${x(sg.t)},${y(sg.v)}`).join(' ')}"/>`;
+  segs.forEach(sg => { g += `<circle cx="${x(sg.t)}" cy="${y(sg.v)}" r="3.5" fill="var(--fc)"/>`; });
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">${g}</svg>`;
+}
+
+// Figure polygraphique : une piste par paramètre (SpO2, FC, vitesse, débit d'O2 si présent), empilées,
+// un seul axe du temps ; repères de minutes, trait de fin et bandes d'arrêt sur toute la hauteur.
+function polySvg(c, st) {
+  const has3 = c.rec3 && (ok(c.rec3.s) || ok(c.rec3.f));
+  const W = 640, L = 70, PR = 460, LEG = 476, fs = 11, xMax = has3 ? endT / 60 + 3.4 : 7;
+  const x = min => L + Math.min(min, xMax) / xMax * (PR - L);
+  const endMin = endT / 60, air = $('o2mode').value === 'air';
+  const lanes = [{ k: 's', name: 'SpO2', unit: '%', h: 72 }, { k: 'f', name: 'FC', unit: '/min', h: 72 }, { k: 'v', name: 'Vitesse', unit: 'km/h', h: 62 }];
+  if (!air) lanes.push({ k: 'o', name: 'O2', unit: pulsed() ? 'réglage' : 'L/min', h: 44 });
+  let y0 = 4; lanes.forEach(l => { l.top = y0; y0 += l.h; l.bot = y0; });
+  const top = 4, bot = y0, H = bot + 34;
+  let g = '';
+  // Fond : récupération grisée, arrêts sur toute la hauteur, repères de minutes.
+  const recEnd = PR;
+  g += `<rect x="${x(endMin)}" y="${top}" width="${recEnd - x(endMin)}" height="${bot - top}" fill="var(--rec)"/>`;
+  pauses.forEach(p => { const e = (p.e ?? endT) / 60; if (e > p.s / 60) g += `<rect x="${x(p.s / 60)}" y="${top}" width="${Math.max(1.5, x(e) - x(p.s / 60))}" height="${bot - top}" fill="var(--band)"/>`; });
+  for (let t = 1; t <= 6; t++) g += `<line x1="${x(t)}" x2="${x(t)}" y1="${top}" y2="${bot}" stroke="var(--line)" stroke-width="1"/>`;
+  lanes.forEach((l, i) => { if (i) g += `<line x1="${L}" x2="${PR}" y1="${l.top}" y2="${l.top}" stroke="var(--ink)" stroke-width="0.6"/>`; });
+  g += `<rect x="${L}" y="${top}" width="${PR - L}" height="${bot - top}" fill="none" stroke="var(--ink)" stroke-width="0.8"/>`;
+  const label = (l) => `<text x="${L - 6}" y="${(l.top + l.bot) / 2 - 2}" text-anchor="end" font-size="${fs}" font-weight="bold" fill="var(--ink)">${l.name}</text><text x="${L - 6}" y="${(l.top + l.bot) / 2 + 11}" text-anchor="end" font-size="${fs - 1}" fill="var(--muted)">${l.unit}</text>`;
+  const legend = (l, lines) => lines.map((t, i) => `<text x="${LEG}" y="${l.top + 16 + i * 13}" font-size="${fs - 1}" fill="var(--muted)">${t}</text>`).join('');
+  // Points d'une série : valeur écrite au-dessus de chaque point (ou au-dessous si la place manque).
+  const series = (l, pts, recs, every = 1, extra = []) => {
+    const vals = pts.map(p => p.v).concat(recs.map(r => r.v)).concat(extra);
+    let lo = Math.min(...vals), hi = Math.max(...vals); if (hi - lo < 4) { lo -= 2; hi += 2; }
+    const y = v => l.bot - 12 - (v - lo) / (hi - lo) * (l.h - 30);
+    let s = '';
+    if (pts.length > 1) s += `<polyline fill="none" stroke="var(--ink)" stroke-width="1.6" points="${pts.map(p => `${x(p.t)},${y(p.v)}`).join(' ')}"/>`;
+    if (recs.length && pts.length) s += `<polyline fill="none" stroke="var(--ink)" stroke-width="1.2" stroke-dasharray="3 3" points="${[pts[pts.length - 1], ...recs].map(p => `${x(p.t)},${y(p.v)}`).join(' ')}"/>`;
+    const minV = Math.min(...pts.map(p => p.v));
+    pts.forEach((p, i) => {
+      s += `<circle cx="${x(p.t)}" cy="${y(p.v)}" r="3" fill="var(--ink)"/>`;
+      if (i % every === 0 || p.v === minV || i === pts.length - 1) {
+        const yy = y(p.v) - 6 < l.top + 14 ? y(p.v) + 15 : y(p.v) - 6;
+        const atEnd = Math.abs(x(p.t) - x(endMin)) < 3, atStart = i === 0 && x(p.t) - L < 8; // ni sur le trait de fin, ni sur le bord gauche
+        s += `<text x="${atEnd ? x(p.t) - 5 : atStart ? x(p.t) + 5 : x(p.t)}" y="${yy}" text-anchor="${atEnd ? 'end' : atStart ? 'start' : 'middle'}" font-size="${fs - 1}" fill="var(--ink)">${fr(p.v)}</text>`;
+      }
+    });
+    // Récupération : cercle vide, valeur écrite à gauche du cercle pour ne pas le recouvrir.
+    recs.forEach(r => { s += `<circle cx="${x(r.t)}" cy="${y(r.v)}" r="3" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.4"/><text x="${x(r.t) - 6}" y="${y(r.v) + 4}" text-anchor="end" font-size="${fs - 1}" fill="var(--ink)">${fr(r.v)}</text>`; });
+    return { s, y };
+  };
+  lanes.forEach(l => {
+    g += label(l);
+    if (l.k === 's' || l.k === 'f') {
+      // Mesures prises pendant les arrêts : tracées au début de l'arrêt, comme dans le bilan.
+      const pts = endOverride(c.pts.filter(p => ok(p[l.k])), l.k).concat(pauseVals.filter(p => ok(p[l.k]))).sort((a, b) => a.t - b.t).map(p => ({ t: p.t, v: p[l.k] }));
+      const recs = [c.rec, c.rec3].filter(r => r && ok(r[l.k])).map(r => ({ t: Math.min(r.t, xMax), v: r[l.k] }));
+      if (!pts.length) { g += `<text x="${(L + PR) / 2}" y="${(l.top + l.bot) / 2 + 4}" text-anchor="middle" font-size="${fs - 1}" fill="var(--muted)">Aucun relevé</text>`; return; }
+      const r = series(l, pts, recs, 1, []);
+      g += r.s;
+      if (l.k === 's') g += legend(l, ['Cercle vide : récupération']);
+    } else if (l.k === 'v') {
+      const pts = speedSegments().map(sg => ({ t: (sg.a + sg.b) / 120, v: Math.round(sg.v * 0.06 * 10) / 10 }));
+      if (!pts.length) { g += `<text x="${(L + PR) / 2}" y="${(l.top + l.bot) / 2 + 4}" text-anchor="middle" font-size="${fs - 1}" fill="var(--muted)">Heures de passage non enregistrées</text>`; return; }
+      const r = series(l, pts, [], 2, st ? [st.kmhWalk] : []);
+      if (st) g += `<line x1="${L}" x2="${x(endMin)}" y1="${r.y(st.kmhWalk)}" y2="${r.y(st.kmhWalk)}" stroke="var(--alert)" stroke-dasharray="5 3" stroke-width="1"/>`;
+      g += r.s;
+      g += legend(l, ['Un point par aller', st ? `Tirets : moyenne ${fr(st.kmhWalk)} km/h` : '', pauses.length ? 'Bande grise : arrêt' : ''].filter(Boolean));
+    } else {
+      const v0 = num('o2debit'), steps = [{ t: 0, v: v0 }, ...o2changes.map(ch => ({ t: ch.t / 60, v: ch.v }))].filter(p => ok(p.v));
+      if (!steps.length) return;
+      const vals = steps.map(p => p.v), lo = Math.min(...vals), hi = Math.max(...vals);
+      const y = v => hi === lo ? (l.top + l.bot) / 2 + 4 : l.bot - 9 - (v - lo) / (hi - lo) * (l.h - 24);
+      let pts = []; steps.forEach((p, i) => { if (i) pts.push(`${x(p.t)},${y(steps[i - 1].v)}`); pts.push(`${x(p.t)},${y(p.v)}`); });
+      pts.push(`${PR},${y(steps[steps.length - 1].v)}`);
+      g += `<polyline fill="none" stroke="var(--ink)" stroke-width="2.2" points="${pts.join(' ')}"/>`;
+      steps.forEach((p, i) => { g += `<text x="${x(p.t) + 4}" y="${y(p.v) - 4}" font-size="${fs - 1}" fill="var(--ink)">${fr(p.v)}${i ? ` (${mmss(p.t * 60)})` : ''}</text>`; });
+      const rest = restSteps();
+      g += legend(l, rest.length ? ['Repos : ' + rest.slice(0, 2).map(st2 => `${fr(st2.s)} % à ${fr(st2.d)}`).join(', ') + (rest.length > 2 ? ',' : ''), rest.length > 2 ? rest.slice(2).map(st2 => `${fr(st2.s)} % à ${fr(st2.d)}`).join(', ') : ''].filter(Boolean) : ['Valeur appliquée']);
+    }
+  });
+  // Trait de fin et axe du temps.
+  g += `<line x1="${x(endMin)}" x2="${x(endMin)}" y1="${top}" y2="${bot}" stroke="var(--ink)" stroke-width="1.8"/>`;
+  for (let t = 0; t <= 6; t++) if (Math.abs(t - endMin) > 0.15) g += `<text x="${x(t)}" y="${bot + 14}" text-anchor="middle" font-size="${fs - 1}" fill="var(--muted)">${t}</text>`;
+  g += `<text x="${x(endMin)}" y="${bot + 14}" text-anchor="middle" font-size="${fs}" font-weight="bold" fill="var(--ink)">Fin${stopReason ? ' ' + mmss(endT) : ''}</text>`;
+  [[c.rec, '+1 min'], [c.rec3, '+3 min']].forEach(([r, lab]) => { if (r && (ok(r.s) || ok(r.f))) g += `<text x="${x(Math.min(r.t, xMax))}" y="${bot + 14}" text-anchor="middle" font-size="${fs - 1}" fill="var(--muted)">${lab}</text>`; });
+  g += `<text x="${(L + PR) / 2}" y="${bot + 29}" text-anchor="middle" font-size="${fs - 1}" fill="var(--muted)">Temps (min)</text>`;
+  return { svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">${g}</svg>`, W, H };
+}
+
+const testDate = () => new Date(t0 || Date.now());
+const testWhen = d => `${d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })} à ${d.getHours()} h ${pad2(d.getMinutes())}`;
+
+async function buildDocx() {
+  refresh();
+  const d = testDate(), dash = '—';
+  const raw = id => $(id).value.trim();
+  const opt = id => $(id).selectedOptions[0].textContent;
+  const cellv = v => ok(v) ? fr(v) : '';
+  const body = [];
+  const air = $('o2mode').value === 'air';
+
+  // En-tête : établissement et titre à gauche ; à droite, un espace vide (80 × 45 mm) pour l'étiquette du patient.
+  const LBL_W = tw(80), LEFT_W = BODY_W - LBL_W;
+  const head = [];
+  if (cfg.etab.trim()) head.push(P(cfg.etab.trim(), { b: true, sz: 20, after: 0 }));
+  if (cfg.service.trim()) head.push(P(cfg.service.trim(), { sz: 18, after: 0 }));
+  cfg.adresse.split('\n').map(l => l.trim()).filter(Boolean).forEach(l => head.push(P(l, { sz: 16, color: GREY, after: 0 })));
+  const isTitr = titr() && !air;
+  head.push(P(isTitr ? "Titration de l'oxygène à l'effort" : 'Test de marche de 6 minutes', { b: true, sz: 30, before: head.length ? 240 : 0, after: isTitr ? 0 : 40 }));
+  if (isTitr) head.push(P('Test de marche de 6 minutes', { sz: 20, color: GREY, after: 40 }));
+  head.push(P(`Examen du ${testWhen(d)}`, { sz: 20, after: 0 }));
+  body.push(tbl([tr([cell(head.join(''), LEFT_W), cell('', LBL_W)], { h: tw(45), hRule: 'atLeast' })], [LEFT_W, LBL_W], { borders: NOBORDER }));
+
+  // Conditions de réalisation, avant tout le reste : un encadré, intitulés en gras.
+  const half = cols([0.5, 0.5]);
+  const deb = raw('o2debit') || dash;
+  const ageTxt = [raw('age') && `${raw('age')} ans`, raw('taille') && `${raw('taille')} cm`, raw('poids') && `${raw('poids')} kg`].filter(Boolean).join(', ') || 'âge, taille et poids non renseignés';
+  const srcTxt = opt('o2src').toLowerCase().replace('le patient', sex === 'F' ? 'la patiente' : 'le patient');
+  const o2txt = air ? 'air ambiant' : `${opt('o2mode').toLowerCase()}, ${pulsed() ? `débit pulsé, réglage ${deb}${o2dev() ? `, dispositif ${o2dev()}` : ''}` : `débit continu, ${deb} L/min`}, ${srcTxt}`;
+  const aideTxt = $('aide').value === 'aucune' ? 'sans aide' : `avec ${opt('aide').toLowerCase()}`;
+  const line = (k, v) => para([run(`${k} : `, { b: true }), run(v)], { after: 40 });
+  body.push(H('Conditions'));
+  body.push(tbl([tr([cell(
+    line(sex === 'F' ? 'Patiente' : 'Patient', `${ageTxt}.`) +
+    line('Oxygène', `${o2txt}.`) +
+    line('Marche', `${aideTxt}, couloir de ${corridor()} m.`), BODY_W)])], [BODY_W]));
+
+  // Performance, juste après : le tableau le plus parlant.
+  const c = compute(), desat = ok(c.sRest) && ok(c.nadir) ? c.sRest - c.nadir : NaN, sp = speedStats(c.dist);
+  const sy = symptoms();
+  const perf = [
+    ['Distance', `${Math.round(c.dist)} m${c.pr ? `, soit ${c.pct} % de la valeur théorique (${c.pr.p} m ; limite inférieure ${c.pr.lin} m)` : ', valeur théorique non calculée (âge, taille ou poids manquant)'}`],
+    ['Vitesse', sp ? (pauses.length ? `${fr(sp.kmhTot)} km/h globale (${fr(sp.mTot)} m/min), ${fr(sp.kmhWalk)} km/h pendant la marche (${fr(sp.mWalk)} m/min)` : `${fr(sp.kmhTot)} km/h (${fr(sp.mTot)} m/min), sans arrêt`) : dash],
+    ['Oxygénation', ok(c.nadir) ? `Nadir ${c.nadir} %, ${!ok(desat) ? 'désaturation non calculée (SpO2 de repos manquante)' : desat > 0 ? `désaturation de ${desat} point${desat > 1 ? 's' : ''}` : 'sans désaturation'}` : dash],
+    ['Déroulement', `${$('endStatus').textContent} ${pauses.length ? `${pauses.length === 1 ? 'Un arrêt' : `${pauses.length} arrêts`}, ${Math.round(pauseTotal())} s au total.` : 'Aucun arrêt.'}`],
+    ['Symptômes limitants', sy.length ? sy.join(', ') : 'aucun rapporté']
+  ];
+  body.push(H('Performance'));
+  body.push(tbl(perf.map(([k, v]) => tr([cell(P(k, { b: true, after: 0 }), cols([0.24, 0.76])[0]), cell(P(v, { after: 0 }), cols([0.24, 0.76])[1])])), cols([0.24, 0.76])));
+
+  // Puis l'interprétation.
+  const parts = $('txt').value.split(/\n\s*\n/).map(t => t.trim()).filter(Boolean);
+  body.push(H('Synthèse'));
+  (parts[0] || '').split(/\n+/).filter(Boolean).forEach(l => body.push(P(l, { jc: 'both' })));
+
+  // Récapitulatif repos / fin / récupération (mêmes calculs que l'app).
+  const fmtPct = ok(c.fPeak) && ok(c.fmt) ? Math.round(c.fPeak / c.fmt * 100) : null;
+  const spoEnd = ok(c.sEnd) ? `${c.sEnd}${ok(c.nadir) && c.nadir < c.sEnd ? ` (nadir ${c.nadir})` : ''}` : (ok(c.nadir) ? `nadir ${c.nadir}` : '');
+  const fcEnd = ok(c.fEnd) ? `${c.fEnd}${ok(c.fPeak) && c.fPeak > c.fEnd ? ` (max ${c.fPeak}` : ''}${fmtPct != null ? `${ok(c.fPeak) && c.fPeak > c.fEnd ? ', ' : ' ('}${fmtPct} % FMT)` : (ok(c.fPeak) && c.fPeak > c.fEnd ? ')' : '')}` : '';
+  const taCell = (sId, dId) => (taStr(sId, dId) || '').replace(' mmHg', '');
+  const bg = id => $(id).value === '' ? '' : fr(parseFloat($(id).value));
+  const recap = [
+    ['SpO2 (%)', cellv(c.sRest), spoEnd, cellv(num('spo2Rec'))],
+    ['Fréquence cardiaque (/min)', cellv(c.fRest), fcEnd, cellv(num('fcRec'))],
+    ['Pression artérielle (mmHg)', taCell('ta0s', 'ta0d'), taCell('ta1s', 'ta1d'), taCell('taRs', 'taRd')],
+    ['Dyspnée (Borg)', bg('borgD0'), bg('borgD1'), ''],
+    ['Fatigue des membres inférieurs (Borg)', bg('borgF0'), bg('borgF1'), '']
+  ];
+  if (!air) recap.push([pulsed() ? 'Oxygène (réglage)' : 'Oxygène (L/min)', cellv(num('o2debit')), cellv(o2At(endT)), cellv(o2At(endT))]);
+  const has3 = ['spo2Rec3', 'fcRec3', 'taR3s', 'taR3d'].some(id => raw(id));
+  if (has3) {
+    const r3 = [cellv(num('spo2Rec3')), cellv(num('fcRec3')), taCell('taR3s', 'taR3d'), '', ''];
+    recap.forEach((row, i) => row.push(i < r3.length ? r3[i] : cellv(o2At(endT))));
+  }
+  body.push(H('Récapitulatif'));
+  body.push(ruled(['Paramètre', 'Repos', stopReason ? `Arrêt (${mmss(endT)})` : 'Fin du test', 'Récupération (1 min)', ...(has3 ? ['Récupération (3 min)'] : [])], recap, has3 ? cols([0.3, 0.14, 0.2, 0.18, 0.18]) : cols([0.36, 0.17, 0.27, 0.2])));
+
+  const methods = "Méthodes. Valeur théorique et limite inférieure de la normale selon Enright et Sherrill (1998), équations établies chez des adultes de 40 à 80 ans. FMT théorique : 220 moins l'âge. Dyspnée et fatigue : échelle de Borg CR10. Nadir : SpO2 la plus basse relevée pendant le test, arrêts compris. Désaturation significative : baisse d'au moins 4 points de SpO2 entre le repos et le nadir. Vitesse globale : distance rapportée à la durée du test ; vitesse de marche : distance rapportée à la durée hors arrêts.";
+
+  // Figure polygraphique : toutes les pistes dans un même cadre, un seul axe du temps.
+  const media = [];
+  const poly = polySvg(c, sp);
+  const png = await svgPng(poly.svg, 1600, Math.round(1600 * poly.H / poly.W));
+  const figW = Math.round(BODY_W / 56.693), figH = figW * poly.H / poly.W;
+  // Titre et figure ensemble en haut de la page 2 (le titre ne reste pas seul en bas de la page 1).
+  body.push(para(run('Évolution au cours du test', { b: true, sz: 21 }), { before: 0, after: 100, keep: true, rule: true, pageBreak: true }));
+  if (png) { media.push({ n: 1, png }); body.push(para(picture(1, figW, figH), { after: 0 })); }
+  else body.push(P('Figure non disponible.', { i: true, sz: 15 }));
+
+  // 6. Détail, présenté comme une feuille de surveillance : les minutes en colonnes.
+  const last = endT >= TEST ? 6 : Math.floor(endT / 60);
+  const heads = ['', 'Repos', ...Array.from({ length: last }, (_, i) => `${i + 1} min`), stopReason ? 'Arrêt' : 'Fin', has3 ? 'Récup. 1 min' : 'Récup.', ...(has3 ? ['Récup. 3 min'] : [])];
+  const rowOf = (label, ids) => [label, ...ids.map(id => raw(id))];
+  const minIds = f => Array.from({ length: last }, (_, i) => `m${i + 1}${f}`);
+  const det = [rowOf('SpO2 (%)', ['m0spo2', ...minIds('spo2'), 'spo2End', 'spo2Rec', ...(has3 ? ['spo2Rec3'] : [])]), rowOf('FC (/min)', ['m0fc', ...minIds('fc'), 'fcEnd', 'fcRec', ...(has3 ? ['fcRec3'] : [])])];
+  const firstW = Math.round(BODY_W * 0.17), restW = Math.floor((BODY_W - firstW) / (heads.length - 1));
+  const detW = [firstW, ...heads.slice(1).map(() => restW)];
+  body.push(H('Détail minute par minute'));
+  body.push(ruled(heads, det, detW));
+  const notes = [];
+  if (raw('nadirIn')) notes.push(`Nadir lu sur l'oxymètre : ${raw('nadirIn')} %.`);
+  notes.forEach(t => body.push(P(t, { before: 60, after: 0 })));
+
+  if (parts.length > 1) {
+    body.push(H('Synthèse détaillée'));
+    parts.slice(1).join('\n').split(/\n+/).filter(Boolean).forEach(l => body.push(P(l, { jc: 'both' })));
+  }
+
+  // Indices exploratoires du bilan (analysis(), premier bloc de script), mêmes valeurs ; les indices non calculables sont omis.
+  // Sources abrégées, reprises des textes du bilan (le détail reste dans le bilan), pour tenir dans les 2 pages.
+  const SRC = { 'Score ODDS': 'Nathan 2025', 'SpO2 à 1 min': 'García-Talavera 2023', 'Désaturation moyenne': 'Sunayama 2024',
+    'Réponse chronotrope': 'Holland 2013', 'Indice chronotrope': 'COPDGene 2022', 'Récupération de la FC à 1 min': 'Rezende 2022, COPDGene 2021',
+    'Produit distance × saturation': 'Gupta 2022', 'Travail de marche (6MWW)': 'Chuang 2001', 'Distance par minute': 'Dalgas 2014',
+    'Fatigabilité à la marche': 'Van Geel 2019', "Variabilité de l'allure": 'Huang 2023', 'Vitesse, 1re puis 2e moitié': 'Lancaster 2018' };
+  const explo = (typeof analysis === 'function' && S.stop ? analysis().explo : []).filter(r => r[1] !== null);
+  if (explo.length) {
+    // Tableau récapitulatif, trois indices par ligne (intitulé, valeur) ; sources dans l'encart Méthodes.
+    body.push(para(run('Indices exploratoires', { b: true, sz: 21 }), { before: 160, after: 80, keep: true, rule: true }));
+    const SHORT = { 'Récupération de la FC à 1 min': 'Récup. FC à 1 min', 'Produit distance × saturation': 'Distance × SpO2', 'Travail de marche (6MWW)': '6MWW',
+      'Vitesse, 1re puis 2e moitié': 'Vitesse 1re / 2e moitié', 'Fatigabilité à la marche': 'Fatigabilité', 'Distance par minute': 'Distance par min', 'Désaturation moyenne': 'Désat. moyenne' };
+    const xw = cols([0.19, 0.14, 0.19, 0.14, 0.20, 0.14]), rows = [], c = (t, b, w) => cell(P(SHORT[t] || t, { b, sz: 14, after: 0 }), w);
+    for (let i = 0; i < explo.length; i += 3) {
+      const r = [0, 1, 2].map(k => explo[i + k] || ['', '']);
+      rows.push(tr(r.flatMap((x, k) => [c(x[0], false, xw[2 * k]), c(x[1], true, xw[2 * k + 1])])));
+    }
+    body.push(tbl(rows, xw));
+  }
+
+  body.push(para('', { before: 40, after: 0 }));
+  body.push(tbl([tr([
+    cell(P(`Opérateur : ${cfg.operateur.trim() || '______________________'}`), half[0]),
+    cell(P('Signature :'), half[1])
+  ])], half, { borders: NOBORDER }));
+
+  const methodsAll = methods + (explo.length ? ' Indices exploratoires, descriptifs (repères établis dans d\'autres populations) : ' + Array.from(new Set(explo.map(r => SRC[r[0]]).filter(Boolean))).join(' ; ') + '.' : '');
+  // Encart Méthodes en bas de page : cadre ancré au bas de la dernière page, hors du flux du texte.
+  const box = ['top', 'left', 'bottom', 'right'].map(sd => `<w:${sd} w:val="single" w:sz="4" w:space="4" w:color="000000"/>`).join('');
+  body.push(`<w:p><w:pPr><w:framePr w:w="${BODY_W}" w:wrap="notBeside" w:vAnchor="margin" w:hAnchor="margin" w:yAlign="bottom"/><w:pBdr>${box}</w:pBdr><w:spacing w:before="0" w:after="0"/><w:jc w:val="both"/></w:pPr>${run(methodsAll, { sz: 14, color: GREY })}</w:p>`);
+
+  const XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+  const W_NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
+  const footLeft = [isTitr ? "Titration de l'oxygène à l'effort" : 'Test de marche de 6 minutes', testWhen(d), cfg.service.trim()].filter(Boolean).join(' – ');
+  const footer_xml = `${XML}<w:ftr ${W_NS}><w:p><w:pPr><w:pBdr><w:top w:val="single" w:sz="4" w:space="4" w:color="000000"/></w:pBdr><w:tabs><w:tab w:val="right" w:pos="${BODY_W}"/></w:tabs><w:spacing w:before="0" w:after="0"/></w:pPr>${run(footLeft, { sz: 16 })}<w:r><w:rPr><w:sz w:val="16"/></w:rPr><w:tab/></w:r>${run('Page ', { sz: 16 })}${field('PAGE')}${run(' sur ', { sz: 16 })}${field('NUMPAGES')}</w:p></w:ftr>`;
+  const document_xml = `${XML}<w:document ${W_NS} xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><w:body>${body.join('')}<w:sectPr><w:footerReference w:type="default" r:id="rIdFooter"/><w:pgSz w:w="${PAGE_W}" w:h="16838"/><w:pgMar w:top="1000" w:right="${MARGIN}" w:bottom="1000" w:left="${MARGIN}" w:header="500" w:footer="500" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+  const styles = `${XML}<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/><w:sz w:val="20"/><w:szCs w:val="20"/><w:lang w:val="fr-FR"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="80" w:line="264" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style><w:style w:type="table" w:default="1" w:styleId="TableNormal"><w:name w:val="Normal Table"/><w:tblPr><w:tblInd w:w="0" w:type="dxa"/><w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="108" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="108" w:type="dxa"/></w:tblCellMar></w:tblPr></w:style></w:styles>`;
+  const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+  const docRels = `${XML}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdStyles" Type="${REL}/styles" Target="styles.xml"/><Relationship Id="rIdFooter" Type="${REL}/footer" Target="footer1.xml"/>${media.map(m => `<Relationship Id="rIdImg${m.n}" Type="${REL}/image" Target="media/figure${m.n}.png"/>`).join('')}</Relationships>`;
+  const rootRels = `${XML}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${REL}/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>`;
+  const core = `${XML}<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>Compte rendu – Test de marche de 6 minutes</dc:title><dcterms:created xsi:type="dcterms:W3CDTF">${new Date().toISOString().replace(/\.\d+Z$/, 'Z')}</dcterms:created></cp:coreProperties>`;
+  const types = `${XML}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>`;
+  return zip([
+    { name: '[Content_Types].xml', data: utf8(types) },
+    { name: '_rels/.rels', data: utf8(rootRels) },
+    { name: 'docProps/core.xml', data: utf8(core) },
+    { name: 'word/document.xml', data: utf8(document_xml) },
+    { name: 'word/styles.xml', data: utf8(styles) },
+    { name: 'word/footer1.xml', data: utf8(footer_xml) },
+    { name: 'word/_rels/document.xml.rels', data: utf8(docRels) },
+    ...media.map(m => ({ name: `word/media/figure${m.n}.png`, data: m.png }))
+  ]);
+}
+
+
+function base64(u8) { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); }
+function mailParts() {
+  const d = testDate(), dd = `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()}`, hh = `${pad2(d.getHours())}h${pad2(d.getMinutes())}`;
+  const fill = t => String(t).replace(/\{date_longue\}/g, testWhen(d)).replace(/\{date\}/g, dd).replace(/\{heure\}/g, hh);
+  return {
+    filename: `TM6_${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}_${hh}.docx`,
+    subject: fill(cfg.mailSubject), body: fill(cfg.mailBody)
+  };
+}
+  /* ----- Fin de la reprise ----- */
+
+  const say = t => { const b = document.getElementById('sendBtn'); if (b) b.textContent = t; };
+  // Appelée par l'app native une fois le mail ou le partage terminé.
+  window.mailDone = r => {
+    say({ sent: 'Mail envoyé', saved: 'Brouillon enregistré dans Mail', cancelled: 'Envoi annulé', failed: "Échec de l'envoi", shared: 'Document partagé', unshared: 'Partage annulé' }[r] || 'Envoyer le compte rendu');
+    setTimeout(() => say('Envoyer le compte rendu'), 4000);
+  };
+  let pendingShare = null;
+  const shareFile = f => {
+    navigator.share({ files: [f.file], title: f.subject, text: f.body }).then(
+      () => window.mailDone('shared'),
+      e => {
+        if (e && e.name === 'NotAllowedError') { pendingShare = f; say('Toucher pour partager le document'); }
+        else window.mailDone('unshared');
+      });
+  };
+  return {
+    brief() { load(); const c = compute(); return buildBrief(c, ok(c.sRest) && ok(c.nadir) ? c.sRest - c.nadir : NaN); },
+    text() { load(); return reportText(); },
+    docx() { load(); return buildDocx(); },
+    async send() {
+      if (!S.stop) return;
+      // Version web : si le partage a été refusé faute de geste récent, ce second toucher partage le document déjà prêt.
+      if (pendingShare) { const f = pendingShare; pendingShare = null; shareFile(f); return; }
+      say('Préparation du document…');
+      let bytes;
+      try { load(); bytes = await buildDocx(); } catch (e) { say('Échec de la création du document'); return; }
+      const m = mailParts();
+      if (NATIVE) { native({ action: 'mail', to: String(cfg.mailTo).trim(), subject: m.subject, body: m.body, filename: m.filename, data: base64(bytes) }); return; }
+      const type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      let file = null;
+      try { file = new File([bytes], m.filename, { type }); } catch (e) { }
+      if (file && navigator.canShare && navigator.canShare({ files: [file] })) { shareFile({ file, subject: m.subject, body: m.body }); return; }
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }));
+      a.download = m.filename; a.click();
+      say('Document téléchargé');
+    }
+  };
+})();
+</script>
+
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');</script>
+</body></html>
