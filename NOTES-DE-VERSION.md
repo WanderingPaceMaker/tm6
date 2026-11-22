@@ -6,7 +6,7 @@
 
 L'application est disponible en anglais comme en français. Elle suit la langue de l'appareil, et un réglage « Langue » permet de choisir entre automatique, français et anglais. En anglais, les consignes, les encouragements et l'échelle de Borg sont ceux des normes d'origine : consignes et encouragements de la norme ERS/ATS de 2014 (tableaux 5 et 6), échelle de Borg modifiée de l'énoncé ATS de 2002 (tableau 2), et question posée après le test, tirée du même énoncé. Les synthèses et le compte rendu Word sont rédigés dans la langue de l'application. Le guide du premier test, la notice d'installation et l'exemple de compte rendu existent en anglais.
 
-Deux corrections de mise en page pendant une titration sous oxygène pulsé : sur iPhone en paysage, l'écran Conditions ne dépasse plus la hauteur de l'écran ; sur iPad en paysage, l'écran du test non plus quand l'alerte SpO2 s'affiche.
+Deux corrections de mise en page pendant une titration sous oxygène pulsé : sur iPhone en paysage, l'écran Conditions ne dépasse plus la hauteur de l'écran et la source d'oxygène s'affiche en entier ; sur iPad en paysage, l'écran du test tient aussi, jusqu'au champ du nadir lu sur l'oxymètre, qui passait sous le bas de l'écran.
 
 ## 22 novembre 2026 — documentation en anglais
 

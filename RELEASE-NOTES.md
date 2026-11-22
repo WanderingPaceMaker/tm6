@@ -6,7 +6,7 @@
 
 The app is available in English as well as in French. It follows the language of the device, and a "Language" setting chooses between automatic, French and English. In English, the instructions, the encouragement and the Borg scale are those of the original standards: instructions and encouragement from the ERS/ATS standard of 2014 (tables 5 and 6), modified Borg scale from the ATS statement of 2002 (table 2), and the post-test question of the same statement. The summaries and the Word report are written in the language of the app. The tutorial, the installation notice and the example report are available in English.
 
-Two layout fixes during an oxygen titration with pulsed oxygen: on iPhone in landscape, the Conditions screen no longer goes beyond the screen height; on iPad in landscape, neither does the Test screen when the SpO2 alert is shown.
+Two layout fixes during an oxygen titration with pulsed oxygen: on iPhone in landscape, the Conditions screen no longer goes beyond the screen height and the oxygen source is shown in full; on iPad in landscape, the Test screen fits as well, down to the field for the nadir read on the oximeter, which went under the bottom of the screen.
 
 ## 22 November 2026 — documentation in English
 

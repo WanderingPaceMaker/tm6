@@ -352,7 +352,7 @@ h1{font-size:28px;line-height:1.15;margin:20px 0 4px;text-wrap:balance}
   .bilan{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);grid-column-gap:28px;grid-template-areas:"fig syn" "fig usu" "exp exp";grid-template-rows:auto 1fr auto}
   .ixs{-webkit-column-count:2;column-count:2;-webkit-column-gap:28px;column-gap:28px}
   .clock .t{font-size:96px}
-  .lap{min-height:340px} /* 400 faisait dépasser la titration (bouton Oxygène) en 1180×820 */
+  .lap{min-height:290px} /* 340 laissait le champ du nadir sous la barre d'accueil (titration, 1180×820 avec les zones de sécurité) */
   .card{padding-top:10px;margin-bottom:6px}
   .f input{padding:9px 0;font-size:24px}
   .consignes{font-size:18px}
@@ -367,7 +367,7 @@ h1{font-size:28px;line-height:1.15;margin:20px 0 4px;text-wrap:balance}
 }
 @media (min-width:700px) and (orientation:landscape) and (max-height:800px){
   .clock .t{font-size:80px}
-  .lap{min-height:300px}
+  .lap{min-height:240px}
   .cols.rcp .choice .opt{font-size:14px;min-height:40px;padding:6px}
   .cols.rcp .showscale{padding:8px 10px;font-size:15px}
   .phrase{min-height:0;padding:6px 10px}
@@ -536,7 +536,7 @@ h1{font-size:28px;line-height:1.15;margin:20px 0 4px;text-wrap:balance}
   .f input{font-size:20px!important;padding:6px 0}
   .grid2,.grid3{grid-gap:8px}
   /* Conditions : trois listes par rangée, sinon l'O2 pulsé dépasse la hauteur. */
-  .grid2.sels{grid-template-columns:1fr 1.3fr 1fr;grid-row-gap:6px}
+  .grid2.sels{grid-template-columns:1fr 1.6fr 1fr;grid-row-gap:6px}
   .sels .wide{grid-column:auto}
   .grid4 .f input{font-size:18px!important}
   .hint{font-size:12px;margin-top:2px}
