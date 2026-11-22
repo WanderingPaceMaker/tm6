@@ -656,6 +656,9 @@ var LANG = (function () { var c = {}; try { c = JSON.parse(localStorage.getItem(
 var EN = LANG === 'en' || (LANG === 'auto' && !/^fr/i.test(String((navigator.languages && navigator.languages[0]) || navigator.language || 'fr')));
 function LG(f, e) { return EN ? e : f; }
 document.documentElement.lang = EN ? 'en' : 'fr';
+// Nom de l'app : TM6 en français, 6MWT (six-minute walk test) en anglais. Le nom proposé sous l'icône web reste TM6 :
+// Safari ne prend ni la balise apple-mobile-web-app-title ni un manifeste changés par la page (essai du 22 novembre 2026).
+if (EN) document.title = '6MWT';
 if (EN) { document.getElementById('gear').setAttribute('aria-label', 'Settings'); document.getElementById('runbar').textContent = 'Test in progress, back to the timer'; }
 var VAL_EN = { 'dyspnée': 'dyspnoea', 'fatigue des membres inférieurs': 'leg fatigue', 'douleur des membres inférieurs': 'leg pain', 'douleur thoracique': 'chest pain',
   'désaturation': 'desaturation', 'malaise ou vertiges': 'faintness or dizziness', 'décision de l\'opérateur': 'assessor\'s decision', 'refus de poursuivre': 'refusal to continue' };
@@ -2331,12 +2334,12 @@ async function buildDocx() {
 
 function base64(u8) { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); }
 function mailParts() {
-  const d = testDate(), dd = `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()}`, hh = `${pad2(d.getHours())}h${pad2(d.getMinutes())}`;
+  const d = testDate(), dd = `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()}`, hh = EN ? `${pad2(d.getHours())}:${pad2(d.getMinutes())}` : `${pad2(d.getHours())}h${pad2(d.getMinutes())}`;
   // {time} et {long_date} : équivalents anglais de {heure} et {date_longue}, acceptés dans les deux langues.
   const fill = t => String(t).replace(/\{(date_longue|long_date)\}/g, testWhen(d)).replace(/\{date\}/g, dd).replace(/\{(heure|time)\}/g, hh);
   return {
     // En anglais : abréviation anglaise (6MWT) et heure 10-18, « 10h18 » étant une notation française.
-    filename: (EN ? '6MWT_' : 'TM6_') + `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}_` + (EN ? `${pad2(d.getHours())}-${pad2(d.getMinutes())}` : hh) + '.docx',
+    filename: (EN ? '6MWT_' : 'TM6_') + `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}_` + (EN ? hh.replace(':', '-') : hh) + '.docx',
     subject: fill(cfg.mailSubject), body: fill(cfg.mailBody)
   };
 }

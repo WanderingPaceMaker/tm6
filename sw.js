@@ -1,6 +1,6 @@
 // Sans réseau : la page et ses fichiers viennent du cache. Avec réseau : le cache est servi tout de suite
 // et mis à jour en arrière-plan ; la nouvelle version s'affiche au lancement suivant.
-const CACHE = 'tm6-53b170bad4';
+const CACHE = 'tm6-d2981571a9';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-512.png',
   'AtkinsonHyperlegible-Regular.ttf', 'AtkinsonHyperlegible-Bold.ttf', 'AtkinsonHyperlegibleMono.ttf'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES))); self.skipWaiting(); });

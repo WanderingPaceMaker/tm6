@@ -2,7 +2,7 @@
 
 *[English](README.md) · Français*
 
-TM6 est une application web qui accompagne l'opérateur pendant un test de marche de 6 minutes ou une titration de l'oxygène à l'effort, puis produit un compte rendu Word prêt à être envoyé. Elle s'utilise sur iPad, iPhone ou téléphone Android, s'installe depuis le navigateur et fonctionne ensuite sans réseau. Son interface est en français ou en anglais : elle suit la langue de l'appareil, et un réglage permet de choisir la langue.
+TM6 est une application web qui accompagne l'opérateur pendant un test de marche de 6 minutes ou une titration de l'oxygène à l'effort, puis produit un compte rendu Word prêt à être envoyé. Elle s'utilise sur iPad, iPhone ou téléphone Android, s'installe depuis le navigateur et fonctionne ensuite sans réseau. Son interface est en français ou en anglais : elle suit la langue de l'appareil, et un réglage permet de choisir la langue. En anglais, elle s'appelle 6MWT, abréviation de *six-minute walk test*.
 
 **Ouvrir l'application : https://wanderingpacemaker.github.io/tm6/**
 

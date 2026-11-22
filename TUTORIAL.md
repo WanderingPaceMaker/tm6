@@ -1,8 +1,8 @@
-# First test with TM6
+# First test with 6MWT
 
 *English · [Français](TUTORIEL.md)*
 
-This guide walks through a first 6-minute walk test with TM6, from the settings to sending the report. The screenshots come from an iPhone; on iPad, the steps are the same, arranged in a column on the left of the screen. To install the app, see the [installation notice](Install-TM6.docx) or the "Install" section of the [README](README.md).
+This guide walks through a first 6-minute walk test with 6MWT, from the settings to sending the report. The screenshots come from an iPhone; on iPad, the steps are the same, arranged in a column on the left of the screen. To install the app, see the [installation notice](Install-6MWT.docx) or the "Install" section of the [README](README.md).
 
 The test runs in seven steps, numbered at the top of the screen. A number can be tapped at any time to go back and correct a value, including during the walk, and nothing blocks if a value is missing: calculations are redone as soon as it is entered.
 

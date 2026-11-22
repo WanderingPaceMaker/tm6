@@ -2,7 +2,7 @@
 
 *English · [Français](METHODES.md)*
 
-This page describes every value computed by TM6: its formula, the data it uses, the reason for the choice and the source. It follows the app code (`index.html`); if they disagree, the code prevails and this page must be corrected.
+This page describes every value computed by 6MWT: its formula, the data it uses, the reason for the choice and the source. It follows the app code (`index.html`); if they disagree, the code prevails and this page must be corrected.
 
 All measurements come from the assessor's input: SpO2 and heart rate (HR) read on the oximeter every minute, at the end of the test, during stops and during recovery; time of each passage at a cone; distance of the final partial length. The app receives no continuous oximeter recording. Calculations are redone after every change, and a value whose data are missing is not shown.
 
@@ -29,7 +29,7 @@ Until a cone is reached, partial metres are measured from the starting line and 
 
 ## Predicted distance and lower limit of normal
 
-TM6 uses the Enright and Sherrill equations, established in 117 healthy men and 173 healthy women aged 40 to 80 years, for subjects taking the test for the first time. Height is in centimetres, weight in kilograms and age in years.
+6MWT uses the Enright and Sherrill equations, established in 117 healthy men and 173 healthy women aged 40 to 80 years, for subjects taking the test for the first time. Height is in centimetres, weight in kilograms and age in years.
 
 > men: 7.57 × height − 5.02 × age − 1.76 × weight − 309
 >

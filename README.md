@@ -1,8 +1,8 @@
-# TM6 — 6-minute walk test
+# 6MWT — 6-minute walk test
 
 *English · [Français](README.fr.md)*
 
-TM6 is a web app that guides the assessor through a 6-minute walk test or an exertional oxygen titration, then produces a Word report ready to be sent. It runs on iPad, iPhone or Android phones, installs from the browser and then works offline. Its interface is in French or English: it follows the language of the device, and a setting chooses the language.
+6MWT, called TM6 in its French version, is a web app that guides the assessor through a 6-minute walk test or an exertional oxygen titration, then produces a Word report ready to be sent. It runs on iPad, iPhone or Android phones, installs from the browser and then works offline. Its interface is in French or English: it follows the language of the device, and a setting chooses the language.
 
 **Open the app: https://wanderingpacemaker.github.io/tm6/**
 
@@ -42,10 +42,10 @@ Example produced by the app from its demonstration test (fictitious patient, emp
 
 The app installs from the browser, with no app store and no account.
 
-- **iPhone and iPad**: open the address in Safari, tap the Share button, then "Add to Home Screen".
+- **iPhone and iPad**: open the address in Safari, tap the Share button, then "Add to Home Screen". Safari suggests the name TM6, which can be replaced by 6MWT before tapping "Add".
 - **Android**: open the address in Chrome, then choose "Install app" or "Add to Home screen" from the menu.
 
-A one-page printable notice with a QR code to the app is available as a Word file: [Install-TM6.docx](Install-TM6.docx).
+A one-page printable notice with a QR code to the app is available as a Word file: [Install-6MWT.docx](Install-6MWT.docx).
 
 The first launch must be online so that the app can be stored on the device; it then works without a connection. When a new version is published, it is picked up at the next launch.
 
