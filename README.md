@@ -4,6 +4,8 @@ TM6 est une application web qui accompagne l'opérateur pendant un test de march
 
 **Ouvrir l'application : https://wanderingpacemaker.github.io/tm6/**
 
+Pour un premier test, suivre le [guide pas à pas](TUTORIEL.md), illustré de captures d'écran.
+
 <p>
   <img src="captures/test.png" alt="Écran du test : chronomètre, relevés minute par minute, couloir dessiné et bouton de comptage des allers" width="300">
   &nbsp;
