@@ -12,8 +12,6 @@ Pour un premier test, suivre le [guide pas à pas](TUTORIEL.md), illustré de ca
   <img src="captures/bilan.png" alt="Bilan : distance, SpO2 la plus basse, FC la plus haute, vitesse de marche et courbes du test" width="300">
 </p>
 
-> **Avertissement.** TM6 est un outil personnel de travail, développé par un clinicien pour son propre usage. Ce n'est pas un dispositif médical marqué CE. Les calculs et les textes produits ne remplacent pas le jugement du médecin qui interprète le test ; le compte rendu doit être relu avant d'être envoyé.
-
 ## Ce que fait l'application
 
 Le test se déroule en sept étapes, toujours accessibles depuis la barre du haut, si bien qu'on peut revenir corriger une donnée à tout moment, y compris pendant la marche. Aucune donnée manquante ne bloque le parcours : les calculs se refont dès qu'elle est saisie.
