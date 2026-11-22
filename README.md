@@ -42,7 +42,7 @@ Example produced by the app from its demonstration test (fictitious patient, emp
 
 The app installs from the browser, with no app store and no account.
 
-- **iPhone and iPad**: open the address in Safari, tap the Share button, then "Add to Home Screen". Safari suggests the name TM6, which can be replaced by 6MWT before tapping "Add".
+- **iPhone and iPad**: open the address in Safari, tap the Share button, then "Add to Home Screen".
 - **Android**: open the address in Chrome, then choose "Install app" or "Add to Home screen" from the menu.
 
 A one-page printable notice with a QR code to the app is available as a Word file: [Install-6MWT.docx](Install-6MWT.docx).

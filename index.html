@@ -2,11 +2,12 @@
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="TM6">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#edf1ed">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icon-180.png">
+<script>(function () { var c = {}; try { c = JSON.parse(localStorage.getItem("tm6-config")) || {}; } catch (e) { }
+var en = c.lang === "en" || (c.lang !== "fr" && !/^fr/i.test(String((navigator.languages && navigator.languages[0]) || navigator.language || "fr")));
+document.write(en ? '<meta name="apple-mobile-web-app-title" content="6MWT"><link rel="manifest" href="manifest-en.webmanifest"><link rel="apple-touch-icon" href="icon-en-180.png">'
+  : '<meta name="apple-mobile-web-app-title" content="TM6"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png">'); })();</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>TM6</title>
 <style>
@@ -656,8 +657,8 @@ var LANG = (function () { var c = {}; try { c = JSON.parse(localStorage.getItem(
 var EN = LANG === 'en' || (LANG === 'auto' && !/^fr/i.test(String((navigator.languages && navigator.languages[0]) || navigator.language || 'fr')));
 function LG(f, e) { return EN ? e : f; }
 document.documentElement.lang = EN ? 'en' : 'fr';
-// Nom de l'app : TM6 en français, 6MWT (six-minute walk test) en anglais. Le nom proposé sous l'icône web reste TM6 :
-// Safari ne prend ni la balise apple-mobile-web-app-title ni un manifeste changés par la page (essai du 22 novembre 2026).
+// Nom de l'app : TM6 en français, 6MWT (six-minute walk test) en anglais. Le nom et l'icône de l'écran d'accueil sont
+// choisis plus tôt, dans l'en-tête écrit par tools/maquette/build.py : Safari ignore ces balises si elles changent ici.
 if (EN) document.title = '6MWT';
 if (EN) { document.getElementById('gear').setAttribute('aria-label', 'Settings'); document.getElementById('runbar').textContent = 'Test in progress, back to the timer'; }
 var VAL_EN = { 'dyspnée': 'dyspnoea', 'fatigue des membres inférieurs': 'leg fatigue', 'douleur des membres inférieurs': 'leg pain', 'douleur thoracique': 'chest pain',
