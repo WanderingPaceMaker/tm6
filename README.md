@@ -28,6 +28,8 @@ Le chronomètre ne part qu'au **départ**. Pendant le **test**, l'opérateur com
 
 Le document est transmis par la feuille de partage du système : on choisit Mail, Fichiers ou toute autre application.
 
+Exemple, produit par l'application à partir de son test de démonstration (patiente fictive, en-tête laissé vide) : [compte rendu Word](exemples/compte-rendu-exemple.docx), et la même chose [en PDF](exemples/compte-rendu-exemple.pdf) pour le lire directement dans GitHub.
+
 ## Installer
 
 L'application s'installe depuis le navigateur, sans magasin d'applications ni compte.
