@@ -52,6 +52,8 @@ L'application suit la norme technique ERS/ATS de 2014, et l'énoncé de l'ATS de
 - Enright PL, Sherrill DL. Reference equations for the six-minute walk in healthy adults. *Am J Respir Crit Care Med* 1998;158:1384-7. doi:10.1164/ajrccm.158.5.9710086 — distance théorique et limite inférieure de la normale, établies chez des adultes de 40 à 80 ans.
 - Nathan SD, et al. *Eur Respir J* 2025;66:2402565. doi:10.1183/13993003.02565-2024 — score ODDS, affiché dans le bilan pour la fibrose pulmonaire idiopathique seulement.
 
+Le détail de chaque calcul (formule, données utilisées, raison du choix et source) est dans [METHODES.md](METHODES.md).
+
 Les autres indices exploratoires du bilan sont descriptifs : leurs repères ont été établis dans d'autres populations et ne donnent lieu à aucun verdict. Chacun est affiché avec sa formule et sa source (auteur et année), que l'encart Méthodes du compte rendu reprend.
 
 ## Fichiers
