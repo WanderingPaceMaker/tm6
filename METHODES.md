@@ -116,7 +116,7 @@ Dans l'insuffisance cardiaque du sujet âgé, une désaturation moyenne d'au moi
 
 Elle entre dans l'indice DSC proposé dans les pneumopathies interstitielles (Kchaou et al., *Sarcoidosis Vasc Diffuse Lung Dis* 2025, doi:10.36141/svdld.v42i1.13949). Elle n'est pas interprétable sous bêtabloquant.
 
-- **Référence non vérifiée** : le repère affiché dans l'application (moins de 20 /min, associé à la survie dans les PID) est attribué à « Holland, 2013 ». Cette référence n'a pas été contrôlée.
+- Source du repère : Holland AE, Hill CJ, Glaspole I, et al. Impaired chronotropic response to 6-min walk test and reduced survival in interstitial lung disease. *Respir Med* 2013;107:1066-72. doi:10.1016/j.rmed.2013.04.002. Chez 62 patients atteints de PID (dont 40 FPI), sans bêtabloquant ni insuffisance cardiaque, une réponse chronotrope inférieure à 20 /min prédisait le décès à quatre ans (odds ratio 10,7), indépendamment de la désaturation et de la CVF. La réponse y est définie comme ici, FC pic moins FC de repos. Vérifié sur le résumé (PubMed).
 
 ### Indice chronotrope
 
@@ -150,8 +150,7 @@ La norme de 2014 cite cet indice parmi les indices de désaturation proposés da
 
 Selon la norme de 2014, il est mieux corrélé que la distance seule à la DLCO et au pic de consommation d'oxygène, et son utilité reste à caractériser. Il n'a pas de valeur de référence. Indice ajouté à la demande du médecin responsable, malgré l'ancienneté de la source.
 
-- Source : Chuang et al. *Respir Med* 2001.
-- **Référence non vérifiée** : les détails affichés dans l'application (BPCO, 33 hommes, moyenne de 27,5 kg·km) n'ont pas été relus dans l'article.
+- Source : Chuang ML, Lin IF, Wasserman K. The body weight-walking distance product as related to lung function, anaerobic threshold and peak VO2 in COPD patients. *Respir Med* 2001;95:618-26. doi:10.1053/rmed.2001.1115. Chez 33 hommes atteints de BPCO (6 exclus faute d'épreuve d'effort maximale), la distance moyenne était de 456 m et le produit moyen de 27,5 kg·km ; le produit était mieux corrélé que la distance seule à la VO2 max et au seuil anaérobie. Vérifié sur le résumé (PubMed).
 
 ### Distance par minute
 
@@ -167,7 +166,7 @@ La distance cumulée entre deux passages aux plots est répartie au prorata du t
 
 Indice des littératures neurologique et gériatrique, sans définition admise de référence, et sans repère dans les maladies respiratoires.
 
-- Source : Van Geel et al. Measuring walking-related performance fatigability in clinical practice: a systematic review. *Eur J Phys Rehabil Med* 2019 (DOI non relevé).
+- Source : Van Geel et al. Measuring walking-related performance fatigability in clinical practice: a systematic review. *Eur J Phys Rehabil Med* 2020;56:88-103 (en ligne en 2019). doi:10.23736/S1973-9087.19.05878-7
 
 ### Variabilité de l'allure
 
