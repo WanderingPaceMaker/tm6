@@ -18,7 +18,7 @@ The gear wheel, at the top right, opens the settings. They are set once and kept
 
 First enter the **corridor length**. If the patient does not start at a cone, for example from a room halfway along the corridor, also enter the **distance between the starting line and the first cone**; leave this field empty if the start is at a cone. The **report header** (institution, department, address, assessor) will appear at the top of the Word document.
 
-Further down, the **instructions to the patient** are those of the ERS/ATS standard; they can be replaced by the department's own text. The **assessor reminder** summarises how the test is run and can be hidden. The **timer speed** must stay on "×1, real time" for a real test: the ×10 and ×30 speeds are only for trying out the app. The **language** setting chooses between French and English; on "Automatic", the app follows the language of the device.
+Further down, the **instructions to the patient** are those of the ERS/ATS standard; they can be replaced by the department's own text. The **assessor reminder** summarises how the test is run and can be hidden. The **timer speed** must stay on "×1, real time" for a real test: the ×10 and ×30 speeds are only for trying out the app. They are shown on the START button and on the timer, and the speed returns to ×1 with each new test. The **language** setting chooses between French and English; on "Automatic", the app follows the language of the device.
 
 At the very bottom, the "Fill in a sample test and open the results" button loads a complete fictitious test: it is the quickest way to see the results and the report before the first patient. The "New test" button erases the test in progress.
 
@@ -54,7 +54,7 @@ The screen shows the instructions to read to the patient. The three boxes (instr
 
 ## 5. Test
 
-The timer and the time left are at the top, with the encouragement to say to the patient, which changes every minute. Each time the patient reaches a cone, tap the large yellow **+1 length** button: the time of each length is used to calculate speed, and the corridor drawing shows where the patient is. "Undo 1" removes the last length counted.
+The timer and the time left are at the top, with the encouragement to say to the patient, which changes every minute. Each time the patient reaches a cone, tap the large yellow **+1 length** button: the time of each length is used to calculate speed, and the corridor drawing shows where the patient is. "Undo 1" removes the last length counted. Two taps less than 3 seconds apart count as a single length. A forgotten length can be added after the end of the test: it counts in the distance but not in the speed, since its time is unknown.
 
 <p>
   <img src="captures/tutorial/test1.png" alt="Test screen: timer, minute card, corridor and +1 length button" width="260">
@@ -62,9 +62,9 @@ The timer and the time left are at the top, with the encouragement to say to the
   <img src="captures/tutorial/arret.png" alt="Stop panel: stop duration, phrase to resume walking and optional measurements" width="260">
 </p>
 
-Every minute, a card asks for the SpO2 and HR read on the oximeter; enter them and tap "Done". The six boxes from 1 to 6 minutes remain editable, and can be completed later. An SpO2 entered below 80% triggers an alert to stop walking, as set out in the ERS/ATS standard of 2014.
+Every minute, a card asks for the SpO2 and HR read on the oximeter; enter them and tap "Done". The six boxes from 1 to 6 minutes remain editable, and can be completed later. An implausible value, a typing error for example (SpO2 outside 50 to 100%, HR outside 30 to 220/min), is shown in red, is left out of every calculation and appears in the "To complete" list of the results; the same applies to age (18 to 100 years), height (100 to 230 cm) and weight (25 to 250 kg). An SpO2 entered below 80% triggers an alert to stop walking, as set out in the ERS/ATS standard of 2014.
 
-If the patient stops, tap "**Patient stops**". The panel counts the duration of the stop (the test timer keeps running), recalls the phrase to say every 30 seconds once SpO2 is back to 85%, and allows optional measurements to be recorded. Then tap "Patient resumes walking", or "Will not resume: stop the test". "Stop the test" ends the test for another reason, with a reason to choose.
+If the patient stops, tap "**Patient stops**". The panel counts the duration of the stop (the test timer keeps running), recalls the phrase to say every 30 seconds once SpO2 is back to 85%, and allows optional measurements to be recorded. Then tap "Patient resumes walking", or "Will not resume: stop the test". "Stop the test" ends the test for another reason, with a reason to choose. During the first 30 seconds, the same panel offers "False start": the timer goes back to zero, without erasing the patient, the conditions or the rest values.
 
 The "Nadir read on the oximeter" field records the lowest SpO2 shown by the oximeter if it is lower than the minute readings.
 
@@ -96,6 +96,6 @@ The results bring together distance, lowest SpO2, highest HR and walking speed, 
 
 "**Send the report**" builds the Word document and opens the share sheet: choose Mail to send it, or "Save to Files" to keep it. In the web version, the recipient is not filled in: type the address in Mail. The document can be edited in Word before being sent. An [example report](exemples/example-report.pdf) is available.
 
-Before the next patient, tap "New test", in the settings or at the bottom of the results. A test interrupted by closing the app or by a phone call is restored when the app is reopened, for up to 12 hours.
+Before the next patient, tap "New test", in the settings, at the bottom of the results or on the "Ready to start" screen, where it replaces START once the test is over. A test interrupted by closing the app or by a phone call is restored when the app is reopened, for up to 12 hours; a finished test is kept until the next "New test".
 
 The detail of each calculation and its sources are in [METHODS.md](METHODS.md).

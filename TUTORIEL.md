@@ -18,7 +18,7 @@ La roue crantée, en haut à droite, ouvre les réglages. Ils se font une fois e
 
 Il faut d'abord indiquer la **longueur du couloir**. Si le patient ne part pas d'un plot, par exemple depuis une salle située au milieu du couloir, on note aussi la **distance entre la ligne de départ et le premier plot** ; on laisse ce champ vide si le départ se fait à un plot. L'**en-tête du compte rendu** (établissement, service, adresse, opérateur) apparaîtra en haut du document Word.
 
-Plus bas, les **consignes au patient** sont celles de la norme ERS/ATS ; elles peuvent être remplacées par le texte du service. Le **rappel pour l'opérateur** résume la conduite du test et peut être masqué. La **vitesse du chronomètre** doit rester sur « ×1, temps réel » pour un vrai test : les vitesses ×10 et ×30 ne servent qu'à essayer l'application. Le réglage **Langue** choisit entre le français et l'anglais ; sur « Automatique », l'application suit la langue de l'appareil.
+Plus bas, les **consignes au patient** sont celles de la norme ERS/ATS ; elles peuvent être remplacées par le texte du service. Le **rappel pour l'opérateur** résume la conduite du test et peut être masqué. La **vitesse du chronomètre** doit rester sur « ×1, temps réel » pour un vrai test : les vitesses ×10 et ×30 ne servent qu'à essayer l'application. Elles sont rappelées sur le bouton DÉPART et sur le chronomètre, et la vitesse revient à ×1 à chaque nouveau test. Le réglage **Langue** choisit entre le français et l'anglais ; sur « Automatique », l'application suit la langue de l'appareil.
 
 Tout en bas, le bouton « Remplir un test d'exemple et ouvrir le bilan » charge un test fictif complet : c'est le moyen le plus rapide de voir le bilan et le compte rendu avant le premier patient. Le bouton « Nouveau test » efface le test en cours.
 
@@ -54,7 +54,7 @@ L'écran affiche les consignes à lire au patient. Les trois cases (consignes lu
 
 ## 5. Test
 
-Le chronomètre et le temps restant sont en haut, avec la phrase d'encouragement à dire au patient, qui change à chaque minute. À chaque passage du patient à un plot, on touche le grand bouton jaune **+1 aller** : l'heure de chaque passage sert à calculer la vitesse, et le couloir dessiné montre où se trouve le patient. « Annuler 1 » retire le dernier aller compté.
+Le chronomètre et le temps restant sont en haut, avec la phrase d'encouragement à dire au patient, qui change à chaque minute. À chaque passage du patient à un plot, on touche le grand bouton jaune **+1 aller** : l'heure de chaque passage sert à calculer la vitesse, et le couloir dessiné montre où se trouve le patient. « Annuler 1 » retire le dernier aller compté. Deux touchers à moins de 3 secondes d'intervalle ne comptent qu'un aller. Un aller oublié peut être ajouté après la fin du test : il compte dans la distance, pas dans la vitesse, puisque son heure est inconnue.
 
 <p>
   <img src="captures/tutoriel/test1.png" alt="Écran du test : chronomètre, carte de la minute, couloir et bouton +1 aller" width="260">
@@ -62,9 +62,9 @@ Le chronomètre et le temps restant sont en haut, avec la phrase d'encouragement
   <img src="captures/tutoriel/arret.png" alt="Panneau d'arrêt : durée de l'arrêt, phrase de reprise et mesures facultatives" width="260">
 </p>
 
-À chaque minute, une carte demande la SpO2 et la FC lues sur l'oxymètre ; on les saisit puis on touche « Fait ». Les six cases de 1 à 6 minutes restent modifiables, et on peut les compléter plus tard. Une SpO2 saisie sous 80 % déclenche une alerte d'arrêt de la marche, comme le prévoit la norme ERS/ATS de 2014.
+À chaque minute, une carte demande la SpO2 et la FC lues sur l'oxymètre ; on les saisit puis on touche « Fait ». Les six cases de 1 à 6 minutes restent modifiables, et on peut les compléter plus tard. Une valeur improbable, faute de frappe par exemple (SpO2 hors de 50 à 100 %, FC hors de 30 à 220/min), s'affiche en rouge, n'entre dans aucun calcul et apparaît dans la liste « À compléter » du bilan ; il en va de même pour l'âge (18 à 100 ans), la taille (100 à 230 cm) et le poids (25 à 250 kg). Une SpO2 saisie sous 80 % déclenche une alerte d'arrêt de la marche, comme le prévoit la norme ERS/ATS de 2014.
 
-Si le patient s'arrête, on touche « **Le patient s'arrête** ». Le panneau compte la durée de l'arrêt (le chronomètre du test continue), rappelle la phrase de reprise à dire toutes les 30 secondes une fois la SpO2 remontée à 85 %, et permet de noter des mesures facultatives. On touche ensuite « Le patient repart », ou « Il ne repartira pas : arrêter le test ». « Arrêter le test » interrompt le test pour une autre raison, avec un motif à choisir.
+Si le patient s'arrête, on touche « **Le patient s'arrête** ». Le panneau compte la durée de l'arrêt (le chronomètre du test continue), rappelle la phrase de reprise à dire toutes les 30 secondes une fois la SpO2 remontée à 85 %, et permet de noter des mesures facultatives. On touche ensuite « Le patient repart », ou « Il ne repartira pas : arrêter le test ». « Arrêter le test » interrompt le test pour une autre raison, avec un motif à choisir. Pendant les 30 premières secondes, ce même panneau propose « Faux départ » : le chronomètre revient à zéro, sans effacer le patient, les conditions ni le repos.
 
 Le champ « Nadir lu sur l'oxymètre » sert à noter la SpO2 la plus basse affichée par l'oxymètre si elle est plus basse que les relevés de chaque minute.
 
@@ -96,6 +96,6 @@ Le bilan réunit la distance, la SpO2 la plus basse, la FC la plus haute et la v
 
 « **Envoyer le compte rendu** » fabrique le document Word et ouvre la feuille de partage : on choisit Mail pour l'envoyer, ou « Enregistrer dans Fichiers » pour le garder. Dans la version web, le destinataire n'est pas prérempli : on tape l'adresse dans Mail. Le document peut être retouché dans Word avant d'être envoyé. Un [exemple de compte rendu](exemples/compte-rendu-exemple.pdf) est disponible.
 
-Avant le patient suivant, on touche « Nouveau test », dans les réglages ou en bas du bilan. Un test interrompu par une fermeture de l'application ou un appel est restauré à la réouverture pendant 12 heures.
+Avant le patient suivant, on touche « Nouveau test », dans les réglages, en bas du bilan ou sur l'écran « Prêt au départ », où il remplace DÉPART une fois le test terminé. Un test interrompu par une fermeture de l'application ou un appel est restauré à la réouverture pendant 12 heures ; un test terminé est gardé jusqu'au « Nouveau test » suivant.
 
 Le détail de chaque calcul et ses sources sont dans [METHODES.md](METHODES.md).

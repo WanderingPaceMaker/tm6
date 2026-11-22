@@ -42,6 +42,8 @@ document.write(en ? '<meta name="apple-mobile-web-app-title" content="6MWT"><lin
   color-scheme:dark}
 *{box-sizing:border-box}
 html{height:100%}
+/* Deux touchers rapides sur « +1 aller » ne doivent pas zoomer la page. */
+html,body,button,input,select,textarea,label,a{touch-action:manipulation}
 body{min-height:100%}
 body{background:var(--bg);color:var(--fg);font:17px/1.4 var(--f-body);margin:0;-webkit-text-size-adjust:100%}
 button,input{font:inherit;color:inherit}
@@ -102,6 +104,7 @@ h1{font-size:28px;line-height:1.15;margin:20px 0 4px;text-wrap:balance}
 /* Modèle du dispositif : même gabarit que les champs chiffrés (et leurs tailles par écran), police du texte. */
 .f input.dev{font-family:var(--f-body);font-weight:400;font-variant-numeric:normal}
 .f .box:focus-within{border-color:var(--accent)}
+.f.bad .box{border-color:var(--alert);background:var(--alert-soft)} /* valeur hors des limites plausibles, non prise en compte */
 .f .u{display:inline;color:var(--muted);font-size:15px;margin:0 0 0 6px;white-space:nowrap}
 
 /* Choix par boutons */
@@ -723,7 +726,7 @@ var S = {
   o2dev: '', rt: [{ d: '', s: '' }, { d: '', s: '' }, { d: '', s: '' }, { d: '', s: '' }, { d: '', s: '' }], o2ch: [],
   rest: { spo2: '', fc: '', pas: '', pad: '', bd: '', bf: '' },
   ready: { oxy: false, line: false, consignes: false },
-  running: false, started: false, t: 0, t0: 0, laps: [], pauses: [], mins: {}, fired: {}, nadir: '',
+  running: false, started: false, t: 0, t0: 0, laps: [], lapsLate: 0, pauses: [], mins: {}, fired: {}, nadir: '', bad: {},
   stop: null, end: { spo2: '', fc: '', pas: '', pad: '', bd: '', bf: '', partiel: 0, sympt: [] },
   rec: { 1: { spo2: '', fc: '', pas: '', pad: '' }, 3: { spo2: '', fc: '', pas: '', pad: '' } },
   recT: 0, recFired: {}, sheet: null, minOpen: null,
@@ -807,6 +810,28 @@ function $(id) { return document.getElementById(id); }
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
 function num(v) { var n = parseFloat(String(v).replace(',', '.')); return isNaN(n) ? NaN : n; }
 function ok(v) { return !isNaN(num(v)); }
+// Limites plausibles (go d'Allan du 22 novembre 2026, seuils proposés par Claude) : une valeur hors limites (faute de
+// frappe : SpO2 9, FC 1180, taille en mètres) reste affichée en rouge, n'entre dans aucun calcul et figure dans « À compléter ».
+var RANGES = [[/^(rest\.spo2|end\.spo2|rec\.\d\.spo2|pauses\.\d+\.spo2|mins\.\d\.s|nadir|rt\.\d+\.s)$/, 50, 100],
+  [/^(rest\.fc|end\.fc|rec\.\d\.fc|pauses\.\d+\.fc|mins\.\d\.f)$/, 30, 220], [/^age$/, 18, 100], [/^taille$/, 100, 230], [/^poids$/, 25, 250]];
+function implausible(k, v) {
+  if (String(v).trim() === '') return false;
+  for (var i = 0; i < RANGES.length; i++) if (RANGES[i][0].test(k)) { var n = num(v); return isNaN(n) || n < RANGES[i][1] || n > RANGES[i][2]; }
+  return false;
+}
+function badLabel(k) {
+  var p = k.split('.'), w = { spo2: 'SpO2', fc: LG('FC', 'HR'), s: 'SpO2', f: LG('FC', 'HR') }[p[p.length - 1]] || '';
+  if (k === 'age') return LG('âge', 'age'); if (k === 'taille') return LG('taille', 'height'); if (k === 'poids') return LG('poids', 'weight');
+  if (k === 'nadir') return LG('nadir lu sur l\'oxymètre', 'nadir read on the oximeter');
+  if (p[0] === 'rest') return w + LG(' de repos', ' at rest');
+  if (p[0] === 'end') return w + LG(' à l\'arrêt', ' at the end');
+  if (p[0] === 'rec') return w + LG(' à ' + p[1] + ' min de récupération', ' at ' + p[1] + ' min of recovery');
+  if (p[0] === 'mins') return w + LG(' à la minute ', ' at minute ') + p[1];
+  if (p[0] === 'pauses') return w + LG(' pendant l\'arrêt n°', ' during stop ') + (+p[1] + 1);
+  if (p[0] === 'rt') return 'SpO2' + LG(' du palier ', ' of step ') + (+p[1] + 1) + LG(' au repos', ' at rest');
+  return k;
+}
+function badStep(k) { var h = k.split('.')[0]; return /^(age|taille|poids)$/.test(h) ? 'patient' : h === 'rest' || h === 'rt' ? 'repos' : h === 'end' || h === 'rec' ? 'recup' : 'test'; }
 function mmss(s) { s = Math.max(0, Math.floor(s)); var m = Math.floor(s / 60), r = s % 60; return m + ':' + (r < 10 ? '0' : '') + r; }
 function get(path) { var p = path.split('.'), o = S; for (var i = 0; i < p.length; i++) { o = o[p[i]]; if (o === undefined) return ''; } return o; }
 function set(path, v) { var p = path.split('.'), o = S; for (var i = 0; i < p.length - 1; i++) o = o[p[i]]; o[p[p.length - 1]] = v; }
@@ -841,8 +866,10 @@ function departTxt() { return depart() ? LG(', départ à ' + String(depart()).r
 function depart() { var d = num(S.depart), c = corridor(); return d > 0 && d < c ? d : 0; }
 function lapLen(i) { return i === 0 && depart() ? depart() : corridor(); }
 function cumDist(n) { return n <= 0 ? 0 : depart() ? depart() + (n - 1) * corridor() : n * corridor(); }
-function partMax() { return S.laps.length === 0 && depart() ? depart() : corridor(); }
-function dist() { return cumDist(S.laps.length) + (S.stop ? num(S.end.partiel) || 0 : 0); }
+// Allers ajoutés après la fin (oubliés pendant la marche) : comptés dans la distance, pas dans la vitesse (heure inconnue).
+function nLaps() { return S.laps.length + (S.lapsLate || 0); }
+function partMax() { return nLaps() === 0 && depart() ? depart() : corridor(); }
+function dist() { return cumDist(nLaps()) + (S.stop ? num(S.end.partiel) || 0 : 0); }
 function predicted() {
   var a = num(S.age), h = num(S.taille), w = num(S.poids);
   if (isNaN(a) || isNaN(h) || isNaN(w) || (S.sex !== 'F' && S.sex !== 'M')) return null;
@@ -880,6 +907,7 @@ function missing() {
     if (miss.length) m.push({ step: 'test', txt: LG('Relevé incomplet à la minute ', 'Incomplete reading at minute ') + miss.join(', ') });
     if (!ok(S.rec[1].spo2) || !ok(S.rec[1].fc)) m.push({ step: 'recup', txt: LG('Récupération à 1 min non saisie', '1-min recovery not entered') });
   }
+  Object.keys(S.bad || {}).forEach(function (k) { m.push({ step: badStep(k), txt: LG('Valeur improbable non prise en compte : ', 'Implausible value ignored: ') + badLabel(k) + ' (' + S.bad[k] + ')' }); });
   return m;
 }
 
@@ -896,7 +924,7 @@ function renderSteps() {
 
 /* ---------- Petits constructeurs ---------- */
 function field(path, label, unit, wide) {
-  var v = get(path), cls = 'f' + (v === '' ? ' empty' : '');
+  var bad = S.bad && S.bad[path] != null, v = bad ? S.bad[path] : get(path), cls = 'f' + (v === '' ? ' empty' : '') + (bad ? ' bad' : '');
   return '<label class="' + cls + '"' + (wide ? ' style="grid-column:1/-1"' : '') + '><span>' + label + '</span><span class="box">' +
     '<input type="text" inputmode="decimal" pattern="[0-9]*" autocomplete="off" data-k="' + path + '" value="' + esc(v) + '">' +
     (unit ? '<span class="u">' + unit + '</span>' : '') + '</span></label>';
@@ -990,14 +1018,18 @@ var SCREENS = {
     $('next').style.display = 'block';
     // Sur téléphone, DÉPART passe dans la barre du bas pour rester visible sans défiler.
     $('nextIn').innerHTML = '<button type="button" class="ghost" data-go="repos">' + LG('Retour', 'Back') + '</button><button type="button" class="big gobar" id="goBar">' + LG('DÉPART', 'START') + '<small>' + examLabel() + ', ' + o2Lc() + '</small></button>';
-    if (S.started) $('nextIn').innerHTML = '<button type="button" class="ghost" data-go="repos">' + LG('Retour', 'Back') + '</button><button type="button" class="big" data-go="test">' + LG('Revenir au test', 'Back to the test') + '</button>';
+    if (S.speed !== 1) $('goBar').innerHTML += '<small>' + LG('Démonstration : chronomètre ×', 'Demonstration: timer ×') + S.speed + '</small>';
+    if (S.running) $('nextIn').innerHTML = '<button type="button" class="ghost" data-go="repos">' + LG('Retour', 'Back') + '</button><button type="button" class="big" data-go="test">' + LG('Revenir au test', 'Back to the test') + '</button>';
+    else if (S.started) $('nextIn').innerHTML = '<button type="button" class="ghost" data-go="repos">' + LG('Retour', 'Back') + '</button><button type="button" class="big gobar" data-new="1">' + LG('Nouveau test', 'New test') + '<small>' + LG('efface le test précédent', 'erases the previous test') + '</small></button>';
     var c = function (k, t) { return '<button type="button" class="check' + (S.ready[k] ? ' on' : '') + '" data-ready="' + k + '"><i>' + (S.ready[k] ? '✓' : '') + '</i>' + t + '</button>'; };
     return '<h1>' + LG('Prêt au départ', 'Ready to start') + '</h1><div class="cols"><div class="col">' +
       '<div class="card"><h2>' + LG('Consignes à lire au patient', 'Instructions to read to the patient') + '</h2><div class="consignes">' + esc(S.consignes) + '</div>' +
       '</div></div><div class="col">' +
       '<div class="card">' + c('consignes', LG('Consignes lues au patient', 'Instructions read to the patient')) + c('oxy', LG('Oxymètre en place, signal stable', 'Oximeter in place, stable signal')) + c('line', LG('Patient sur la ligne de départ', 'Patient on the starting line')) +
       '</div>' +
-      (S.started ? '' : '<button type="button" class="go" id="goBtn">' + LG('DÉPART', 'START') + '<small>' + examLabel() + '</small><small>' + o2Label() + '</small></button>') + '</div></div>';
+      (S.running ? '' : S.started ? '<button type="button" class="go" data-new="1">' + LG('Nouveau test', 'New test') + '<small>' + LG('efface le test précédent', 'erases the previous test') + '</small></button>' :
+        '<button type="button" class="go" id="goBtn">' + LG('DÉPART', 'START') + '<small>' + examLabel() + '</small><small>' + o2Label() + '</small>' +
+        (S.speed !== 1 ? '<small>' + LG('Démonstration : chronomètre ×', 'Demonstration: timer ×') + S.speed + '</small>' : '') + '</button>') + '</div></div>';
   },
   test: function () {
     $('next').style.display = 'none';
@@ -1008,7 +1040,7 @@ var SCREENS = {
       '<div class="bar"><b id="prog" style="width:0"></b>' + ticks + '</div>' +
       '<div id="alertBox"></div><div class="phrase" id="phrase">' + esc(S.lastPhrase || LG('Départ. Marchez aussi loin que possible pendant 6 minutes.', 'Start. Walk as far as possible for 6 minutes.')) + '</div>' +
       '<div id="promptBox"></div><div class="minstrip" id="minstrip"></div></div><div class="col">' +
-      '<div class="track" id="track"></div><button type="button" class="lap' + (S.running ? '' : ' disabled') + '" id="lapBtn"><span class="p">' + LG('+1 aller', '+1 length') + '</span><span class="d" id="lapD">' + LG('0 m · 0 aller', '0 m, 0 lengths') + '</span></button>' +
+      '<div class="track" id="track"></div><button type="button" class="lap' + (S.running || S.stop ? '' : ' disabled') + '" id="lapBtn"><span class="p">' + LG('+1 aller', '+1 length') + '</span><span class="d" id="lapD">' + LG('0 m · 0 aller', '0 m, 0 lengths') + '</span></button>' +
       '<div class="ctl"><button type="button" class="b-undo" id="undoBtn">' + LG('Annuler 1', 'Undo 1') + '</button>' +
       '<button type="button" class="b-pause' + (S.running ? '' : ' disabled') + '" id="pauseBtn">' + LG('Le patient s\'arrête', 'Patient stops') + '</button>' +
       '<button type="button" class="b-stop" id="stopBtn">' + (S.running ? LG('Arrêter le test', 'Stop the test') : LG('Aller à la récupération', 'Go to recovery')) + '</button></div>' +
@@ -1027,7 +1059,7 @@ var SCREENS = {
       '<div class="rtabs"><span class="rtstop">' + stopTxt + '</span><span class="rtclk" id="rtClk"></span>' + [LG('Arrêt', 'End'), LG('Borg, symptômes', 'Borg, symptoms'), LG('Récupération', 'Recovery')].map(function (t, i) { return '<button type="button" class="rtab' + ((S.rpane || 0) === i ? ' on' : '') + '" data-rpane="' + i + '">' + t + '</button>'; }).join('') + '</div>' +
       '<div class="cols rcp" data-pane="' + (S.rpane || 0) + '"><div class="col"><div class="rec"><div class="rt" id="rt1"><span>' + LG('Récupération', 'Recovery') + '</span><b id="recClk">0:00</b></div><div class="rt" id="rt3"><span id="recLbl">' + LG('Relevé à 1 min dans', 'Reading at 1 min in') + '</span><b id="recNext">1:00</b></div></div>' +
       '<div class="card"><h2>' + LG('À l\'arrêt', 'At the end') + '</h2><div class="grid2">' + field('end.spo2', 'SpO2', '%') + field('end.fc', LG('FC', 'HR'), '/min') + field('end.pas', LG('PAS', 'SBP'), 'mmHg') + field('end.pad', LG('PAD', 'DBP'), 'mmHg') + '</div>' +
-      '<div style="height:12px"></div><div class="f"><span>' + (S.laps.length === 0 && depart() ? LG('Mètres depuis la ligne de départ', 'Metres from the starting line') : LG('Mètres depuis le dernier plot', 'Metres from the last cone')) + LG(' : ', ': ') + '<b id="partV">' + (S.end.partiel || 0) + ' m</b></span>' +
+      '<div style="height:12px"></div><div class="f"><span>' + (nLaps() === 0 && depart() ? LG('Mètres depuis la ligne de départ', 'Metres from the starting line') : LG('Mètres depuis le dernier plot', 'Metres from the last cone')) + LG(' : ', ': ') + '<b id="partV">' + (S.end.partiel || 0) + ' m</b></span>' +
       '<input class="slider" type="range" min="0" max="' + partMax() + '" step="1" value="' + (S.end.partiel || 0) + '" data-k="end.partiel"></div>' + flags('recup') + '</div></div><div class="col">' +
       '<div class="card"><h2>' + LG('Borg à la fin', 'Borg at the end') + '</h2>' + borg('end.bd', LG('Dyspnée', 'Dyspnoea')) + borg('end.bf', 'Fatigue') + '</div>' +
       '<div class="card"><h2>' + LG('Symptômes limitants', 'Limiting symptoms') + '</h2><p class="say">' + LG('Après le Borg : « Qu\'est-ce qui vous a empêché de marcher plus loin ? »', 'After the Borg: “What, if anything, kept you from walking farther?”') + '</p>' + sy + '</div>' +
@@ -1064,7 +1096,7 @@ function o2Val(v) { return S.o2mode === 'pulse' ? 'position ' + v : v + ' L/min'
 function restTitr() {
   if (!titrOn()) return '';
   // Paliers en colonnes, deux lignes (valeur appliquée, SpO2) : tient sous les relevés de repos, même sur téléphone en paysage.
-  var cell = function (path) { var v = get(path); return '<label class="f' + (v === '' ? ' empty' : '') + '"><span class="box"><input type="text" inputmode="decimal" autocomplete="off" data-k="' + path + '" value="' + esc(v) + '"></span></label>'; };
+  var cell = function (path) { var bad = S.bad && S.bad[path] != null, v = bad ? S.bad[path] : get(path); return '<label class="f' + (v === '' ? ' empty' : '') + (bad ? ' bad' : '') + '"><span class="box"><input type="text" inputmode="decimal" autocomplete="off" data-k="' + path + '" value="' + esc(v) + '"></span></label>'; };
   var h = '<div class="card"><h2>' + LG('Titration au repos', 'Titration at rest') + '</h2><div class="rtg"><span></span>', i;
   for (i = 0; i < 5; i++) h += '<span class="rtn">' + (i + 1) + '</span>';
   h += '<span class="rth">' + (S.o2mode === 'pulse' ? LG('Réglage', 'Setting') : LG('Débit, L/min', 'Flow, L/min')) + '</span>';
@@ -1308,7 +1340,7 @@ function go(step) {
 }
 
 /* ---------- Chronomètre (accéléré pour la démonstration) ---------- */
-var last = 0, timer = null;
+var last = 0, timer = null, lastLapAt = 0;
 function start() {
   S.started = true; S.running = true; S.t = 0; S.t0 = Date.now(); S.alert = null; S.o2ch = []; saveDevice(); awake(true); S.laps = []; S.pauses = []; S.mins = {}; S.fired = {}; S.stop = null; S.lastPhrase = '';
   last = Date.now(); beep(660, 0.25); timer = setInterval(tick, 200); go('test');
@@ -1319,12 +1351,13 @@ function tick() {
   if (S.running) {
     S.t = Math.min(TEST, (now - S.t0) / 1000 * S.speed);
     if (paused()) { var pz = S.pauses[S.pauses.length - 1], k30 = Math.floor((S.t - pz.s) / 30); if (k30 > (pz.n30 || 0)) { pz.n30 = k30; beep(620, 0.12); } }
-    for (var k in PHRASES) if (S.t >= +k && !S.fired[k]) {
+    // Au retour d'une mise en veille ou d'un appel, plusieurs phrases sont dues d'un coup : seule la dernière sonne.
+    var due = []; for (var k in PHRASES) if (S.t >= +k && !S.fired[k]) due.push(+k);
+    due.forEach(function (k, i) {
       S.fired[k] = 1;
-      if (+k % 60 === 0) { var m = +k / 60; if (!S.mins[m]) S.mins[m] = { s: '', f: '' }; S.mins[m].due = true; if (S.minOpen == null) S.minOpen = m; beep(880, 0.2); haptic('minute'); }
-      else beep(880, 0.15, 2);
-      say(PHRASES[k]);
-    }
+      if (k % 60 === 0) { var m = k / 60; if (!S.mins[m]) S.mins[m] = { s: '', f: '' }; S.mins[m].due = true; if (S.minOpen == null) S.minOpen = m; }
+      if (i === due.length - 1) { if (k % 60 === 0) { beep(880, 0.2); haptic('minute'); } else beep(880, 0.15, 2); say(PHRASES[k]); }
+    });
     if (S.t >= TEST) { finish(null); return; }
   } else if (S.stop) {
     S.recT = (now - S.recT0) / 1000 * S.speed;
@@ -1365,9 +1398,9 @@ function renderTest(light) {
   if (!$('clk')) return;
   if ($('alertBox').innerHTML !== alertHtml()) $('alertBox').innerHTML = alertHtml();
   $('clk').textContent = mmss(t);
-  $('rem').textContent = S.running ? LG('reste ' + mmss(TEST - t), mmss(TEST - t) + ' left') : (S.stop && S.stop.reason ? LG('arrêté à ', 'stopped at ') + mmss(S.stop.t) : LG('terminé', 'finished'));
+  $('rem').textContent = S.running ? LG('reste ' + mmss(TEST - t), mmss(TEST - t) + ' left') + (S.speed !== 1 ? LG(' (démonstration ×', ' (demonstration ×') + S.speed + ')' : '') : (S.stop && S.stop.reason ? LG('arrêté à ', 'stopped at ') + mmss(S.stop.t) : LG('terminé', 'finished'));
   $('prog').style.width = (t / TEST * 100) + '%';
-  $('lapD').textContent = cumDist(S.laps.length) + ' m, ' + S.laps.length + LG(' aller', ' length') + (S.laps.length > 1 || (EN && S.laps.length === 0) ? 's' : '');
+  $('lapD').textContent = cumDist(nLaps()) + ' m, ' + nLaps() + LG(' aller', ' length') + (nLaps() > 1 || (EN && nLaps() === 0) ? 's' : '') + (S.lapsLate ? LG(' (' + S.lapsLate + ' après la fin)', ' (' + S.lapsLate + ' after the end)') : '');
   renderTrack();
   $('pauseBtn').textContent = paused() ? LG('Arrêt en cours…', 'Stopped…') : LG('Le patient s\'arrête', 'Patient stops');
   $('pinfo').textContent = (S.pauses.length ? S.pauses.length + LG(' arrêt', ' stop') + (S.pauses.length > 1 ? 's' : '') + ', ' + Math.round(pauseTotal()) + LG(' s au total. ', ' s in total. ') : '') + LG('Le chronomètre continue pendant les arrêts.', 'The timer keeps running during stops.');
@@ -1389,7 +1422,7 @@ function renderTest(light) {
 // Couloir vu de dessus : un plot à chaque bout, le patient au plot qu'il vient d'atteindre (départ si nombre d'allers pair).
 // Départ au milieu : la ligne de départ est tracée à sa distance du premier plot atteint (dessiné à droite).
 function renderTrack() {
-  var n = S.laps.length, atFar = n % 2 === 1, W = 600, x0 = 40, x1 = W - 40, dp = depart(), xs = dp ? x1 - (x1 - x0) * dp / corridor() : x0;
+  var n = nLaps(), atFar = n % 2 === 1, W = 600, x0 = 40, x1 = W - 40, dp = depart(), xs = dp ? x1 - (x1 - x0) * dp / corridor() : x0;
   var g = '<line class="lane" x1="' + x0 + '" y1="40" x2="' + x1 + '" y2="40"/>';
   for (var i = 1; i < 6; i++) { var x = x0 + (x1 - x0) * i / 6; g += '<line class="tick" x1="' + x + '" y1="30" x2="' + x + '" y2="50"/>'; }
   [x0, x1].forEach(function (x) { g += '<path class="cone" d="M' + (x - 13) + ' 54 L' + x + ' 18 L' + (x + 13) + ' 54 Z"/>'; });
@@ -1411,6 +1444,14 @@ function renderRecup() {
 
 /* ---------- Panneaux ---------- */
 function closeSheet() { S.sheet = null; $('sheet').innerHTML = ''; }
+// Faux départ (30 premières secondes) : le test redevient « pas commencé » ; patient, conditions et repos sont gardés.
+function cancelStart() {
+  clearInterval(timer); timer = null; awake(false);
+  S.started = false; S.running = false; S.t = 0; S.t0 = 0; S.laps = []; S.lapsLate = 0; S.pauses = []; S.mins = {}; S.fired = {}; S.stop = null;
+  S.alert = null; S.o2ch = []; S.lastPhrase = ''; S.minOpen = null; S.nadir = '';
+  ['mins', 'nadir', 'pauses'].forEach(function (h) { Object.keys(S.bad).forEach(function (k) { if (k.split('.')[0] === h) delete S.bad[k]; }); });
+  closeSheet(); go('pret');
+}
 function openPause() {
   if (!S.running) return;
   if (!paused()) { S.pauses.push({ s: S.t, e: null, spo2: '', fc: '', pas: '', pad: '' }); say(PAUSE_PHRASE); beep(520, 0.2); }
@@ -1443,7 +1484,9 @@ function openStop() {
   S.sheet = 'stop';
   var h = '<div class="sheet"><div class="pane"><h2>' + LG('Arrêter le test ?', 'Stop the test?') + '</h2><p class="sub">' + LG('Motif de l\'arrêt :', 'Reason for stopping:') + '</p><div class="choice c2" id="motifs">';
   MOTIFS.forEach(function (m) { h += '<button type="button" class="opt" data-motif="' + esc(m) + '">' + tv(m) + '</button>'; });
-  h += '</div><button type="button" class="b-confirm disabled" id="stopOk">' + LG('Choisir un motif', 'Choose a reason') + '</button><button type="button" class="ghost b-cancel" id="stopNo">' + LG('Continuer le test', 'Continue the test') + '</button></div></div>';
+  h += '</div><button type="button" class="b-confirm disabled" id="stopOk">' + LG('Choisir un motif', 'Choose a reason') + '</button>' +
+    (S.t < 30 ? '<button type="button" class="ghost b-cancel" id="falseStart">' + LG('Faux départ : remettre le chronomètre à zéro', 'False start: reset the timer') + '</button>' : '') +
+    '<button type="button" class="ghost b-cancel" id="stopNo">' + LG('Continuer le test', 'Continue the test') + '</button></div></div>';
   $('sheet').innerHTML = h; S.motif = null;
 }
 // Redessine les réglages sans perdre la position de lecture (sinon la feuille remonte en haut à chaque choix).
@@ -1480,8 +1523,10 @@ function openSettings() {
 document.addEventListener('input', function (e) {
   var k = e.target.getAttribute('data-k'); if (!k) return;
   if (k.indexOf('mins.') === 0) { var m = k.split('.')[1]; if (!S.mins[m]) S.mins[m] = { s: '', f: '' }; }
-  set(k, e.target.value);
+  var bad = implausible(k, e.target.value);
+  if (bad) { S.bad[k] = e.target.value; set(k, ''); } else { delete S.bad[k]; set(k, e.target.value); }
   var lab = e.target.parentNode && e.target.parentNode.parentNode;
+  // Le rouge n'apparaît qu'à la validation du champ (sinon « 1 » s'afficherait en rouge pendant qu'on tape « 118 »).
   if (lab && lab.className && lab.className.indexOf('f') === 0) lab.className = 'f' + (e.target.value === '' ? ' empty' : '');
   if (k === 'end.partiel') $('partV').textContent = e.target.value + ' m';
   if (k === 'couloir' || k === 'depart' || k.indexOf('cfg.') === 0) saveCfg();
@@ -1496,6 +1541,8 @@ document.addEventListener('change', function (e) {
     go(S.step); return;
   }
   var k = e.target.getAttribute('data-k'); if (k) checkSpo2(k, e.target.value);
+  var lab = e.target.parentNode && e.target.parentNode.parentNode;
+  if (k && lab && lab.className && lab.className.indexOf('f') === 0) lab.className = 'f' + (e.target.value === '' ? ' empty' : '') + (S.bad[k] != null ? ' bad' : '');
 });
 document.addEventListener('click', function (e) {
   var b = e.target.closest ? e.target.closest('button') : null;
@@ -1535,8 +1582,12 @@ document.addEventListener('click', function (e) {
   if (mo) { S.motif = mo; [].forEach.call(document.querySelectorAll('[data-motif]'), function (x) { x.className = 'opt' + (x === b ? ' on' : ''); }); $('stopOk').className = 'b-confirm'; $('stopOk').textContent = LG('Arrêter le test : ', 'Stop the test: ') + tv(mo); return; }
   switch (b.id) {
     case 'goBtn': case 'goBar': start(); break;
-    case 'lapBtn': if (S.running) { S.laps.push(S.t); beep(1200, 0.05); haptic('tap'); renderTest(); } break;
-    case 'undoBtn': if (S.laps.length) { S.laps.pop(); beep(300, 0.12, 2); haptic('undo'); renderTest(); } break;
+    case 'lapBtn':
+      // Double toucher : un second toucher moins de 3 s après le précédent est ignoré (bip grave).
+      if (Date.now() - lastLapAt < 3000) { beep(300, 0.12); break; }
+      if (S.running) S.laps.push(S.t); else if (S.stop) S.lapsLate = (S.lapsLate || 0) + 1; else break;
+      lastLapAt = Date.now(); beep(1200, 0.05); haptic('tap'); renderTest(); if (S.stop) go('test'); break;
+    case 'undoBtn': if (S.lapsLate) S.lapsLate--; else if (S.laps.length) S.laps.pop(); else break; beep(300, 0.12, 2); haptic('undo'); renderTest(); break;
     case 'pauseBtn': openPause(); break;
     case 'o2Btn': openO2(); break;
     // Pendant un arrêt, la fenêtre d'oxygène revient au panneau d'arrêt (le patient n'est pas reparti).
@@ -1548,10 +1599,18 @@ document.addEventListener('click', function (e) {
     case 'stopBtn': openStop(); break;
     case 'stopNo': closeSheet(); if (paused()) S.sheet = 'pause', renderPauseSheet(); break;
     case 'stopOk': if (S.motif) finish(S.motif); break;
+    case 'falseStart': if (S.running && S.t < 30) cancelStart(); break;
     case 'minDone': var cur = S.minOpen; S.minOpen = null; for (var m = 1; m <= 6; m++) if (m !== cur && S.mins[m] && S.mins[m].due && !(ok(S.mins[m].s) && ok(S.mins[m].f))) { S.minOpen = m; break; } renderTest(); break;
     case 'gear': openSettings(); break;
     case 'cfgClose': closeSheet(); go(S.step); break;
-    case 'demoBtn': demoFill(); break;
+    case 'demoBtn':
+      if (S.started || S.sex || S.age || S.taille || S.poids || S.rest.spo2 || S.rest.fc) {
+        S.sheet = 'demo';
+        $('sheet').innerHTML = '<div class="sheet"><div class="pane"><h2>' + LG('Remplir un test d\'exemple ?', 'Fill in a sample test?') + '</h2><p class="sub">' + LG('Les données du test actuel seront effacées de l\'appareil.', 'The current test data will be erased from the device.') + '</p>' +
+          '<button type="button" class="b-confirm" id="demoOk">' + LG('Effacer et remplir l\'exemple', 'Erase and fill in the sample') + '</button><button type="button" class="ghost b-cancel" id="newNo">' + LG('Annuler', 'Cancel') + '</button></div></div>';
+      } else { newTest(); demoFill(); }
+      break;
+    case 'demoOk': newTest(); demoFill(); break;
     case 'newOk': newTest(); break;
     case 'newNo': closeSheet(); break;
     case 'sendBtn': Report.send(); break;
@@ -1565,7 +1624,7 @@ document.addEventListener('click', function (e) {
 // d'origine (« tm6-test ») mais version 3 : chacune ignore les sauvegardes de l'autre. Restauration jusqu'à 12 h.
 var SAVE_KEY = 'tm6-test', SAVE_MAX_AGE = 12 * 3600 * 1000;
 var TEST_KEYS = ['step', 'seen', 'sex', 'age', 'taille', 'poids', 'exam', 'o2', 'o2mode', 'o2if', 'o2debit', 'o2src', 'o2dev', 'aide', 'rest', 'rt', 'ready',
-  'running', 'started', 't', 't0', 'laps', 'pauses', 'mins', 'fired', 'nadir', 'stop', 'end', 'rec', 'recT', 'recT0', 'recFired', 'rpane', 'lastPhrase', 'alert', 'o2ch', 'speed'];
+  'running', 'started', 't', 't0', 'laps', 'pauses', 'mins', 'fired', 'nadir', 'stop', 'end', 'rec', 'recT', 'recT0', 'recFired', 'rpane', 'lastPhrase', 'alert', 'o2ch', 'speed', 'bad', 'lapsLate'];
 var FRESH = (function () { var o = {}; TEST_KEYS.forEach(function (k) { o[k] = S[k]; }); return JSON.stringify(o); })();
 function saveTest() {
   var o = { v: 3, at: Date.now() }; TEST_KEYS.forEach(function (k) { o[k] = S[k]; });
@@ -1575,7 +1634,7 @@ function toast(t) { var d = $('toast'); d.textContent = t; d.className = 'toast 
 function restoreTest() {
   var d = null;
   try { d = JSON.parse(localStorage.getItem(SAVE_KEY)); } catch (e) { }
-  if (!d || d.v !== 3 || Date.now() - d.at > SAVE_MAX_AGE) return false;
+  if (!d || d.v !== 3 || (!(d.started && !d.running) && Date.now() - d.at > SAVE_MAX_AGE)) return false;
   TEST_KEYS.forEach(function (k) { if (d[k] !== undefined) S[k] = d[k]; });
   if (S.started) timer = setInterval(tick, 200);
   if (S.running) {
@@ -1598,7 +1657,7 @@ function askNewTest() {
 }
 function newTest() {
   clearInterval(timer); timer = null; awake(false);
-  var f = JSON.parse(FRESH); TEST_KEYS.forEach(function (k) { if (k !== 'speed') S[k] = f[k]; });
+  var f = JSON.parse(FRESH); TEST_KEYS.forEach(function (k) { S[k] = f[k]; }); S.speed = 1; S.bad = {}; S.lapsLate = 0;
   S.seen = { patient: 1 }; S.minOpen = null; S.motif = null;
   try { localStorage.removeItem(SAVE_KEY); } catch (e) { }
   closeSheet(); go('patient');
@@ -1634,7 +1693,7 @@ var Report = (function () {
   // Valeurs de l'état S, sous les identifiants des champs de l'app d'origine.
   function load() {
     const b = v => String(v == null ? '' : v).replace(',', '.'); // Borg : « 0,5 » saisi, « 0.5 » attendu
-    sex = S.sex; lapTimes = S.laps.slice(); laps = lapTimes.length;
+    sex = S.sex; lapTimes = S.laps.slice(); laps = lapTimes.length + (S.lapsLate || 0);
     pauses = S.pauses.map(p => ({ s: p.s, e: p.e }));
     const pf = v => parseFloat(String(v == null ? '' : v).replace(',', '.'));
     pauseVals = S.pauses.map(p => ({ t: p.s / 60, s: pf(p.spo2), f: pf(p.fc) })); endT = S.stop ? S.stop.t : 0; stopReason = S.stop ? S.stop.reason : null;
