@@ -1,5 +1,7 @@
 # Premier test avec TM6
 
+*[English](TUTORIAL.md) · Français*
+
 Ce guide accompagne un premier test de marche de 6 minutes avec TM6, de l'installation des réglages jusqu'à l'envoi du compte rendu. Les captures viennent d'un iPhone ; sur iPad, les étapes sont les mêmes, rangées dans une colonne à gauche de l'écran. Pour installer l'application, voir la [notice d'installation](Installer-TM6.docx) ou la partie « Installer » du [README](README.fr.md).
 
 Le test se déroule en sept étapes, numérotées en haut de l'écran. On peut toucher un numéro à tout moment pour revenir corriger une donnée, y compris pendant la marche, et rien ne bloque si une valeur manque : les calculs se refont dès qu'elle est saisie.
@@ -16,7 +18,7 @@ La roue crantée, en haut à droite, ouvre les réglages. Ils se font une fois e
 
 Il faut d'abord indiquer la **longueur du couloir**. Si le patient ne part pas d'un plot, par exemple depuis une salle située au milieu du couloir, on note aussi la **distance entre la ligne de départ et le premier plot** ; on laisse ce champ vide si le départ se fait à un plot. L'**en-tête du compte rendu** (établissement, service, adresse, opérateur) apparaîtra en haut du document Word.
 
-Plus bas, les **consignes au patient** sont celles de la norme ERS/ATS ; elles peuvent être remplacées par le texte du service. Le **rappel pour l'opérateur** résume la conduite du test et peut être masqué. La **vitesse du chronomètre** doit rester sur « ×1, temps réel » pour un vrai test : les vitesses ×10 et ×30 ne servent qu'à essayer l'application.
+Plus bas, les **consignes au patient** sont celles de la norme ERS/ATS ; elles peuvent être remplacées par le texte du service. Le **rappel pour l'opérateur** résume la conduite du test et peut être masqué. La **vitesse du chronomètre** doit rester sur « ×1, temps réel » pour un vrai test : les vitesses ×10 et ×30 ne servent qu'à essayer l'application. Le réglage **Langue** choisit entre le français et l'anglais ; sur « Automatique », l'application suit la langue de l'appareil.
 
 Tout en bas, le bouton « Remplir un test d'exemple et ouvrir le bilan » charge un test fictif complet : c'est le moyen le plus rapide de voir le bilan et le compte rendu avant le premier patient. Le bouton « Nouveau test » efface le test en cours.
 

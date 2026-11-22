@@ -2,16 +2,16 @@
 
 *English · [Français](README.fr.md)*
 
-TM6 is a web app that guides the assessor through a 6-minute walk test or an exertional oxygen titration, then produces a Word report ready to be sent. It runs on iPad, iPhone or Android phones, installs from the browser and then works offline. Its interface is currently in French; an English version is in preparation.
+TM6 is a web app that guides the assessor through a 6-minute walk test or an exertional oxygen titration, then produces a Word report ready to be sent. It runs on iPad, iPhone or Android phones, installs from the browser and then works offline. Its interface is in French or English: it follows the language of the device, and a setting chooses the language.
 
 **Open the app: https://wanderingpacemaker.github.io/tm6/**
 
-A step-by-step guide to a first test, with screenshots, is available in French: [TUTORIEL.md](TUTORIEL.md).
+A step-by-step guide to a first test, with screenshots: [TUTORIAL.md](TUTORIAL.md).
 
 <p>
-  <img src="captures/test.png" alt="Test screen: timer, minute-by-minute readings, corridor drawing and length counter button" width="300">
+  <img src="captures/en/test.png" alt="Test screen: timer, minute-by-minute readings, corridor drawing and length counter button" width="300">
   &nbsp;
-  <img src="captures/bilan.png" alt="Results: distance, lowest SpO2, highest heart rate, walking speed and test curves" width="300">
+  <img src="captures/en/bilan.png" alt="Results: distance, lowest SpO2, highest heart rate, walking speed and test curves" width="300">
 </p>
 
 ## What the app does
@@ -30,12 +30,12 @@ At the end, a timer prompts the **recovery** readings at 1 and 3 minutes, and th
 
 The document is passed to the system share sheet: choose Mail, Files or any other app.
 
-Example produced by the app from its demonstration test (fictitious patient, empty header), currently in French: [Word report](exemples/compte-rendu-exemple.docx), and the same [as a PDF](exemples/compte-rendu-exemple.pdf) to read it directly on GitHub.
+Example produced by the app from its demonstration test (fictitious patient, empty header): [Word report](exemples/example-report.docx), and the same [as a PDF](exemples/example-report.pdf) to read it directly on GitHub. The report is written in the language of the app.
 
 <p>
-  <img src="captures/cr-1.png" alt="Report page 1: conditions, performance table, summary and overview of measurements" width="300">
+  <img src="captures/en/cr-1.png" alt="Report page 1: conditions, performance table, summary and overview of measurements" width="300">
   &nbsp;
-  <img src="captures/cr-2.png" alt="Report page 2: figure of the course of the test, minute-by-minute detail, detailed summary, exploratory indices and methods" width="300">
+  <img src="captures/en/cr-2.png" alt="Report page 2: figure of the course of the test, minute-by-minute detail, detailed summary, exploratory indices and methods" width="300">
 </p>
 
 ## Installing
@@ -45,7 +45,7 @@ The app installs from the browser, with no app store and no account.
 - **iPhone and iPad**: open the address in Safari, tap the Share button, then "Add to Home Screen".
 - **Android**: open the address in Chrome, then choose "Install app" or "Add to Home screen" from the menu.
 
-A one-page printable notice with a QR code to the app is available in French as a Word file: [Installer-TM6.docx](Installer-TM6.docx).
+A one-page printable notice with a QR code to the app is available as a Word file: [Install-TM6.docx](Install-TM6.docx).
 
 The first launch must be online so that the app can be stored on the device; it then works without a connection. When a new version is published, it is picked up at the next launch.
 
@@ -57,7 +57,7 @@ An interrupted test (app closed, phone call) is restored on reopening for up to 
 
 ## References
 
-The app follows the ERS/ATS technical standard of 2014, and the ATS statement of 2002 where the 2014 standard is silent.
+The app follows the ERS/ATS technical standard of 2014, and the ATS statement of 2002 where the 2014 standard is silent. The English texts said to the patient (instructions, encouragement, Borg scale) are those of the original standards.
 
 - Holland AE, Spruit MA, Troosters T, et al. An official European Respiratory Society/American Thoracic Society technical standard: field walking tests in chronic respiratory disease. *Eur Respir J* 2014;44:1428-46. doi:10.1183/09031936.00150314 — instructions to the patient, encouragement, management of stops and of desaturation.
 - ATS Committee on Proficiency Standards for Clinical Pulmonary Function Laboratories. ATS statement: guidelines for the six-minute walk test. *Am J Respir Crit Care Med* 2002;166:111-7. doi:10.1164/ajrccm.166.1.at1102 — modified Borg scale (table 2) and reminders for the assessor.

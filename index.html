@@ -352,7 +352,7 @@ h1{font-size:28px;line-height:1.15;margin:20px 0 4px;text-wrap:balance}
   .bilan{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);grid-column-gap:28px;grid-template-areas:"fig syn" "fig usu" "exp exp";grid-template-rows:auto 1fr auto}
   .ixs{-webkit-column-count:2;column-count:2;-webkit-column-gap:28px;column-gap:28px}
   .clock .t{font-size:96px}
-  .lap{min-height:400px}
+  .lap{min-height:340px} /* 400 faisait dépasser la titration (bouton Oxygène) en 1180×820 */
   .card{padding-top:10px;margin-bottom:6px}
   .f input{padding:9px 0;font-size:24px}
   .consignes{font-size:18px}
@@ -535,6 +535,9 @@ h1{font-size:28px;line-height:1.15;margin:20px 0 4px;text-wrap:balance}
   .f span{font-size:13px;margin-bottom:2px}
   .f input{font-size:20px!important;padding:6px 0}
   .grid2,.grid3{grid-gap:8px}
+  /* Conditions : trois listes par rangée, sinon l'O2 pulsé dépasse la hauteur. */
+  .grid2.sels{grid-template-columns:1fr 1.3fr 1fr;grid-row-gap:6px}
+  .sels .wide{grid-column:auto}
   .grid4 .f input{font-size:18px!important}
   .hint{font-size:12px;margin-top:2px}
   /* Patient */
@@ -646,36 +649,63 @@ h1{font-size:28px;line-height:1.15;margin:20px 0 4px;text-wrap:balance}
 
 <script>
 /* ES5 volontairement (pas de flèches ni de ?.), pour pouvoir ouvrir la maquette dans le Safari d'un vieil iPad. */
+// Langue : réglage « auto » (langue de l'appareil), « fr » ou « en », lu au chargement ; changer de langue recharge la page.
+// Les textes anglais des consignes, encouragements et de l'échelle de Borg sont ceux d'origine des normes (ERS/ATS 2014,
+// tableaux 5 et 6 ; ATS 2002, tableau 2). Les valeurs enregistrées (motifs, symptômes, Borg « 0,5 ») restent en français.
+var LANG = (function () { var c = {}; try { c = JSON.parse(localStorage.getItem('tm6-config')) || {}; } catch (e) { } return c.lang === 'fr' || c.lang === 'en' ? c.lang : 'auto'; })();
+var EN = LANG === 'en' || (LANG === 'auto' && !/^fr/i.test(String((navigator.languages && navigator.languages[0]) || navigator.language || 'fr')));
+function LG(f, e) { return EN ? e : f; }
+document.documentElement.lang = EN ? 'en' : 'fr';
+if (EN) { document.getElementById('gear').setAttribute('aria-label', 'Settings'); document.getElementById('runbar').textContent = 'Test in progress, back to the timer'; }
+var VAL_EN = { 'dyspnée': 'dyspnoea', 'fatigue des membres inférieurs': 'leg fatigue', 'douleur des membres inférieurs': 'leg pain', 'douleur thoracique': 'chest pain',
+  'désaturation': 'desaturation', 'malaise ou vertiges': 'faintness or dizziness', 'décision de l\'opérateur': 'assessor\'s decision', 'refus de poursuivre': 'refusal to continue' };
+function tv(x) { return EN && VAL_EN[x] ? VAL_EN[x] : x; }
+// Cote de Borg affichée : « 0,5 » en français, « 0.5 » en anglais (enregistrée « 0,5 »).
+function bdv(v) { return EN ? String(v).replace(',', '.') : v; }
+// Anglais : « 95 % » devient « 95% », mais « SpO2 % » (intitulé) reste tel quel.
+function pctEN(t) { return String(t).replace(/([A-Za-z]*\d+) %/g, function (m, w) { return /^\d+$/.test(w) ? w + '%' : m; }); }
 var STEPS = [
-  { id: 'patient', label: 'Patient' }, { id: 'cond', label: 'Conditions' }, { id: 'repos', label: 'Repos' },
-  { id: 'pret', label: 'Prêt' }, { id: 'test', label: 'Test' }, { id: 'recup', label: 'Récupération' }, { id: 'bilan', label: 'Bilan' }
+  { id: 'patient', label: 'Patient' }, { id: 'cond', label: 'Conditions' }, { id: 'repos', label: LG('Repos', 'Rest') },
+  { id: 'pret', label: LG('Prêt', 'Ready') }, { id: 'test', label: 'Test' }, { id: 'recup', label: LG('Récupération', 'Recovery') }, { id: 'bilan', label: LG('Bilan', 'Results') }
 ];
 // Encouragements standardisés de la norme ERS/ATS 2014 (Holland, Eur Respir J 2014;44:1428-46, tableau 6), traduction de travail.
 // La phrase de l'ATS 2002 à 15 s de la fin a disparu en 2014 : à 6 min, seulement « Arrêtez-vous là où vous êtes. »
-var PHRASES = {
+var PHRASES = EN ? {
+  60: 'You are doing well. You have 5 minutes to go.',
+  120: 'Keep up the good work. You have 4 minutes to go.',
+  180: 'You are doing well. You are halfway.',
+  240: 'Keep up the good work. You have only 2 minutes left.',
+  300: 'You are doing well. You have only 1 minute to go.'
+} : {
   60: 'Vous vous débrouillez bien. Il vous reste 5 minutes.',
   120: 'Continuez comme ça. Il vous reste 4 minutes.',
   180: 'Vous vous débrouillez bien. Vous êtes à la moitié du test.',
   240: 'Continuez comme ça. Il ne vous reste plus que 2 minutes.',
   300: 'Vous vous débrouillez bien. Il ne vous reste plus qu\'une minute.'
 };
-var END_PHRASE = 'Arrêtez-vous là où vous êtes.';
+var END_PHRASE = LG('Arrêtez-vous là où vous êtes.', 'Please stop where you are.');
 // Pendant un arrêt : toutes les 30 s, une fois la SpO2 remontée à 85 % ou plus (ERS/ATS 2014, tableau 6).
-var PAUSE_PHRASE = 'Reprenez la marche dès que vous vous en sentez capable.';
+var PAUSE_PHRASE = LG('Reprenez la marche dès que vous vous en sentez capable.', 'Please resume walking whenever you feel able.');
 var MOTIFS = ['dyspnée', 'fatigue des membres inférieurs', 'douleur des membres inférieurs', 'douleur thoracique', 'désaturation', 'malaise ou vertiges', 'décision de l\'opérateur', 'refus de poursuivre'];
 var SYMPT = ['dyspnée', 'fatigue des membres inférieurs', 'douleur des membres inférieurs', 'douleur thoracique', 'malaise ou vertiges'];
 var BORG = ['0', '0,5', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
 // Échelle de Borg modifiée telle que donnée par l'ATS 2002 (Am J Respir Crit Care Med 2002;166:111-7, tableau 2).
 // Traduction française de travail : aucune version française validée n'a été trouvée ; à remplacer par celle du service.
-var BORG_LBL = { '0': 'Rien du tout', '0,5': 'Très, très léger (à peine perceptible)', '1': 'Très léger', '2': 'Léger', '3': 'Modéré', '4': 'Un peu sévère', '5': 'Sévère', '6': '', '7': 'Très sévère', '8': '', '9': '', '10': 'Très, très sévère (maximal)' };
+var BORG_LBL = EN ? { '0': 'Nothing at all', '0,5': 'Very, very slight (just noticeable)', '1': 'Very slight', '2': 'Slight (light)', '3': 'Moderate', '4': 'Somewhat severe', '5': 'Severe (heavy)', '6': '', '7': 'Very severe', '8': '', '9': '', '10': 'Very, very severe (maximal)' } : { '0': 'Rien du tout', '0,5': 'Très, très léger (à peine perceptible)', '1': 'Très léger', '2': 'Léger', '3': 'Modéré', '4': 'Un peu sévère', '5': 'Sévère', '6': '', '7': 'Très sévère', '8': '', '9': '', '10': 'Très, très sévère (maximal)' };
 // Déroulé ATS 2002 : au départ, montrer l'échelle imprimée en gros caractères et demander d'abord l'essoufflement, puis la fatigue ;
 // à la fin, rappeler au patient la cote qu'il avait donnée avant, puis lui redemander.
-var BORG_Q = {
+var BORG_Q = EN ? {
+  bd: 'Please grade your level of shortness of breath using this scale.',
+  bf: 'Please grade your level of fatigue using this scale.'
+} : {
   bd: 'Indiquez votre niveau d\'essoufflement à l\'aide de cette échelle.',
   bf: 'Indiquez votre niveau de fatigue à l\'aide de cette échelle.'
 };
 // Explication à donner avant la première cotation : proposition (non tirée de l'ATS), à valider.
-var BORG_EXPL = {
+var BORG_EXPL = EN ? {
+  bd: '0 means you are not short of breath at all. 10 means the most severe shortness of breath you can imagine. Show me the number, or the words, that match how you feel right now.',
+  bf: '0 means no fatigue at all. 10 means the most severe fatigue you can imagine. Show me the number, or the words, that match how you feel right now.'
+} : {
   bd: '0 veut dire que vous n\'êtes pas du tout essoufflé. 10 veut dire l\'essoufflement le plus fort que vous puissiez imaginer. Montrez-moi le chiffre, ou les mots, qui correspondent à ce que vous ressentez maintenant.',
   bf: '0 veut dire aucune fatigue. 10 veut dire la fatigue la plus forte que vous puissiez imaginer. Montrez-moi le chiffre, ou les mots, qui correspondent à ce que vous ressentez maintenant.'
 };
@@ -697,7 +727,14 @@ var S = {
   opGuide: true,
   // Consignes à l'opérateur : norme ERS/ATS 2014 (Holland, Eur Respir J 2014;44:1428-46), complétée par l'ATS 2002 là où
   // 2014 ne dit rien (ne parler à personne, ton égal). Décision d'Allan (12 octobre 2026) : en cas de divergence, 2014.
-  opText: '• Ne parler à personne pendant la marche. N\'utiliser que les phrases standardisées, d\'un ton égal : chaque minute ; pendant un arrêt, toutes les 30 s une fois la SpO2 à 85 % ou plus.\n' +
+  opText: EN ? '• Do not talk to anyone during the walk. Use only the standardised phrases, in an even tone of voice: every minute; during a stop, every 30 s once SpO2 is 85% or more.\n' +
+    '• Walk behind the patient, without pacing them, so that the lowest SpO2 and the end-test HR can be recorded.\n' +
+    '• If the patient stops: they rest sitting or standing, as they prefer; the timer keeps running.\n' +
+    '• Stop the walk if SpO2 falls below 80%; walking may resume once it recovers to 85% or more.\n' +
+    '• Also stop for chest pain, intolerable dyspnoea, leg cramps, staggering, diaphoresis, pale or ashen appearance: sit or lay the patient down, measure blood pressure, pulse rate and SpO2, obtain a physician evaluation, give oxygen as appropriate.\n' +
+    '• Oxygen carried by the assessor: walk slightly behind the patient.\n' +
+    '• At the end: SpO2 and pulse rate, Borg, then ask: “What, if anything, kept you from walking farther?”' :
+    '• Ne parler à personne pendant la marche. N\'utiliser que les phrases standardisées, d\'un ton égal : chaque minute ; pendant un arrêt, toutes les 30 s une fois la SpO2 à 85 % ou plus.\n' +
     '• Marcher derrière le patient, sans lui imposer l\'allure, pour relever la SpO2 la plus basse et la FC de fin.\n' +
     '• Si le patient s\'arrête : il se repose assis ou debout, comme il préfère ; le chronomètre continue.\n' +
     '• Arrêter la marche si la SpO2 passe sous 80 % ; reprise possible quand elle remonte à 85 % ou plus.\n' +
@@ -705,17 +742,25 @@ var S = {
     '• Oxygène porté par l\'opérateur : marcher légèrement derrière le patient.\n' +
     '• À la fin : SpO2 et pouls, Borg, puis demander pourquoi il n\'a pas pu marcher plus loin.',
   // Consignes standardisées de la norme ERS/ATS 2014 (tableau 5), traduction de travail : à remplacer par celle du service.
-  consignes: 'Le but de ce test est de marcher le plus loin possible pendant 6 minutes. Vous allez marcher dans ce couloir, entre les plots, autant de fois que possible en 6 minutes. Je vous indiquerai chaque minute qui passe, puis, à 6 minutes, je vous demanderai de vous arrêter là où vous êtes. Six minutes, c\'est long : vous allez faire un effort. Vous avez le droit de ralentir, de vous arrêter et de vous reposer si nécessaire, mais reprenez la marche dès que vous le pouvez. N\'oubliez pas : le but est de marcher LE PLUS LOIN POSSIBLE pendant 6 minutes, sans courir ni trottiner. Avez-vous des questions ?',
+  consignes: EN ? 'The aim of this test is to walk as far as possible for 6 minutes. You will walk along this hallway between the markers, as many times as you can in 6 minutes. I will let you know as each minute goes past, and then at 6 minutes I will ask you to stop where you are. 6 minutes is a long time to walk, so you will be exerting yourself. You are permitted to slow down, to stop, and to rest as necessary, but please resume walking as soon as you are able. Remember that the objective is to walk AS FAR AS POSSIBLE for 6 minutes, but don\'t run or jog. Do you have any questions?' :
+    'Le but de ce test est de marcher le plus loin possible pendant 6 minutes. Vous allez marcher dans ce couloir, entre les plots, autant de fois que possible en 6 minutes. Je vous indiquerai chaque minute qui passe, puis, à 6 minutes, je vous demanderai de vous arrêter là où vous êtes. Six minutes, c\'est long : vous allez faire un effort. Vous avez le droit de ralentir, de vous arrêter et de vous reposer si nécessaire, mais reprenez la marche dès que vous le pouvez. N\'oubliez pas : le but est de marcher LE PLUS LOIN POSSIBLE pendant 6 minutes, sans courir ni trottiner. Avez-vous des questions ?',
   speed: 1, beeps: true, vibr: true,
   // Compte rendu et envoi : mêmes réglages que l'app d'origine (même clé de stockage, donc repris sur l'appareil).
-  cfg: { etab: '', service: '', adresse: '', operateur: '', mailTo: '', mailSubject: 'TM6 – test du {date} {heure}',
-    mailBody: "Résultats du test de marche de 6 minutes du {date_longue}, en pièce jointe (document Word).\n\nLe document ne contient aucune identité : coller l'étiquette du patient dans l'espace prévu en haut à droite." }
+  cfg: { etab: '', service: '', adresse: '', operateur: '', mailTo: '' }
 };
+// Objet et texte du mail par défaut, dans chaque langue ; un défaut enregistré dans l'autre langue est remplacé.
+var MAIL_DEF = {
+  fr: { mailSubject: 'TM6 – test du {date} {heure}',
+    mailBody: "Résultats du test de marche de 6 minutes du {date_longue}, en pièce jointe (document Word).\n\nLe document ne contient aucune identité : coller l'étiquette du patient dans l'espace prévu en haut à droite." },
+  en: { mailSubject: '6MWT – test of {date} {time}',
+    mailBody: 'Results of the 6-minute walk test of {long_date}, attached (Word document).\n\nThe document contains no patient identity: stick the patient label in the space provided at the top right.' }
+};
+S.cfg.mailSubject = MAIL_DEF[EN ? 'en' : 'fr'].mailSubject; S.cfg.mailBody = MAIL_DEF[EN ? 'en' : 'fr'].mailBody; S.lang = LANG;
 var CFG_KEY = 'tm6-config';
 function stored() { try { return JSON.parse(localStorage.getItem(CFG_KEY)) || {}; } catch (e) { return {}; } }
 (function () {
   var c = stored();
-  for (var k in S.cfg) if (typeof c[k] === 'string') S.cfg[k] = c[k];
+  for (var k in S.cfg) if (typeof c[k] === 'string' && c[k] !== MAIL_DEF[EN ? 'fr' : 'en'][k]) S.cfg[k] = c[k];
   if (ok(c.couloir)) S.couloir = String(c.couloir);
   if (typeof c.depart === 'string') S.depart = c.depart;
   if (typeof c.bips === 'boolean') S.beeps = c.bips;
@@ -784,7 +829,7 @@ function beep(freq, dur, n) {
 
 /* ---------- Calculs ---------- */
 function corridor() { return ok(S.couloir) ? num(S.couloir) : 30; }
-function departTxt() { return depart() ? ', départ à ' + String(depart()).replace('.', ',') + ' m du plot' : ''; }
+function departTxt() { return depart() ? LG(', départ à ' + String(depart()).replace('.', ',') + ' m du plot', ', start ' + depart() + ' m from the cone') : ''; }
 // Départ ailleurs qu'à un plot (salle de l'oxymètre au milieu du couloir) : le premier passage à un plot ne compte
 // que la distance de la ligne de départ à ce plot ; 0 = départ au plot. La norme ERS/ATS 2014 (Holland 2014, « Recording
 // performance of the 6MWT ») demande de relever le nombre d'allers et la distance du dernier aller partiel ; elle ne place
@@ -821,15 +866,15 @@ function pauseTotal() { var s = 0; S.pauses.forEach(function (p) { s += (p.e == 
 // Ce qui manque, étape par étape : jamais bloquant, toujours rattrapable.
 function missing() {
   var m = [];
-  if (!S.sex || !ok(S.age) || !ok(S.taille) || !ok(S.poids)) m.push({ step: 'patient', txt: 'Sexe, âge, taille ou poids manquant : pas de valeur théorique' });
-  if (S.o2 === 'o2' && !ok(S.o2debit)) m.push({ step: 'cond', txt: 'Débit ou réglage d\'oxygène manquant' });
-  if (!ok(S.rest.spo2) || !ok(S.rest.fc)) m.push({ step: 'repos', txt: 'SpO2 ou FC de repos manquante' });
+  if (!S.sex || !ok(S.age) || !ok(S.taille) || !ok(S.poids)) m.push({ step: 'patient', txt: LG('Sexe, âge, taille ou poids manquant : pas de valeur théorique', 'Sex, age, height or weight missing: no predicted value') });
+  if (S.o2 === 'o2' && !ok(S.o2debit)) m.push({ step: 'cond', txt: LG('Débit ou réglage d\'oxygène manquant', 'Oxygen flow or setting missing') });
+  if (!ok(S.rest.spo2) || !ok(S.rest.fc)) m.push({ step: 'repos', txt: LG('SpO2 ou FC de repos manquante', 'Resting SpO2 or HR missing') });
   if (S.stop) {
-    if (!ok(S.end.spo2) || !ok(S.end.fc)) m.push({ step: 'recup', txt: 'SpO2 ou FC à l\'arrêt manquante' });
+    if (!ok(S.end.spo2) || !ok(S.end.fc)) m.push({ step: 'recup', txt: LG('SpO2 ou FC à l\'arrêt manquante', 'End-test SpO2 or HR missing') });
     var last = S.stop.t >= TEST ? 6 : Math.floor(S.stop.t / 60), miss = [];
     for (var k = 1; k <= last; k++) if (!S.mins[k] || !ok(S.mins[k].s) || !ok(S.mins[k].f)) miss.push(k);
-    if (miss.length) m.push({ step: 'test', txt: 'Relevé incomplet à la minute ' + miss.join(', ') });
-    if (!ok(S.rec[1].spo2) || !ok(S.rec[1].fc)) m.push({ step: 'recup', txt: 'Récupération à 1 min non saisie' });
+    if (miss.length) m.push({ step: 'test', txt: LG('Relevé incomplet à la minute ', 'Incomplete reading at minute ') + miss.join(', ') });
+    if (!ok(S.rec[1].spo2) || !ok(S.rec[1].fc)) m.push({ step: 'recup', txt: LG('Récupération à 1 min non saisie', '1-min recovery not entered') });
   }
   return m;
 }
@@ -869,23 +914,23 @@ function tfield(path, label, type) {
 // Cotation de Borg : l'opérateur présente l'échelle au patient en plein écran ; la valeur choisie s'affiche ici, modifiable.
 function borg(path, label) {
   var v = get(path), kind = path.split('.').pop();
-  var h = '<div class="borgrow"><div class="bl"><b>' + label + '</b><span class="bv">' + (v === '' ? '<span class="bw" style="margin:0">non coté</span>' : v + (BORG_LBL[v] ? '<span class="bw">' + BORG_LBL[v] + '</span>' : '')) + '</span></div>' +
-    '<button type="button" class="showscale" data-scale="' + path + '">' + (v === '' ? 'Présenter l\'échelle' : 'Recoter') + '</button></div>';
+  var h = '<div class="borgrow"><div class="bl"><b>' + label + '</b><span class="bv">' + (v === '' ? '<span class="bw" style="margin:0">' + LG('non coté', 'not rated') + '</span>' : bdv(v) + (BORG_LBL[v] ? '<span class="bw">' + BORG_LBL[v] + '</span>' : '')) + '</span></div>' +
+    '<button type="button" class="showscale" data-scale="' + path + '">' + (v === '' ? LG('Présenter l\'échelle', 'Show the scale') : LG('Recoter', 'Rate again')) + '</button></div>';
   return h;
 }
 function openScale(path) {
   var kind = path.split('.').pop(), atEnd = path.indexOf('end.') === 0, before = atEnd ? S.rest[kind] : '';
   var opText = atEnd
-    ? (before !== '' ? 'Rappeler au patient sa cote d\'avant le test : ' + before + (BORG_LBL[before] ? ', ' + BORG_LBL[before].toLowerCase() : '') + '. Puis poser la question.' : 'Poser la question.')
-    : 'Montrer l\'échelle au patient, puis poser la question.';
+    ? (before !== '' ? LG('Rappeler au patient sa cote d\'avant le test : ', 'Remind the patient of their rating before the test: ') + bdv(before) + (BORG_LBL[before] ? ', ' + BORG_LBL[before].toLowerCase() : '') + LG('. Puis poser la question.', '. Then ask the question.') : LG('Poser la question.', 'Ask the question.'))
+    : LG('Montrer l\'échelle au patient, puis poser la question.', 'Show the scale to the patient, then ask the question.');
   var h = '<div class="scale"><div class="schead"><div class="scop">' + opText + '</div>' +
     '<p class="scq">' + BORG_Q[kind] + '</p>' +
-    (atEnd && before !== '' ? '<p class="scbefore">Avant le test : ' + before + (BORG_LBL[before] ? ', ' + BORG_LBL[before].toLowerCase() : '') + '</p>' : '') +
-    (atEnd ? '' : '<p class="scexpl">À dire avant la première cotation : « ' + BORG_EXPL[kind] + ' »</p>') +
-    '<button type="button" class="ghost scclose" id="scaleClose">Fermer sans coter</button></div>' +
+    (atEnd && before !== '' ? '<p class="scbefore">' + LG('Avant le test : ', 'Before the test: ') + bdv(before) + (BORG_LBL[before] ? ', ' + BORG_LBL[before].toLowerCase() : '') + '</p>' : '') +
+    (atEnd ? '' : '<p class="scexpl">' + LG('À dire avant la première cotation : « ' + BORG_EXPL[kind] + ' »', 'Say before the first rating: “' + BORG_EXPL[kind] + '”') + '</p>') +
+    '<button type="button" class="ghost scclose" id="scaleClose">' + LG('Fermer sans coter', 'Close without rating') + '</button></div>' +
     '<div class="sclist">';
   BORG.slice().reverse().forEach(function (b) {
-    h += '<button type="button" class="scitem' + (get(path) === b ? ' on' : '') + '" data-pick="' + path + '" data-v="' + b + '"><span class="n">' + b + '</span><span class="w">' + (BORG_LBL[b] || '') + '</span></button>';
+    h += '<button type="button" class="scitem' + (get(path) === b ? ' on' : '') + '" data-pick="' + path + '" data-v="' + b + '"><span class="n">' + bdv(b) + '</span><span class="w">' + (BORG_LBL[b] || '') + '</span></button>';
   });
   h += '</div></div>';
   S.sheet = 'scale'; $('sheet').innerHTML = h;
@@ -898,7 +943,7 @@ function flags(step) {
 }
 function nextBar(backTo, label, goTo, extra) {
   $('next').style.display = 'block';
-  $('nextIn').innerHTML = (backTo ? '<button type="button" class="ghost" data-go="' + backTo + '">Retour</button>' : '<span></span>') +
+  $('nextIn').innerHTML = (backTo ? '<button type="button" class="ghost" data-go="' + backTo + '">' + LG('Retour', 'Back') + '</button>' : '<span></span>') +
     '<button type="button" class="big" data-go="' + goTo + '"' + (extra || '') + '>' + label + '</button>';
 }
 
@@ -906,105 +951,105 @@ function nextBar(backTo, label, goTo, extra) {
 var SCREENS = {
   patient: function () {
     var pr = predicted();
-    nextBar(null, 'Suivant : conditions', 'cond');
+    nextBar(null, LG('Suivant : conditions', 'Next: conditions'), 'cond');
     return '<h1>Patient</h1>' +
-      '<div class="cols pat"><div class="col"><div class="card"><h2>Sexe</h2>' + choice('sex', [['F', 'Femme'], ['M', 'Homme']]) + '</div>' +
-      '<div class="card"><div class="grid3">' + field('age', 'Âge', 'ans') + field('taille', 'Taille', 'cm') + field('poids', 'Poids', 'kg') + '</div>' +
+      '<div class="cols pat"><div class="col"><div class="card"><h2>' + LG('Sexe', 'Sex') + '</h2>' + choice('sex', [['F', LG('Femme', 'Female')], ['M', LG('Homme', 'Male')]]) + '</div>' +
+      '<div class="card"><div class="grid3">' + field('age', LG('Âge', 'Age'), LG('ans', 'years')) + field('taille', LG('Taille', 'Height'), 'cm') + field('poids', LG('Poids', 'Weight'), 'kg') + '</div>' +
       '</div></div><div class="col"><div id="pred">' + predText() + '</div></div></div>';
   },
   cond: function () {
     // Listes déroulantes, comme l'app d'origine (branche main) : une seule carte, rien à déplier.
-    nextBar('patient', 'Suivant : repos', 'repos');
+    nextBar('patient', LG('Suivant : repos', 'Next: rest'), 'repos');
     var oxy = S.o2 === 'air' ? 'air' : S.o2if, pulse = S.o2mode === 'pulse';
-    var h = '<h1>Conditions</h1><div class="card"><h2>Examen</h2><div class="nosm">' + choice('exam', [['tm6', 'Test de marche', '6 minutes'], ['titr', 'Titration', 'oxygène à l\'effort']]) + '</div></div>' +
+    var h = '<h1>Conditions</h1><div class="card"><h2>' + LG('Examen', 'Test') + '</h2><div class="nosm">' + choice('exam', [['tm6', LG('Test de marche', 'Walk test'), '6 minutes'], ['titr', 'Titration', LG('oxygène à l\'effort', 'oxygen on exertion')]]) + '</div></div>' +
       '<div class="card"><div class="grid2 sels">' +
-      sel('oxy', 'Oxygène', oxy, [['air', 'Air ambiant'], ['lunettes', 'Lunettes'], ['masque', 'Masque'], ['autre', 'Autre interface']]) +
-      sel('aide', 'Aide à la marche', S.aide, [['aucune', 'Aucune'], ['canne', 'Canne'], ['deambulateur', 'Déambulateur'], ['rollator', 'Rollator']]);
+      sel('oxy', LG('Oxygène', 'Oxygen'), oxy, [['air', LG('Air ambiant', 'Room air')], ['lunettes', LG('Lunettes', 'Nasal cannula')], ['masque', LG('Masque', 'Mask')], ['autre', LG('Autre interface', 'Other interface')]]) +
+      sel('aide', LG('Aide à la marche', 'Walking aid'), S.aide, [['aucune', LG('Aucune', 'None')], ['canne', LG('Canne', 'Walking stick')], ['deambulateur', LG('Déambulateur', 'Walking frame')], ['rollator', 'Rollator']]);
     if (S.o2 === 'o2') {
-      h += sel('o2mode', 'Mode', S.o2mode, [['continu', 'Continu'], ['pulse', 'Pulsé']]) +
-        field('o2debit', pulse ? 'Réglage' : 'Débit', pulse ? 'pos.' : 'L/min') +
-        sel('o2src', 'Source d\'oxygène', S.o2src, [['porte', 'Portée par le patient'], ['chariot', 'Chariot poussé par le patient'], ['operateur', 'Portée par l\'opérateur']], true) +
-        (pulse ? '<label class="f' + (S.o2dev ? '' : ' empty') + '"><span>Dispositif (modèle)</span><span class="box"><input class="dev" list="devList" autocomplete="off" autocapitalize="off" spellcheck="false" data-k="o2dev" value="' + esc(S.o2dev) + '"></span><datalist id="devList">' +
+      h += sel('o2mode', 'Mode', S.o2mode, [['continu', LG('Continu', 'Continuous')], ['pulse', LG('Pulsé', 'Pulsed')]]) +
+        field('o2debit', pulse ? LG('Réglage', 'Setting') : LG('Débit', 'Flow'), pulse ? 'pos.' : 'L/min') +
+        sel('o2src', LG('Source d\'oxygène', 'Oxygen source'), S.o2src, [['porte', LG('Portée par le patient', 'Carried by the patient')], ['chariot', LG('Chariot poussé par le patient', 'Trolley pushed by the patient')], ['operateur', LG('Portée par l\'opérateur', 'Carried by the assessor')]], true) +
+        (pulse ? '<label class="f' + (S.o2dev ? '' : ' empty') + '"><span>' + LG('Dispositif (modèle)', 'Device (model)') + '</span><span class="box"><input class="dev" list="devList" autocomplete="off" autocapitalize="off" spellcheck="false" data-k="o2dev" value="' + esc(S.o2dev) + '"></span><datalist id="devList">' +
           devices().map(function (d) { return '<option value="' + esc(d) + '"></option>'; }).join('') + '</datalist></label>' : '<span></span>');
     }
-    h += '</div><p class="hint corr">Couloir : ' + corridor() + ' m' + departTxt() + '. <button type="button" class="linkbtn" id="gearInline">Modifier</button></p>';
-    if (S.exam === 'titr' && S.o2 === 'air') h += '<p class="hint" style="margin-top:10px">La titration se fait sous oxygène : choisir une interface d\'oxygène.</p>';
+    h += '</div><p class="hint corr">' + LG('Couloir : ', 'Corridor: ') + corridor() + ' m' + departTxt() + '. <button type="button" class="linkbtn" id="gearInline">' + LG('Modifier', 'Change') + '</button></p>';
+    if (S.exam === 'titr' && S.o2 === 'air') h += '<p class="hint" style="margin-top:10px">' + LG('La titration se fait sous oxygène : choisir une interface d\'oxygène.', 'Titration is done on oxygen: choose an oxygen interface.') + '</p>';
     return h + '</div>';
   },
   repos: function () {
-    nextBar('cond', 'Suivant : préparer le départ', 'pret');
-    return '<h1>Repos, avant le départ</h1><p class="lead">Patient assis près de la ligne de départ, au repos au moins 15 minutes avant le test. Vérifier les contre-indications ; relever SpO2, FC et pression artérielle, puis dyspnée et fatigue.</p>' +
-      '<div class="cols"><div class="col"><div class="card"><div class="grid2">' + field('rest.spo2', 'SpO2', '%') + field('rest.fc', 'FC', '/min') + field('rest.pas', 'PAS', 'mmHg') + field('rest.pad', 'PAD', 'mmHg') + '</div>' + flags('repos') + '</div>' + restTitr() + '</div>' +
-      '<div class="col"><div class="card' + (titrOn() ? ' borgpair' : '') + '"><h2>Borg avant le test</h2>' + borg('rest.bd', 'Dyspnée') + borg('rest.bf', 'Fatigue') + '</div></div></div>';
+    nextBar('cond', LG('Suivant : préparer le départ', 'Next: get ready to start'), 'pret');
+    return '<h1>' + LG('Repos, avant le départ', 'Rest, before the start') + '</h1><p class="lead">' + LG('Patient assis près de la ligne de départ, au repos au moins 15 minutes avant le test. Vérifier les contre-indications ; relever SpO2, FC et pression artérielle, puis dyspnée et fatigue.', 'Patient seated near the starting line, resting for at least 15 minutes before the test. Check contraindications; record SpO2, HR and blood pressure, then dyspnoea and fatigue.') + '</p>' +
+      '<div class="cols"><div class="col"><div class="card"><div class="grid2">' + field('rest.spo2', 'SpO2', '%') + field('rest.fc', LG('FC', 'HR'), '/min') + field('rest.pas', LG('PAS', 'SBP'), 'mmHg') + field('rest.pad', LG('PAD', 'DBP'), 'mmHg') + '</div>' + flags('repos') + '</div>' + restTitr() + '</div>' +
+      '<div class="col"><div class="card' + (titrOn() ? ' borgpair' : '') + '"><h2>' + LG('Borg avant le test', 'Borg before the test') + '</h2>' + borg('rest.bd', LG('Dyspnée', 'Dyspnoea')) + borg('rest.bf', 'Fatigue') + '</div></div></div>';
   },
   pret: function () {
     $('next').style.display = 'block';
     // Sur téléphone, DÉPART passe dans la barre du bas pour rester visible sans défiler.
-    $('nextIn').innerHTML = '<button type="button" class="ghost" data-go="repos">Retour</button><button type="button" class="big gobar" id="goBar">DÉPART<small>' + examLabel() + ', ' + o2Lc() + '</small></button>';
-    if (S.started) $('nextIn').innerHTML = '<button type="button" class="ghost" data-go="repos">Retour</button><button type="button" class="big" data-go="test">Revenir au test</button>';
+    $('nextIn').innerHTML = '<button type="button" class="ghost" data-go="repos">' + LG('Retour', 'Back') + '</button><button type="button" class="big gobar" id="goBar">' + LG('DÉPART', 'START') + '<small>' + examLabel() + ', ' + o2Lc() + '</small></button>';
+    if (S.started) $('nextIn').innerHTML = '<button type="button" class="ghost" data-go="repos">' + LG('Retour', 'Back') + '</button><button type="button" class="big" data-go="test">' + LG('Revenir au test', 'Back to the test') + '</button>';
     var c = function (k, t) { return '<button type="button" class="check' + (S.ready[k] ? ' on' : '') + '" data-ready="' + k + '"><i>' + (S.ready[k] ? '✓' : '') + '</i>' + t + '</button>'; };
-    return '<h1>Prêt au départ</h1><div class="cols"><div class="col">' +
-      '<div class="card"><h2>Consignes à lire au patient</h2><div class="consignes">' + esc(S.consignes) + '</div>' +
+    return '<h1>' + LG('Prêt au départ', 'Ready to start') + '</h1><div class="cols"><div class="col">' +
+      '<div class="card"><h2>' + LG('Consignes à lire au patient', 'Instructions to read to the patient') + '</h2><div class="consignes">' + esc(S.consignes) + '</div>' +
       '</div></div><div class="col">' +
-      '<div class="card">' + c('consignes', 'Consignes lues au patient') + c('oxy', 'Oxymètre en place, signal stable') + c('line', 'Patient sur la ligne de départ') +
+      '<div class="card">' + c('consignes', LG('Consignes lues au patient', 'Instructions read to the patient')) + c('oxy', LG('Oxymètre en place, signal stable', 'Oximeter in place, stable signal')) + c('line', LG('Patient sur la ligne de départ', 'Patient on the starting line')) +
       '</div>' +
-      (S.started ? '' : '<button type="button" class="go" id="goBtn">DÉPART<small>' + examLabel() + '</small><small>' + o2Label() + '</small></button>') + '</div></div>';
+      (S.started ? '' : '<button type="button" class="go" id="goBtn">' + LG('DÉPART', 'START') + '<small>' + examLabel() + '</small><small>' + o2Label() + '</small></button>') + '</div></div>';
   },
   test: function () {
     $('next').style.display = 'none';
-    if (!S.started) return '<h1>Test</h1><div class="card"><p>Le test n\'a pas commencé.</p><button type="button" class="big" style="width:100%" data-go="pret">Aller au départ</button></div>';
+    if (!S.started) return '<h1>Test</h1><div class="card"><p>' + LG('Le test n\'a pas commencé.', 'The test has not started.') + '</p><button type="button" class="big" style="width:100%" data-go="pret">' + LG('Aller au départ', 'Go to the start') + '</button></div>';
     var ticks = ''; for (var m = 1; m < 6; m++) ticks += '<em style="left:' + (m / 6 * 100) + '%"></em>';
-    return '<p class="testinfo">' + examLabel() + ', ' + o2Lc() + ', couloir de ' + corridor() + ' m' + departTxt() + '</p>' +
+    return '<p class="testinfo">' + examLabel() + ', ' + o2Lc() + LG(', couloir de ' + corridor() + ' m', ', ' + corridor() + ' m corridor') + departTxt() + '</p>' +
       '<div class="cols test"><div class="col"><div class="clock"><div class="t" id="clk">0:00</div><div class="r" id="rem"></div></div>' +
       '<div class="bar"><b id="prog" style="width:0"></b>' + ticks + '</div>' +
-      '<div id="alertBox"></div><div class="phrase" id="phrase">' + esc(S.lastPhrase || 'Départ. Marchez aussi loin que possible pendant 6 minutes.') + '</div>' +
+      '<div id="alertBox"></div><div class="phrase" id="phrase">' + esc(S.lastPhrase || LG('Départ. Marchez aussi loin que possible pendant 6 minutes.', 'Start. Walk as far as possible for 6 minutes.')) + '</div>' +
       '<div id="promptBox"></div><div class="minstrip" id="minstrip"></div></div><div class="col">' +
-      '<div class="track" id="track"></div><button type="button" class="lap' + (S.running ? '' : ' disabled') + '" id="lapBtn"><span class="p">+1 aller</span><span class="d" id="lapD">0 m · 0 aller</span></button>' +
-      '<div class="ctl"><button type="button" class="b-undo" id="undoBtn">Annuler 1</button>' +
-      '<button type="button" class="b-pause' + (S.running ? '' : ' disabled') + '" id="pauseBtn">Le patient s\'arrête</button>' +
-      '<button type="button" class="b-stop" id="stopBtn">' + (S.running ? 'Arrêter le test' : 'Aller à la récupération') + '</button></div>' +
+      '<div class="track" id="track"></div><button type="button" class="lap' + (S.running ? '' : ' disabled') + '" id="lapBtn"><span class="p">' + LG('+1 aller', '+1 length') + '</span><span class="d" id="lapD">' + LG('0 m · 0 aller', '0 m, 0 lengths') + '</span></button>' +
+      '<div class="ctl"><button type="button" class="b-undo" id="undoBtn">' + LG('Annuler 1', 'Undo 1') + '</button>' +
+      '<button type="button" class="b-pause' + (S.running ? '' : ' disabled') + '" id="pauseBtn">' + LG('Le patient s\'arrête', 'Patient stops') + '</button>' +
+      '<button type="button" class="b-stop" id="stopBtn">' + (S.running ? LG('Arrêter le test', 'Stop the test') : LG('Aller à la récupération', 'Go to recovery')) + '</button></div>' +
       '<p class="hint" id="pinfo"></p></div><div class="col">' + o2Run() +
-      (S.opGuide ? '<details class="guide"><summary>Rappel pour l\'opérateur</summary><div class="gtxt">' + esc(S.opText) + '</div></details>' : '') +
-      '<div class="nadirrow">' + field('nadir', 'Nadir lu sur l\'oxymètre, s\'il est plus bas qu\'un relevé', '%') + '</div></div></div>';
+      (S.opGuide ? '<details class="guide"><summary>' + LG('Rappel pour l\'opérateur', 'Assessor reminder') + '</summary><div class="gtxt">' + esc(S.opText) + '</div></details>' : '') +
+      '<div class="nadirrow">' + field('nadir', LG('Nadir lu sur l\'oxymètre, s\'il est plus bas qu\'un relevé', 'Nadir read on the oximeter, if lower than a reading'), '%') + '</div></div></div>';
   },
   recup: function () {
-    nextBar('test', 'Suivant : bilan', 'bilan');
-    if (!S.stop) return '<h1>Arrêt et récupération</h1><div class="card"><p>Le test n\'est pas terminé.</p></div>';
-    var stopTxt = S.stop.reason ? 'Arrêt prématuré à ' + mmss(S.stop.t) + ' (' + S.stop.reason + ')' : 'Test mené à son terme (6 min)';
+    nextBar('test', LG('Suivant : bilan', 'Next: results'), 'bilan');
+    if (!S.stop) return '<h1>' + LG('Arrêt et récupération', 'End and recovery') + '</h1><div class="card"><p>' + LG('Le test n\'est pas terminé.', 'The test is not finished.') + '</p></div>';
+    var stopTxt = S.stop.reason ? LG('Arrêt prématuré à ', 'Stopped early at ') + mmss(S.stop.t) + ' (' + tv(S.stop.reason) + ')' : LG('Test mené à son terme (6 min)', 'Test completed (6 min)');
     var sy = '<div class="choice c2">';
-    SYMPT.forEach(function (s) { sy += '<button type="button" class="opt' + (S.end.sympt.indexOf(s) >= 0 ? ' on' : '') + '" data-sympt="' + esc(s) + '">' + s + '</button>'; });
+    SYMPT.forEach(function (s) { sy += '<button type="button" class="opt' + (S.end.sympt.indexOf(s) >= 0 ? ' on' : '') + '" data-sympt="' + esc(s) + '">' + tv(s) + '</button>'; });
     sy += '</div>';
-    return '<h1>Arrêt et récupération</h1><p class="lead rcl">' + stopTxt + (S.stop.reason ? '.' : '. À dire : « ' + END_PHRASE + ' »') + ' Le minuteur de récupération tourne.</p>' +
-      '<div class="rtabs"><span class="rtstop">' + stopTxt + '</span><span class="rtclk" id="rtClk"></span>' + ['Arrêt', 'Borg, symptômes', 'Récupération'].map(function (t, i) { return '<button type="button" class="rtab' + ((S.rpane || 0) === i ? ' on' : '') + '" data-rpane="' + i + '">' + t + '</button>'; }).join('') + '</div>' +
-      '<div class="cols rcp" data-pane="' + (S.rpane || 0) + '"><div class="col"><div class="rec"><div class="rt" id="rt1"><span>Récupération</span><b id="recClk">0:00</b></div><div class="rt" id="rt3"><span id="recLbl">Relevé à 1 min dans</span><b id="recNext">1:00</b></div></div>' +
-      '<div class="card"><h2>À l\'arrêt</h2><div class="grid2">' + field('end.spo2', 'SpO2', '%') + field('end.fc', 'FC', '/min') + field('end.pas', 'PAS', 'mmHg') + field('end.pad', 'PAD', 'mmHg') + '</div>' +
-      '<div style="height:12px"></div><div class="f"><span>' + (S.laps.length === 0 && depart() ? 'Mètres depuis la ligne de départ' : 'Mètres depuis le dernier plot') + ' : <b id="partV">' + (S.end.partiel || 0) + ' m</b></span>' +
+    return '<h1>' + LG('Arrêt et récupération', 'End and recovery') + '</h1><p class="lead rcl">' + stopTxt + (S.stop.reason ? '.' : LG('. À dire : « ' + END_PHRASE + ' »', '. Say: “' + END_PHRASE + '”')) + LG(' Le minuteur de récupération tourne.', ' The recovery timer is running.') + '</p>' +
+      '<div class="rtabs"><span class="rtstop">' + stopTxt + '</span><span class="rtclk" id="rtClk"></span>' + [LG('Arrêt', 'End'), LG('Borg, symptômes', 'Borg, symptoms'), LG('Récupération', 'Recovery')].map(function (t, i) { return '<button type="button" class="rtab' + ((S.rpane || 0) === i ? ' on' : '') + '" data-rpane="' + i + '">' + t + '</button>'; }).join('') + '</div>' +
+      '<div class="cols rcp" data-pane="' + (S.rpane || 0) + '"><div class="col"><div class="rec"><div class="rt" id="rt1"><span>' + LG('Récupération', 'Recovery') + '</span><b id="recClk">0:00</b></div><div class="rt" id="rt3"><span id="recLbl">' + LG('Relevé à 1 min dans', 'Reading at 1 min in') + '</span><b id="recNext">1:00</b></div></div>' +
+      '<div class="card"><h2>' + LG('À l\'arrêt', 'At the end') + '</h2><div class="grid2">' + field('end.spo2', 'SpO2', '%') + field('end.fc', LG('FC', 'HR'), '/min') + field('end.pas', LG('PAS', 'SBP'), 'mmHg') + field('end.pad', LG('PAD', 'DBP'), 'mmHg') + '</div>' +
+      '<div style="height:12px"></div><div class="f"><span>' + (S.laps.length === 0 && depart() ? LG('Mètres depuis la ligne de départ', 'Metres from the starting line') : LG('Mètres depuis le dernier plot', 'Metres from the last cone')) + LG(' : ', ': ') + '<b id="partV">' + (S.end.partiel || 0) + ' m</b></span>' +
       '<input class="slider" type="range" min="0" max="' + partMax() + '" step="1" value="' + (S.end.partiel || 0) + '" data-k="end.partiel"></div>' + flags('recup') + '</div></div><div class="col">' +
-      '<div class="card"><h2>Borg à la fin</h2>' + borg('end.bd', 'Dyspnée') + borg('end.bf', 'Fatigue') + '</div>' +
-      '<div class="card"><h2>Symptômes limitants</h2><p class="say">Après le Borg : « Qu\'est-ce qui vous a empêché de marcher plus loin ? »</p>' + sy + '</div>' +
-      '</div><div class="col"><div class="card" id="rc1"><h2>Récupération à 1 min</h2><div class="grid4">' + field('rec.1.spo2', 'SpO2 %', '') + field('rec.1.fc', 'FC /min', '') + field('rec.1.pas', 'PAS', '') + field('rec.1.pad', 'PAD', '') + '</div></div>' +
-      '<div class="card" id="rc3"><h2>Récupération à 3 min</h2><div class="grid4">' + field('rec.3.spo2', 'SpO2 %', '') + field('rec.3.fc', 'FC /min', '') + field('rec.3.pas', 'PAS', '') + field('rec.3.pad', 'PAD', '') + '</div></div></div></div>';
+      '<div class="card"><h2>' + LG('Borg à la fin', 'Borg at the end') + '</h2>' + borg('end.bd', LG('Dyspnée', 'Dyspnoea')) + borg('end.bf', 'Fatigue') + '</div>' +
+      '<div class="card"><h2>' + LG('Symptômes limitants', 'Limiting symptoms') + '</h2><p class="say">' + LG('Après le Borg : « Qu\'est-ce qui vous a empêché de marcher plus loin ? »', 'After the Borg: “What, if anything, kept you from walking farther?”') + '</p>' + sy + '</div>' +
+      '</div><div class="col"><div class="card" id="rc1"><h2>' + LG('Récupération à 1 min', 'Recovery at 1 min') + '</h2><div class="grid4">' + field('rec.1.spo2', 'SpO2 %', '') + field('rec.1.fc', LG('FC /min', 'HR /min'), '') + field('rec.1.pas', LG('PAS', 'SBP'), '') + field('rec.1.pad', LG('PAD', 'DBP'), '') + '</div></div>' +
+      '<div class="card" id="rc3"><h2>' + LG('Récupération à 3 min', 'Recovery at 3 min') + '</h2><div class="grid4">' + field('rec.3.spo2', 'SpO2 %', '') + field('rec.3.fc', LG('FC /min', 'HR /min'), '') + field('rec.3.pas', LG('PAS', 'SBP'), '') + field('rec.3.pad', LG('PAD', 'DBP'), '') + '</div></div></div></div>';
   },
   bilan: function () {
     $('next').style.display = 'block';
-    $('nextIn').innerHTML = '<button type="button" class="ghost" data-go="recup">Retour</button><button type="button" class="big' + (S.stop ? '' : ' disabled') + '" id="sendBtn">Envoyer le compte rendu</button>';
-    if (!S.stop) return '<h1>Bilan</h1><div class="card"><p>Le bilan apparaît une fois le test terminé.</p></div>';
+    $('nextIn').innerHTML = '<button type="button" class="ghost" data-go="recup">' + LG('Retour', 'Back') + '</button><button type="button" class="big' + (S.stop ? '' : ' disabled') + '" id="sendBtn">' + LG('Envoyer le compte rendu', 'Send the report') + '</button>';
+    if (!S.stop) return '<h1>' + LG('Bilan', 'Results') + '</h1><div class="card"><p>' + LG('Le bilan apparaît une fois le test terminé.', 'The results appear once the test is finished.') + '</p></div>';
     var A = analysis();
     var k = '<div class="kpis">' +
-      kpi(Math.round(A.dist) + ' m', A.pr ? A.pct + ' % de la théorique, LIN ' + A.pr.lin + ' m' : 'pas de valeur théorique', A.pr && A.dist < A.pr.lin) +
-      kpi(isNaN(A.nadir) ? '—' : A.nadir + ' %', 'SpO2 la plus basse' + (isNaN(A.desat) ? '' : ', baisse de ' + A.desat + ' points'), A.desat >= 4) +
-      kpi(isNaN(A.fPeak) ? '—' : A.fPeak + '/min', 'FC la plus haute' + (isNaN(A.pFmt) ? '' : ', ' + A.pFmt + ' % de la FMT'), false) +
-      kpi(isNaN(A.vWalk) ? '—' : fr1(A.vWalk) + ' km/h', 'vitesse pendant la marche', false) + '</div>';
+      kpi(Math.round(A.dist) + ' m', A.pr ? A.pct + LG(' % de la théorique, LIN ', '% of predicted, LLN ') + A.pr.lin + ' m' : LG('pas de valeur théorique', 'no predicted value'), A.pr && A.dist < A.pr.lin) +
+      kpi(isNaN(A.nadir) ? '—' : A.nadir + ' %', LG('SpO2 la plus basse', 'Lowest SpO2') + (isNaN(A.desat) ? '' : LG(', baisse de ', ', fall of ') + A.desat + ' points'), A.desat >= 4) +
+      kpi(isNaN(A.fPeak) ? '—' : A.fPeak + '/min', LG('FC la plus haute', 'Highest HR') + (isNaN(A.pFmt) ? '' : ', ' + A.pFmt + LG(' % de la FMT', '% of predicted max HR')), false) +
+      kpi(isNaN(A.vWalk) ? '—' : fr1(A.vWalk) + ' km/h', LG('vitesse pendant la marche', 'walking speed'), false) + '</div>';
     var todo = '';
-    missing().forEach(function (m) { todo += '<p class="todo">' + m.txt + '. <button type="button" class="linkbtn" data-go="' + m.step + '">Compléter</button></p>'; });
+    missing().forEach(function (m) { todo += '<p class="todo">' + m.txt + '. <button type="button" class="linkbtn" data-go="' + m.step + '">' + LG('Compléter', 'Complete') + '</button></p>'; });
     // Grille à zones : portrait = figure | synthèse, puis usuelles | indices ; paysage = figure à gauche sur deux rangées, indices sur toute la largeur.
-    return '<h1>Bilan</h1>' + k + '<div class="bilan">' +
-      '<div class="card b-fig"><h2>Évolution au cours du test</h2>' + figure(A) + '</div>' +
-      '<div class="b-syn"><div class="card"><h2>Synthèse</h2><div class="text">' + esc(Report.brief()) + '</div></div>' +
-      (todo ? '<div class="card"><h2>À compléter avant l\'envoi</h2>' + todo + '</div>' : '') + '</div>' +
-      '<div class="card b-usu"><h2>Valeurs usuelles</h2>' + table(A.usual) + '</div>' +
-      '<div class="card b-exp"><h2>Indices exploratoires</h2><p class="hint" style="margin:0 0 8px">Repères publiés, établis dans d\'autres populations et souvent avec une SpO2 enregistrée en continu : à lire comme des descriptions, pas comme des seuils diagnostiques.</p>' + entries(A.explo) + '</div></div>' +
-      '<button type="button" class="ghost newtest" data-new="1">Nouveau test</button>';
+    return '<h1>' + LG('Bilan', 'Results') + '</h1>' + k + '<div class="bilan">' +
+      '<div class="card b-fig"><h2>' + LG('Évolution au cours du test', 'Course of the test') + '</h2>' + figure(A) + '</div>' +
+      '<div class="b-syn"><div class="card"><h2>' + LG('Synthèse', 'Summary') + '</h2><div class="text">' + esc(Report.brief()) + '</div></div>' +
+      (todo ? '<div class="card"><h2>' + LG('À compléter avant l\'envoi', 'To complete before sending') + '</h2>' + todo + '</div>' : '') + '</div>' +
+      '<div class="card b-usu"><h2>' + LG('Valeurs usuelles', 'Standard values') + '</h2>' + table(A.usual) + '</div>' +
+      '<div class="card b-exp"><h2>' + LG('Indices exploratoires', 'Exploratory indices') + '</h2><p class="hint" style="margin:0 0 8px">' + LG('Repères publiés, établis dans d\'autres populations et souvent avec une SpO2 enregistrée en continu : à lire comme des descriptions, pas comme des seuils diagnostiques.', 'Published reference points, established in other populations and often with continuously recorded SpO2: read them as descriptions, not as diagnostic thresholds.') + '</p>' + entries(A.explo) + '</div></div>' +
+      '<button type="button" class="ghost newtest" data-new="1">' + LG('Nouveau test', 'New test') + '</button>';
   }
 };
 
@@ -1016,9 +1061,9 @@ function restTitr() {
   if (!titrOn()) return '';
   // Paliers en colonnes, deux lignes (valeur appliquée, SpO2) : tient sous les relevés de repos, même sur téléphone en paysage.
   var cell = function (path) { var v = get(path); return '<label class="f' + (v === '' ? ' empty' : '') + '"><span class="box"><input type="text" inputmode="decimal" autocomplete="off" data-k="' + path + '" value="' + esc(v) + '"></span></label>'; };
-  var h = '<div class="card"><h2>Titration au repos</h2><div class="rtg"><span></span>', i;
+  var h = '<div class="card"><h2>' + LG('Titration au repos', 'Titration at rest') + '</h2><div class="rtg"><span></span>', i;
   for (i = 0; i < 5; i++) h += '<span class="rtn">' + (i + 1) + '</span>';
-  h += '<span class="rth">' + (S.o2mode === 'pulse' ? 'Réglage' : 'Débit, L/min') + '</span>';
+  h += '<span class="rth">' + (S.o2mode === 'pulse' ? LG('Réglage', 'Setting') : LG('Débit, L/min', 'Flow, L/min')) + '</span>';
   for (i = 0; i < 5; i++) h += cell('rt.' + i + '.d');
   h += '<span class="rth">SpO2 %</span>';
   for (i = 0; i < 5; i++) h += cell('rt.' + i + '.s');
@@ -1028,35 +1073,35 @@ function restTitr() {
 function o2Now() { return S.o2ch.length ? S.o2ch[S.o2ch.length - 1].v : S.o2debit; }
 function o2Run() {
   if (!titrOn()) return '';
-  return '<div class="o2run"><button type="button" class="o2btn" id="o2Btn">Oxygène : <b>' + (ok(o2Now()) ? o2Val(o2Now()) : '?') + '</b>, modifier</button>' +
-    '<p class="hint" style="margin:4px 0 0">' + (S.o2ch.length ? S.o2ch.length + ' changement' + (S.o2ch.length > 1 ? 's' : '') + ', le dernier à ' + mmss(S.o2ch[S.o2ch.length - 1].t) + '.' : 'Valeur de départ, inchangée.') + '</p></div>';
+  return '<div class="o2run"><button type="button" class="o2btn" id="o2Btn">' + LG('Oxygène : ', 'Oxygen: ') + '<b>' + (ok(o2Now()) ? o2Val(o2Now()) : '?') + '</b>' + LG(', modifier', ', change') + '</button>' +
+    '<p class="hint" style="margin:4px 0 0">' + (S.o2ch.length ? S.o2ch.length + LG(' changement', ' change') + (S.o2ch.length > 1 ? 's' : '') + LG(', le dernier à ', ', the last at ') + mmss(S.o2ch[S.o2ch.length - 1].t) + '.' : LG('Valeur de départ, inchangée.', 'Starting value, unchanged.')) + '</p></div>';
 }
 function openO2() {
   S.sheet = 'o2'; S.o2new = '';
-  var list = S.o2ch.map(function (c) { return mmss(c.t) + ' : ' + o2Val(c.v); }).join(' ; ');
-  $('sheet').innerHTML = '<div class="sheet"><div class="pane"><h2>' + (S.o2mode === 'pulse' ? 'Changer le réglage' : 'Changer le débit') + '</h2>' +
-    '<p class="sub">Actuellement : ' + (ok(o2Now()) ? o2Val(o2Now()) : 'non renseigné') + (list ? '. Changements : ' + list : '') + '.</p>' +
-    '<div class="grid2">' + field('o2new', S.o2mode === 'pulse' ? 'Nouveau réglage' : 'Nouveau débit', o2Unit()) + '<span></span></div>' +
-    '<button type="button" class="big o2ok" id="o2Ok">Valider</button>' +
-    (S.o2ch.length ? '<button type="button" class="ghost b-cancel" id="o2Undo">Annuler le dernier changement</button>' : '') +
-    '<button type="button" class="ghost b-cancel" id="o2No">Fermer</button></div></div>';
+  var list = S.o2ch.map(function (c) { return mmss(c.t) + LG(' : ', ': ') + o2Val(c.v); }).join(LG(' ; ', '; '));
+  $('sheet').innerHTML = '<div class="sheet"><div class="pane"><h2>' + (S.o2mode === 'pulse' ? LG('Changer le réglage', 'Change the setting') : LG('Changer le débit', 'Change the flow')) + '</h2>' +
+    '<p class="sub">' + LG('Actuellement : ', 'Current: ') + (ok(o2Now()) ? o2Val(o2Now()) : LG('non renseigné', 'not entered')) + (list ? LG('. Changements : ', '. Changes: ') + list : '') + '.</p>' +
+    '<div class="grid2">' + field('o2new', S.o2mode === 'pulse' ? LG('Nouveau réglage', 'New setting') : LG('Nouveau débit', 'New flow'), o2Unit()) + '<span></span></div>' +
+    '<button type="button" class="big o2ok" id="o2Ok">' + LG('Valider', 'Confirm') + '</button>' +
+    (S.o2ch.length ? '<button type="button" class="ghost b-cancel" id="o2Undo">' + LG('Annuler le dernier changement', 'Undo the last change') + '</button>' : '') +
+    '<button type="button" class="ghost b-cancel" id="o2No">' + LG('Fermer', 'Close') + '</button></div></div>';
 }
 function predText() {
   var pr = predicted();
-  return pr ? '<div class="readout"><span class="rl">Distance théorique</span><span class="rv">' + pr.p + ' m</span><span class="rs">Limite inférieure de la normale : ' + pr.lin + ' m</span></div>'
+  return pr ? '<div class="readout"><span class="rl">' + LG('Distance théorique', 'Predicted distance') + '</span><span class="rv">' + pr.p + ' m</span><span class="rs">' + LG('Limite inférieure de la normale : ', 'Lower limit of normal: ') + pr.lin + ' m</span></div>'
     : '';
 }
-function examLabel() { return S.exam === 'titr' ? 'Titration de l\'oxygène à l\'effort' : 'Test de marche de 6 minutes'; }
+function examLabel() { return S.exam === 'titr' ? LG('Titration de l\'oxygène à l\'effort', 'Exertional oxygen titration') : LG('Test de marche de 6 minutes', '6-minute walk test'); }
 // Dans une phrase : minuscule initiale, sauf pour « O2 ».
 function o2Lc() { var l = o2Label(); return l.indexOf('O2') === 0 ? l : l.charAt(0).toLowerCase() + l.slice(1); }
 function o2Label() {
-  if (S.o2 === 'air') return 'Air ambiant';
+  if (S.o2 === 'air') return LG('Air ambiant', 'Room air');
   var v = ok(S.o2debit) ? S.o2debit : '?';
-  var src = { porte: 'portée par le patient', chariot: 'chariot poussé', operateur: 'portée par l\'opérateur' }[S.o2src];
-  return (S.o2mode === 'pulse' ? 'O2 pulsé, position ' + v + (S.o2dev ? ' (' + S.o2dev + ')' : '') : 'O2 continu, ' + v + ' L/min') + ', ' + src;
+  var src = (EN ? { porte: 'carried by the patient', chariot: 'pushed trolley', operateur: 'carried by the assessor' } : { porte: 'portée par le patient', chariot: 'chariot poussé', operateur: 'portée par l\'opérateur' })[S.o2src];
+  return (S.o2mode === 'pulse' ? LG('O2 pulsé, position ', 'Pulsed O2, position ') + v + (S.o2dev ? ' (' + S.o2dev + ')' : '') : LG('O2 continu, ', 'Continuous O2, ') + v + ' L/min') + ', ' + src;
 }
 
-function fr1(v) { return (Math.round(v * 10) / 10).toString().replace('.', ','); }
+function fr1(v) { var t = (Math.round(v * 10) / 10).toString(); return EN ? t : t.replace('.', ','); }
 function kpi(v, l, bad) { return '<div class="kpi' + (bad ? ' bad' : '') + '"><b>' + v + '</b><span>' + l + '</span></div>'; }
 // Même rendu que table(), mais en blocs : peut se répartir sur plusieurs colonnes.
 function entries(rows) {
@@ -1121,18 +1166,18 @@ function analysis() {
   var bd0 = num(S.rest.bd), bd1 = num(S.end.bd), bf0 = num(S.rest.bf), bf1 = num(S.end.bf);
   var v = function (x, u) { return isNaN(x) ? null : x + (u || ''); };
   A.usual = [
-    ['Distance', Math.round(A.dist) + ' m', A.pr ? A.pct + ' % de la valeur théorique (Enright), LIN ' + A.pr.lin + ' m' : ''],
-    ['Vitesse globale', isNaN(A.vTot) ? null : fr1(A.vTot) + ' km/h', ''],
-    ['Vitesse pendant la marche', isNaN(A.vWalk) ? null : fr1(A.vWalk) + ' km/h', S.pauses.length ? S.pauses.length + ' arrêt' + (S.pauses.length > 1 ? 's' : '') + ', ' + Math.round(pauseTotal()) + ' s' : 'sans arrêt'],
-    ['SpO2 repos, fin, nadir', isNaN(A.sRest) ? null : A.sRest + ' %, ' + (isNaN(A.sEnd) ? '—' : A.sEnd + ' %') + ', ' + (isNaN(A.nadir) ? '—' : A.nadir + ' %'), isNaN(A.desat) ? '' : 'baisse de ' + A.desat + ' points'],
-    ['FC repos, fin, pic', isNaN(A.fRest) ? null : A.fRest + ', ' + (isNaN(A.fEnd) ? '—' : A.fEnd) + ', ' + (isNaN(A.fPeak) ? '—' : A.fPeak) + ' /min', isNaN(A.pFmt) ? '' : 'pic à ' + A.pFmt + ' % de la FMT (220 − âge)'],
-    ['Pression artérielle', ok(S.rest.pas) ? S.rest.pas + '/' + S.rest.pad + ' → ' + (ok(S.end.pas) ? S.end.pas + '/' + S.end.pad : '—') + ' mmHg' : null, 'repos → arrêt'],
-    ['Borg dyspnée', isNaN(bd0) ? null : S.rest.bd + ' → ' + (isNaN(bd1) ? '—' : S.end.bd), ''],
-    ['Borg fatigue', isNaN(bf0) ? null : S.rest.bf + ' → ' + (isNaN(bf1) ? '—' : S.end.bf), ''],
-    ['Récupération à 1 min', ok(S.rec[1].spo2) ? 'SpO2 ' + S.rec[1].spo2 + ' %, FC ' + S.rec[1].fc + ' /min' : null, ''],
-    ['Oxygène', S.o2 === 'o2' ? (ok(S.o2debit) ? o2Val(S.o2debit) : '—') + (S.o2ch.length ? S.o2ch.map(function (c) { return ', ' + o2Val(c.v) + ' à ' + mmss(c.t); }).join('') : '') : 'air ambiant',
-      (function () { var r = S.rt.filter(function (x) { return ok(x.d) && ok(x.s); }); return titrOn() && r.length ? 'Au repos : ' + r.map(function (x) { return x.s + ' % à ' + o2Val(x.d); }).join(', ') : ''; })()],
-    ['Récupération à 3 min', ok(S.rec[3].spo2) ? 'SpO2 ' + S.rec[3].spo2 + ' %, FC ' + S.rec[3].fc + ' /min' : null, '']
+    ['Distance', Math.round(A.dist) + ' m', A.pr ? A.pct + LG(' % de la valeur théorique (Enright), LIN ', '% of predicted (Enright), LLN ') + A.pr.lin + ' m' : ''],
+    [LG('Vitesse globale', 'Overall speed'), isNaN(A.vTot) ? null : fr1(A.vTot) + ' km/h', ''],
+    [LG('Vitesse pendant la marche', 'Walking speed'), isNaN(A.vWalk) ? null : fr1(A.vWalk) + ' km/h', S.pauses.length ? S.pauses.length + LG(' arrêt', ' stop') + (S.pauses.length > 1 ? 's' : '') + ', ' + Math.round(pauseTotal()) + ' s' : LG('sans arrêt', 'no stops')],
+    [LG('SpO2 repos, fin, nadir', 'SpO2 rest, end, nadir'), isNaN(A.sRest) ? null : A.sRest + ' %, ' + (isNaN(A.sEnd) ? '—' : A.sEnd + ' %') + ', ' + (isNaN(A.nadir) ? '—' : A.nadir + ' %'), isNaN(A.desat) ? '' : LG('baisse de ', 'fall of ') + A.desat + ' points'],
+    [LG('FC repos, fin, pic', 'HR rest, end, peak'), isNaN(A.fRest) ? null : A.fRest + ', ' + (isNaN(A.fEnd) ? '—' : A.fEnd) + ', ' + (isNaN(A.fPeak) ? '—' : A.fPeak) + ' /min', isNaN(A.pFmt) ? '' : LG('pic à ' + A.pFmt + ' % de la FMT (220 − âge)', 'peak at ' + A.pFmt + '% of predicted max HR (220 − age)')],
+    [LG('Pression artérielle', 'Blood pressure'), ok(S.rest.pas) ? S.rest.pas + '/' + S.rest.pad + ' → ' + (ok(S.end.pas) ? S.end.pas + '/' + S.end.pad : '—') + ' mmHg' : null, LG('repos → arrêt', 'rest → end')],
+    [LG('Borg dyspnée', 'Borg dyspnoea'), isNaN(bd0) ? null : bdv(S.rest.bd) + ' → ' + (isNaN(bd1) ? '—' : bdv(S.end.bd)), ''],
+    ['Borg fatigue', isNaN(bf0) ? null : bdv(S.rest.bf) + ' → ' + (isNaN(bf1) ? '—' : bdv(S.end.bf)), ''],
+    [LG('Récupération à 1 min', 'Recovery at 1 min'), ok(S.rec[1].spo2) ? 'SpO2 ' + S.rec[1].spo2 + LG(' %, FC ', ' %, HR ') + S.rec[1].fc + ' /min' : null, ''],
+    [LG('Oxygène', 'Oxygen'), S.o2 === 'o2' ? (ok(S.o2debit) ? o2Val(S.o2debit) : '—') + (S.o2ch.length ? S.o2ch.map(function (c) { return ', ' + o2Val(c.v) + LG(' à ', ' at ') + mmss(c.t); }).join('') : '') : LG('air ambiant', 'room air'),
+      (function () { var r = S.rt.filter(function (x) { return ok(x.d) && ok(x.s); }); return titrOn() && r.length ? LG('Au repos : ', 'At rest: ') + r.map(function (x) { return x.s + LG(' % à ', ' % at ') + o2Val(x.d); }).join(', ') : ''; })()],
+    [LG('Récupération à 3 min', 'Recovery at 3 min'), ok(S.rec[3].spo2) ? 'SpO2 ' + S.rec[3].spo2 + LG(' %, FC ', ' %, HR ') + S.rec[3].fc + ' /min' : null, '']
   ];
   // ODDS (Nathan, Eur Respir J 2025;66:2402565, tableau 2) : Borg de dyspnée, débit d'O2, distance, nadir de SpO2.
   // Choix validés par Allan le 12 octobre 2026 : borne à 350 ou 450 m dans la catégorie la plus favorable ; débit > 6 L/min
@@ -1141,27 +1186,43 @@ function analysis() {
   A.odds = (function () {
     var bd = num(S.end.bd), d = A.dist, pulse = S.o2 === 'o2' && S.o2mode === 'pulse', flow = S.o2 === 'o2' ? num(S.o2debit) : 0;
     var miss = [];
-    if (isNaN(bd)) miss.push('Borg de dyspnée de fin');
-    if (isNaN(A.nadir)) miss.push('SpO2 la plus basse');
-    if (!pulse && isNaN(flow)) miss.push('débit d\'oxygène');
+    if (isNaN(bd)) miss.push(LG('Borg de dyspnée de fin', 'end-test Borg dyspnoea'));
+    if (isNaN(A.nadir)) miss.push(LG('SpO2 la plus basse', 'lowest SpO2'));
+    if (!pulse && isNaN(flow)) miss.push(LG('débit d\'oxygène', 'oxygen flow'));
     if (pulse || miss.length) return { total: NaN, pulse: pulse, miss: miss };
     var pb = bd > 5 ? 19 : bd >= 2 ? 3 : 0, po = flow >= 3 ? 28 : 0, pd = d < 300 ? 34 : d < 350 ? 26 : d < 450 ? 15 : 0, pn = A.nadir < 90 ? 19 : 0;
-    return { total: pb + po + pd + pn, txt: 'Borg ' + S.end.bd + ' : ' + pb + ', O2 ' + (S.o2 === 'o2' ? fr1(flow) + ' L/min' : 'air') + ' : ' + po + ', ' + Math.round(d) + ' m : ' + pd + ', nadir ' + A.nadir + ' % : ' + pn + '.' };
+    var sep = LG(' : ', ': ');
+    return { total: pb + po + pd + pn, txt: 'Borg ' + bdv(S.end.bd) + sep + pb + ', O2 ' + (S.o2 === 'o2' ? fr1(flow) + ' L/min' : LG('air', 'room air')) + sep + po + ', ' + Math.round(d) + ' m' + sep + pd + ', nadir ' + A.nadir + ' %' + sep + pn + '.' };
   })();
-  var oddsRef = 'Score pronostique de la FPI seulement (décès ou hospitalisation respiratoire), dérivé de 1251 patients des essais ISABELA et validé dans une cohorte de 295 patients d\'un seul centre (Nathan, Eur Respir J 2025). Repère : ≥ 28 (sensibilité 85 %, spécificité 48 % en validation) ; quartiles 0–18, 19–37, 38–56, 57–100. Borg de fin de marche ; nadir lu chaque minute.';
-  A.explo = [
-    ['Score ODDS', isNaN(A.odds.total) ? null : A.odds.total + ' / 100', (A.odds.pulse ? 'Non calculable sous O2 pulsé : le score repose sur un débit continu. ' : A.odds.miss && A.odds.miss.length ? 'Manque : ' + A.odds.miss.join(', ') + '. ' : A.odds.txt + ' ') + oddsRef],
-    ['SpO2 à 1 min', v(A.s1, ' %'), 'Repère : < 88 % dès la 1re minute associé à la mortalité dans la BPCO (García-Talavera, Lung 2023). Approximation : délai réel avant 88 % non mesuré.'],
-    ['Désaturation moyenne', isNaN(A.meanDesat) ? null : fr1(A.meanDesat) + ' points', 'Repos moins moyenne des relevés minute par minute. Repère : ≥ 6,7 % dans l\'insuffisance cardiaque du sujet âgé (Sunayama, 2024).'],
-    ['Réponse chronotrope', v(A.chrono, ' /min'), 'FC pic − FC repos. Repère : < 20 /min associé à la survie dans les PID (Holland, 2013). Ininterprétable sous bêtabloquant.'],
-    ['Indice chronotrope', isNaN(A.chronoIdx) ? null : fr1(A.chronoIdx * 100) + ' %', '(FC fin − FC repos) / (220 − âge − FC repos). Associé aux exacerbations sévères dans la BPCO (COPDGene, 2022), sans seuil.'],
-    ['Récupération de la FC à 1 min', v(A.hrr1, ' /min'), 'FC fin − FC à 1 min. Repères : < 17 dans l\'HTAP (Rezende, 2022), ≤ 10 dans la BPCO (COPDGene, 2021) ; non pronostique dans l\'HTP de la sarcoïdose (2022).'],
-    ['Produit distance × saturation', isNaN(A.dsp) ? null : Math.round(A.dsp) + ' m·%', 'Distance × SpO2 la plus basse. Non pronostique dans l\'HTP de la sarcoïdose (Gupta, 2022) ; nadir lu chaque minute, donc surestimé.'],
-    ['Travail de marche (6MWW)', ok(S.poids) ? fr1(A.dist * num(S.poids) / 1000) + ' kg·km' : null, 'Distance × poids (moyenne de 27,5 kg·km dans l\'étude d\'origine). Mieux corrélé que la distance seule à la VO2 max et au seuil anaérobie dans la BPCO (Chuang, Respir Med 2001 ; 33 hommes), sans valeur de référence.'],
-    ['Distance par minute', A.perMin.length ? A.perMin.map(function (d) { return Math.round(d); }).join(', ') + ' m' : null, 'Allers répartis au prorata du temps de marche ; la dernière minute contient les mètres partiels estimés. Unité des études d\'allure (Dalgas, J Rehabil Med 2014, sclérose en plaques) ; sans repère dans les maladies respiratoires. Le sujet sain marche à allure presque constante.'],
-    ['Fatigabilité à la marche', isNaN(A.fatig) ? null : Math.round(A.fatig * 100) + ' %', 'Distance de la dernière minute rapportée à celle de la 1re. Indice de la littérature neurologique et gériatrique, sans référence admise (revue Van Geel, 2019) ; aucun repère respiratoire.'],
-    ['Variabilité de l\'allure', isNaN(A.pv) ? null : (Math.round(A.pv * 100) / 100).toString().replace('.', ','), 'Test en trois tranches de 2 min : (vitesse de la plus rapide − de la plus lente) ÷ vitesse moyenne. Repère : ≥ 0,39 associé à la mortalité ou à l\'hospitalisation à 1 an dans la BPCO (Huang, 2023 ; une seule cohorte, 163 patients). Calculé sur un test de 6 min complet.'],
-    ['Vitesse, 1re puis 2e moitié', isNaN(A.v1) ? null : fr1(A.v1) + ' puis ' + (isNaN(A.v2) ? '—' : fr1(A.v2)) + ' km/h', 'Ralentissement en fin de test : piste de recherche (Lancaster, 2018), sans valeur de référence.']
+  var oddsRef = EN ? 'Prognostic score for IPF only (death or respiratory hospitalisation), derived in 1251 patients from the ISABELA trials and validated in a single-centre cohort of 295 patients (Nathan, Eur Respir J 2025). Reference point: ≥ 28 (sensitivity 85%, specificity 48% in validation); quartiles 0–18, 19–37, 38–56, 57–100. End-of-walk Borg; nadir read every minute.' : 'Score pronostique de la FPI seulement (décès ou hospitalisation respiratoire), dérivé de 1251 patients des essais ISABELA et validé dans une cohorte de 295 patients d\'un seul centre (Nathan, Eur Respir J 2025). Repère : ≥ 28 (sensibilité 85 %, spécificité 48 % en validation) ; quartiles 0–18, 19–37, 38–56, 57–100. Borg de fin de marche ; nadir lu chaque minute.';
+  var oddsNote = A.odds.pulse ? LG('Non calculable sous O2 pulsé : le score repose sur un débit continu. ', 'Not computable on pulsed O2: the score relies on a continuous flow. ') : A.odds.miss && A.odds.miss.length ? LG('Manque : ', 'Missing: ') + A.odds.miss.join(', ') + '. ' : A.odds.txt + ' ';
+  if (EN) A.explo = [
+    ['ODDS score', isNaN(A.odds.total) ? null : A.odds.total + ' / 100', oddsNote + oddsRef, 'Nathan 2025', ''],
+    ['SpO2 at 1 min', v(A.s1, '%'), 'Reference point: < 88% from the 1st minute associated with mortality in COPD (García-Talavera, Lung 2023). Approximation: actual time to 88% not measured.', 'García-Talavera 2023', ''],
+    ['Mean desaturation', isNaN(A.meanDesat) ? null : fr1(A.meanDesat) + ' points', 'Rest minus the mean of the minute-by-minute readings. Reference point: ≥ 6.7% in heart failure in older adults (Sunayama, 2024).', 'Sunayama 2024', 'Mean desat.'],
+    ['Chronotropic response', v(A.chrono, ' /min'), 'Peak HR − resting HR. Reference point: < 20 /min associated with survival in ILD (Holland, 2013). Uninterpretable on beta-blockers.', 'Holland 2013', ''],
+    ['Chronotropic index', isNaN(A.chronoIdx) ? null : fr1(A.chronoIdx * 100) + '%', '(End HR − resting HR) / (220 − age − resting HR). Associated with severe exacerbations in COPD (COPDGene, 2022), no threshold.', 'COPDGene 2022', ''],
+    ['HR recovery at 1 min', v(A.hrr1, ' /min'), 'End HR − HR at 1 min. Reference points: < 17 in PAH (Rezende, 2022), ≤ 10 in COPD (COPDGene, 2021); not prognostic in sarcoidosis-associated PH (2022).', 'Rezende 2022, COPDGene 2021', 'HR recovery 1 min'],
+    ['Distance–saturation product', isNaN(A.dsp) ? null : Math.round(A.dsp) + ' m·%', 'Distance × lowest SpO2. Not prognostic in sarcoidosis-associated PH (Gupta, 2022); nadir read every minute, hence overestimated.', 'Gupta 2022', 'Distance × SpO2'],
+    ['Six-minute walk work (6MWW)', ok(S.poids) ? fr1(A.dist * num(S.poids) / 1000) + ' kg·km' : null, 'Distance × weight (mean 27.5 kg·km in the original study). Better correlated than distance alone with peak VO2 and the anaerobic threshold in COPD (Chuang, Respir Med 2001; 33 men), no reference value.', 'Chuang 2001', '6MWW'],
+    ['Distance per minute', A.perMin.length ? A.perMin.map(function (d) { return Math.round(d); }).join(', ') + ' m' : null, 'Lengths apportioned by walking time; the last minute includes the estimated partial metres. Unit of pacing studies (Dalgas, J Rehabil Med 2014, multiple sclerosis); no reference point in respiratory disease. Healthy subjects walk at an almost constant pace.', 'Dalgas 2014', 'Distance per min'],
+    ['Walking fatigability', isNaN(A.fatig) ? null : Math.round(A.fatig * 100) + '%', 'Distance of the last minute relative to the 1st. Index from the neurological and geriatric literature, no accepted reference (Van Geel review, 2019); no respiratory reference point.', 'Van Geel 2019', 'Fatigability'],
+    ['Pace variability', isNaN(A.pv) ? null : String(Math.round(A.pv * 100) / 100), 'Test split into three 2-min epochs: (speed of the fastest − slowest) ÷ mean speed. Reference point: ≥ 0.39 associated with mortality or hospitalisation at 1 year in COPD (Huang, 2023; single cohort, 163 patients). Computed on a complete 6-min test.', 'Huang 2023', ''],
+    ['Speed, 1st then 2nd half', isNaN(A.v1) ? null : fr1(A.v1) + ' then ' + (isNaN(A.v2) ? '—' : fr1(A.v2)) + ' km/h', 'Slowing at the end of the test: research lead (Lancaster, 2018), no reference value.', 'Lancaster 2018', 'Speed 1st / 2nd half']
+  ];
+  else A.explo = [
+    ['Score ODDS', isNaN(A.odds.total) ? null : A.odds.total + ' / 100', oddsNote + oddsRef, 'Nathan 2025', ''],
+    ['SpO2 à 1 min', v(A.s1, ' %'), 'Repère : < 88 % dès la 1re minute associé à la mortalité dans la BPCO (García-Talavera, Lung 2023). Approximation : délai réel avant 88 % non mesuré.', 'García-Talavera 2023', ''],
+    ['Désaturation moyenne', isNaN(A.meanDesat) ? null : fr1(A.meanDesat) + ' points', 'Repos moins moyenne des relevés minute par minute. Repère : ≥ 6,7 % dans l\'insuffisance cardiaque du sujet âgé (Sunayama, 2024).', 'Sunayama 2024', 'Désat. moyenne'],
+    ['Réponse chronotrope', v(A.chrono, ' /min'), 'FC pic − FC repos. Repère : < 20 /min associé à la survie dans les PID (Holland, 2013). Ininterprétable sous bêtabloquant.', 'Holland 2013', ''],
+    ['Indice chronotrope', isNaN(A.chronoIdx) ? null : fr1(A.chronoIdx * 100) + ' %', '(FC fin − FC repos) / (220 − âge − FC repos). Associé aux exacerbations sévères dans la BPCO (COPDGene, 2022), sans seuil.', 'COPDGene 2022', ''],
+    ['Récupération de la FC à 1 min', v(A.hrr1, ' /min'), 'FC fin − FC à 1 min. Repères : < 17 dans l\'HTAP (Rezende, 2022), ≤ 10 dans la BPCO (COPDGene, 2021) ; non pronostique dans l\'HTP de la sarcoïdose (2022).', 'Rezende 2022, COPDGene 2021', 'Récup. FC à 1 min'],
+    ['Produit distance × saturation', isNaN(A.dsp) ? null : Math.round(A.dsp) + ' m·%', 'Distance × SpO2 la plus basse. Non pronostique dans l\'HTP de la sarcoïdose (Gupta, 2022) ; nadir lu chaque minute, donc surestimé.', 'Gupta 2022', 'Distance × SpO2'],
+    ['Travail de marche (6MWW)', ok(S.poids) ? fr1(A.dist * num(S.poids) / 1000) + ' kg·km' : null, 'Distance × poids (moyenne de 27,5 kg·km dans l\'étude d\'origine). Mieux corrélé que la distance seule à la VO2 max et au seuil anaérobie dans la BPCO (Chuang, Respir Med 2001 ; 33 hommes), sans valeur de référence.', 'Chuang 2001', '6MWW'],
+    ['Distance par minute', A.perMin.length ? A.perMin.map(function (d) { return Math.round(d); }).join(', ') + ' m' : null, 'Allers répartis au prorata du temps de marche ; la dernière minute contient les mètres partiels estimés. Unité des études d\'allure (Dalgas, J Rehabil Med 2014, sclérose en plaques) ; sans repère dans les maladies respiratoires. Le sujet sain marche à allure presque constante.', 'Dalgas 2014', 'Distance par min'],
+    ['Fatigabilité à la marche', isNaN(A.fatig) ? null : Math.round(A.fatig * 100) + ' %', 'Distance de la dernière minute rapportée à celle de la 1re. Indice de la littérature neurologique et gériatrique, sans référence admise (revue Van Geel, 2019) ; aucun repère respiratoire.', 'Van Geel 2019', 'Fatigabilité'],
+    ['Variabilité de l\'allure', isNaN(A.pv) ? null : (Math.round(A.pv * 100) / 100).toString().replace('.', ','), 'Test en trois tranches de 2 min : (vitesse de la plus rapide − de la plus lente) ÷ vitesse moyenne. Repère : ≥ 0,39 associé à la mortalité ou à l\'hospitalisation à 1 an dans la BPCO (Huang, 2023 ; une seule cohorte, 163 patients). Calculé sur un test de 6 min complet.', 'Huang 2023', ''],
+    ['Vitesse, 1re puis 2e moitié', isNaN(A.v1) ? null : fr1(A.v1) + ' puis ' + (isNaN(A.v2) ? '—' : fr1(A.v2)) + ' km/h', 'Ralentissement en fin de test : piste de recherche (Lancaster, 2018), sans valeur de référence.', 'Lancaster 2018', 'Vitesse 1re / 2e moitié']
   ];
   return A;
 }
@@ -1181,7 +1242,7 @@ function figure(A) {
   var dHi = Math.ceil(Math.max(A.dist, A.pr ? A.pr.p : 0) / 100) * 100 || 100;
   var tracks = [
     { lbl: 'SpO2 %', cls: 'sp', pts: spts, rec: srec, lo: 80, hi: 100, h: 150 },
-    { lbl: 'FC /min', cls: 'fc', pts: fpts, rec: frec, lo: 50, hi: 150, h: 140 },
+    { lbl: LG('FC /min', 'HR /min'), cls: 'fc', pts: fpts, rec: frec, lo: 50, hi: 150, h: 140 },
     { lbl: 'm', cls: 'ds', pts: dpts, rec: [], lo: 0, hi: dHi, h: 130, fixed: true },
     { lbl: 'km/h', cls: 'vt', pts: vpts, rec: [], lo: 0, hi: 6, h: 110 }
   ];
@@ -1200,7 +1261,7 @@ function figure(A) {
     pts.forEach(function (p) { g += '<circle class="pt ' + t.cls + '" cx="' + x(p.t) + '" cy="' + Y(p.v) + '" r="4"/>' + (t.cls !== 'vt' && t.cls !== 'ds' ? '<text class="vl" x="' + x(p.t) + '" y="' + (Y(p.v) - 8) + '" text-anchor="middle">' + p.v + '</text>' : ''); });
     // Distance cumulée : droites d'allure régulière menant à la valeur théorique et à la LIN à 6 min (repères, pas des normes minute par minute).
     if (t.cls === 'ds') {
-      if (A.pr) [[A.pr.p, 'théorique ' + A.pr.p], [A.pr.lin, 'LIN ' + A.pr.lin]].forEach(function (r) {
+      if (A.pr) [[A.pr.p, LG('théorique ', 'predicted ') + A.pr.p], [A.pr.lin, LG('LIN ', 'LLN ') + A.pr.lin]].forEach(function (r) {
         g += '<line class="ref" x1="' + x(0) + '" y1="' + Y(0) + '" x2="' + x(6) + '" y2="' + Y(r[0]) + '"/><text class="lbl" x="' + (x(6) + 6) + '" y="' + (Y(r[0]) + 4) + '">' + r[1] + '</text>';
       });
     }
@@ -1209,9 +1270,9 @@ function figure(A) {
   });
   for (var mm = 0; mm <= Math.max(6, Math.floor(endM)); mm++) g += '<text class="lbl" x="' + x(mm) + '" y="' + (H - 8) + '" text-anchor="middle">' + mm + '</text>';
   S.o2ch.forEach(function (c) { var xx = x(c.t / 60); g += '<line class="o2c" x1="' + xx + '" x2="' + xx + '" y1="0" y2="' + (H - 28) + '"/><text class="lbl" x="' + (xx + 4) + '" y="' + (H - 34) + '">O2 ' + o2Val(c.v) + '</text>'; });
-  g += '<line class="fin" x1="' + x(endM) + '" x2="' + x(endM) + '" y1="0" y2="' + (H - 28) + '"/><text class="lbl b" x="' + (x(endM) + 5) + '" y="14">fin</text>';
+  g += '<line class="fin" x1="' + x(endM) + '" x2="' + x(endM) + '" y1="0" y2="' + (H - 28) + '"/><text class="lbl b" x="' + (x(endM) + 5) + '" y="14">' + LG('fin', 'end') + '</text>';
   g += '<text class="lbl" x="' + x(endM + 1) + '" y="' + (H - 8) + '" text-anchor="middle">+1</text><text class="lbl" x="' + x(endM + 3) + '" y="' + (H - 8) + '" text-anchor="middle">+3</text>';
-  return '<svg class="fig" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="SpO2, FC, distance cumulée et vitesse au cours du test">' + g + '</svg>';
+  return '<svg class="fig" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + LG('SpO2, FC, distance cumulée et vitesse au cours du test', 'SpO2, HR, cumulative distance and speed during the test') + '">' + g + '</svg>';
 }
 // Démonstration : un test complet d'exemple (patiente fictive), pour voir le bilan sans faire passer six minutes.
 function demoFill() {
@@ -1233,7 +1294,9 @@ function demoFill() {
 function go(step) {
   if (step === 'test' && !S.started) step = 'pret';
   S.step = step; S.seen[step] = 1;
-  $('main').innerHTML = SCREENS[step]();
+  var h = SCREENS[step]();
+  // Anglais : « 95% » sans espace (les valeurs mesurées restent dans des champs, non touchés).
+  $('main').innerHTML = EN ? pctEN(h) : h;
   renderSteps();
   if (step === 'test') renderTest();
   if (step === 'recup') renderRecup();
@@ -1283,7 +1346,7 @@ function finish(reason) {
 // Alerte SpO2 (ERS/ATS 2014) : sous 80 %, arrêter la marche ; reprise possible quand la SpO2 remonte à 85 % ou plus.
 function alertHtml() {
   document.body.className = document.body.className.replace(/ ?spo2low/g, '') + (S.alert ? ' spo2low' : '');
-  return S.alert ? '<div class="alert">SpO2 à ' + S.alert.v + ' % : arrêter la marche. Reprise possible quand la SpO2 remonte à 85 % ou plus.</div>' : '';
+  return S.alert ? '<div class="alert">' + LG('SpO2 à ' + S.alert.v + ' % : arrêter la marche. Reprise possible quand la SpO2 remonte à 85 % ou plus.', 'SpO2 ' + S.alert.v + '%: stop the walk. Walking may resume once SpO2 recovers to 85% or more.') + '</div>' : '';
 }
 function checkSpo2(k, val) {
   if (!S.running || !/^(mins\.\d\.s|nadir|pauses\.\d+\.spo2)$/.test(k)) return;
@@ -1298,12 +1361,12 @@ function renderTest(light) {
   if (!$('clk')) return;
   if ($('alertBox').innerHTML !== alertHtml()) $('alertBox').innerHTML = alertHtml();
   $('clk').textContent = mmss(t);
-  $('rem').textContent = S.running ? 'reste ' + mmss(TEST - t) : (S.stop && S.stop.reason ? 'arrêté à ' + mmss(S.stop.t) : 'terminé');
+  $('rem').textContent = S.running ? LG('reste ' + mmss(TEST - t), mmss(TEST - t) + ' left') : (S.stop && S.stop.reason ? LG('arrêté à ', 'stopped at ') + mmss(S.stop.t) : LG('terminé', 'finished'));
   $('prog').style.width = (t / TEST * 100) + '%';
-  $('lapD').textContent = cumDist(S.laps.length) + ' m, ' + S.laps.length + ' aller' + (S.laps.length > 1 ? 's' : '');
+  $('lapD').textContent = cumDist(S.laps.length) + ' m, ' + S.laps.length + LG(' aller', ' length') + (S.laps.length > 1 || (EN && S.laps.length === 0) ? 's' : '');
   renderTrack();
-  $('pauseBtn').textContent = paused() ? 'Arrêt en cours…' : 'Le patient s\'arrête';
-  $('pinfo').textContent = S.pauses.length ? S.pauses.length + ' arrêt' + (S.pauses.length > 1 ? 's' : '') + ', ' + Math.round(pauseTotal()) + ' s au total. Le chronomètre continue pendant les arrêts.' : 'Le chronomètre continue pendant les arrêts.';
+  $('pauseBtn').textContent = paused() ? LG('Arrêt en cours…', 'Stopped…') : LG('Le patient s\'arrête', 'Patient stops');
+  $('pinfo').textContent = (S.pauses.length ? S.pauses.length + LG(' arrêt', ' stop') + (S.pauses.length > 1 ? 's' : '') + ', ' + Math.round(pauseTotal()) + LG(' s au total. ', ' s in total. ') : '') + LG('Le chronomètre continue pendant les arrêts.', 'The timer keeps running during stops.');
   var strip = '';
   for (var m = 1; m <= 6; m++) {
     var r = S.mins[m], st = !r ? '' : (ok(r.s) && ok(r.f) ? ' ok' : r.due ? ' due' : '');
@@ -1315,8 +1378,8 @@ function renderTest(light) {
   if (want == null) { if (box.innerHTML) box.innerHTML = ''; }
   else if (box.getAttribute('data-m') !== String(want) || !box.innerHTML) {
     box.setAttribute('data-m', want);
-    box.innerHTML = '<div class="prompt"><h3>Minute ' + want + ' : note SpO2 et FC</h3><div class="prow">' + field('mins.' + want + '.s', 'SpO2', '%') + field('mins.' + want + '.f', 'FC', '/min') +
-      '<button type="button" class="ghost" id="minDone">Fait</button></div></div>';
+    box.innerHTML = '<div class="prompt"><h3>Minute ' + want + LG(' : note SpO2 et FC', ': record SpO2 and HR') + '</h3><div class="prow">' + field('mins.' + want + '.s', 'SpO2', '%') + field('mins.' + want + '.f', LG('FC', 'HR'), '/min') +
+      '<button type="button" class="ghost" id="minDone">' + LG('Fait', 'Done') + '</button></div></div>';
   }
 }
 // Couloir vu de dessus : un plot à chaque bout, le patient au plot qu'il vient d'atteindre (départ si nombre d'allers pair).
@@ -1328,18 +1391,18 @@ function renderTrack() {
   [x0, x1].forEach(function (x) { g += '<path class="cone" d="M' + (x - 13) + ' 54 L' + x + ' 18 L' + (x + 13) + ' 54 Z"/>'; });
   if (dp) g += '<line class="startl" x1="' + xs + '" y1="22" x2="' + xs + '" y2="58"/>';
   g += '<circle class="pt" cx="' + (n === 0 ? xs : atFar ? x1 : x0) + '" cy="40" r="11"/>';
-  g += '<text x="' + xs + '" y="78" text-anchor="middle">départ</text>';
+  g += '<text x="' + xs + '" y="78" text-anchor="middle">' + LG('départ', 'start') + '</text>';
   if (!dp) g += '<text x="' + x1 + '" y="78" text-anchor="middle">' + corridor() + ' m</text>';
-  var t = $('track'); if (t) t.innerHTML = '<svg viewBox="0 0 ' + W + ' 86" role="img" aria-label="Position au couloir">' + g + '</svg>';
+  var t = $('track'); if (t) t.innerHTML = '<svg viewBox="0 0 ' + W + ' 86" role="img" aria-label="' + LG('Position au couloir', 'Position in the corridor') + '">' + g + '</svg>';
 }
 function renderRecup() {
   if (!$('recClk')) return;
   $('recClk').textContent = mmss(S.recT);
-  $('recLbl').textContent = S.recT < 60 ? 'Relevé à 1 min dans' : S.recT < 180 ? 'Relevé à 3 min dans' : 'Relevés';
-  $('recNext').textContent = S.recT < 60 ? mmss(60 - S.recT) : S.recT < 180 ? mmss(180 - S.recT) : 'terminé';
+  $('recLbl').textContent = S.recT < 60 ? LG('Relevé à 1 min dans', 'Reading at 1 min in') : S.recT < 180 ? LG('Relevé à 3 min dans', 'Reading at 3 min in') : LG('Relevés', 'Readings');
+  $('recNext').textContent = S.recT < 60 ? mmss(60 - S.recT) : S.recT < 180 ? mmss(180 - S.recT) : LG('terminé', 'done');
   $('rc1').style.borderColor = S.recT >= 60 && !ok(S.rec[1].spo2) ? 'var(--warn)' : '';
   $('rc3').style.borderColor = S.recT >= 180 && !ok(S.rec[3].spo2) ? 'var(--warn)' : '';
-  if ($('rtClk')) $('rtClk').textContent = S.recT < 180 ? $('recLbl').textContent + ' ' + $('recNext').textContent : 'Récupération ' + mmss(S.recT) + ' : relevés à 1 et 3 min passés';
+  if ($('rtClk')) $('rtClk').textContent = S.recT < 180 ? $('recLbl').textContent + ' ' + $('recNext').textContent : LG('Récupération ' + mmss(S.recT) + ' : relevés à 1 et 3 min passés', 'Recovery ' + mmss(S.recT) + ': 1- and 3-min readings due');
 }
 
 /* ---------- Panneaux ---------- */
@@ -1352,30 +1415,31 @@ function openPause() {
 function renderPauseSheet(light) {
   var p = S.pauses[S.pauses.length - 1], i = S.pauses.length - 1;
   if (light && $('pclk')) {
-    $('pclk').textContent = mmss(S.t - p.s); $('ptot').textContent = 'Chronomètre du test : ' + mmss(S.t) + ' (il continue)';
-    $('pnext').textContent = 'Prochaine phrase dans ' + mmss(30 - (S.t - p.s) % 30);
+    $('pclk').textContent = mmss(S.t - p.s); $('ptot').textContent = LG('Chronomètre du test : ' + mmss(S.t) + ' (il continue)', 'Test timer: ' + mmss(S.t) + ' (still running)');
+    $('pnext').textContent = LG('Prochaine phrase dans ', 'Next phrase in ') + mmss(30 - (S.t - p.s) % 30);
     return;
   }
-  $('sheet').innerHTML = '<div class="sheet"><div class="pane"><h2>Arrêt n°' + (i + 1) + '</h2><p class="sub" id="ptot"></p>' +
+  $('sheet').innerHTML = '<div class="sheet"><div class="pane"><h2>' + LG('Arrêt n°', 'Stop ') + (i + 1) + '</h2><p class="sub" id="ptot"></p>' +
     '<div class="pausebig" id="pclk">0:00</div><div id="palert"></div>' +
     '<p class="hint" style="margin-top:0"><span id="phint"></span> <b id="pnext"></b></p>' +
-    '<div class="card"><h2>Mesures pendant l\'arrêt (facultatif)</h2><div class="grid4">' + field('pauses.' + i + '.spo2', 'SpO2 %', '') + field('pauses.' + i + '.fc', 'FC /min', '') + field('pauses.' + i + '.pas', 'PAS', '') + field('pauses.' + i + '.pad', 'PAD', '') + '</div></div>' +
-    o2Run() + '<button type="button" class="b-resume" id="resumeBtn">Le patient repart</button>' +
-    '<button type="button" class="ghost b-cancel" id="pauseToStop">Il ne repartira pas : arrêter le test</button></div></div>';
+    '<div class="card"><h2>' + LG('Mesures pendant l\'arrêt (facultatif)', 'Measurements during the stop (optional)') + '</h2><div class="grid4">' + field('pauses.' + i + '.spo2', 'SpO2 %', '') + field('pauses.' + i + '.fc', LG('FC /min', 'HR /min'), '') + field('pauses.' + i + '.pas', LG('PAS', 'SBP'), '') + field('pauses.' + i + '.pad', LG('PAD', 'DBP'), '') + '</div></div>' +
+    o2Run() + '<button type="button" class="b-resume" id="resumeBtn">' + LG('Le patient repart', 'Patient resumes walking') + '</button>' +
+    '<button type="button" class="ghost b-cancel" id="pauseToStop">' + LG('Il ne repartira pas : arrêter le test', 'Will not resume: stop the test') + '</button></div></div>';
   pauseHint(); renderPauseSheet(true);
 }
 function pauseHint() {
   var p = S.pauses[S.pauses.length - 1]; if (!p || !$('phint')) return;
   var low = S.alert || (ok(p.spo2) && num(p.spo2) < 85);
   $('palert').innerHTML = alertHtml();
-  $('phint').textContent = 'Repos assis ou debout, comme le patient préfère. ' + (low ? 'SpO2 sous 85\u00a0% : attendre qu\'elle remonte avant de proposer la reprise.' : 'Toutes les 30 s, une fois la SpO2 à 85 % ou plus : « ' + PAUSE_PHRASE + ' »');
+  $('phint').textContent = EN ? 'Rest sitting or standing, as the patient prefers. ' + (low ? 'SpO2 below 85%: wait for it to recover before suggesting to resume.' : 'Every 30 s, once SpO2 is 85% or more: “' + PAUSE_PHRASE + '”') :
+    'Repos assis ou debout, comme le patient préfère. ' + (low ? 'SpO2 sous 85\u00a0% : attendre qu\'elle remonte avant de proposer la reprise.' : 'Toutes les 30 s, une fois la SpO2 à 85 % ou plus : « ' + PAUSE_PHRASE + ' »');
 }
 function openStop() {
   if (!S.running) { go('recup'); return; }
   S.sheet = 'stop';
-  var h = '<div class="sheet"><div class="pane"><h2>Arrêter le test ?</h2><p class="sub">Motif de l\'arrêt :</p><div class="choice c2" id="motifs">';
-  MOTIFS.forEach(function (m) { h += '<button type="button" class="opt" data-motif="' + esc(m) + '">' + m + '</button>'; });
-  h += '</div><button type="button" class="b-confirm disabled" id="stopOk">Choisir un motif</button><button type="button" class="ghost b-cancel" id="stopNo">Continuer le test</button></div></div>';
+  var h = '<div class="sheet"><div class="pane"><h2>' + LG('Arrêter le test ?', 'Stop the test?') + '</h2><p class="sub">' + LG('Motif de l\'arrêt :', 'Reason for stopping:') + '</p><div class="choice c2" id="motifs">';
+  MOTIFS.forEach(function (m) { h += '<button type="button" class="opt" data-motif="' + esc(m) + '">' + tv(m) + '</button>'; });
+  h += '</div><button type="button" class="b-confirm disabled" id="stopOk">' + LG('Choisir un motif', 'Choose a reason') + '</button><button type="button" class="ghost b-cancel" id="stopNo">' + LG('Continuer le test', 'Continue the test') + '</button></div></div>';
   $('sheet').innerHTML = h; S.motif = null;
 }
 // Redessine les réglages sans perdre la position de lecture (sinon la feuille remonte en haut à chaque choix).
@@ -1386,21 +1450,22 @@ function refreshSettings() {
 }
 function openSettings() {
   S.sheet = 'cfg';
-  $('sheet').innerHTML = '<div class="sheet"><div class="pane"><h2>Réglages</h2>' +
-    '<div class="card"><h2>Couloir</h2><div class="grid2">' + field('couloir', 'Longueur par défaut', 'm') + field('depart', 'Départ, distance au 1er plot', 'm') + '</div><p class="hint">Vide si le patient part d\'un plot.</p></div>' +
-    '<div class="card"><h2>En-tête du compte rendu</h2>' + tfield('cfg.etab', 'Établissement') + tfield('cfg.service', 'Service') +
-    '<label class="f tf"><span>Adresse, une ligne par ligne</span><textarea class="ta" data-k="cfg.adresse" rows="2">' + esc(S.cfg.adresse) + '</textarea></label>' + tfield('cfg.operateur', 'Opérateur') + '</div>' +
-    '<div class="card"><h2>Envoi par mail</h2>' + tfield('cfg.mailTo', 'Destinataire', 'email') + tfield('cfg.mailSubject', 'Objet') +
-    '<label class="f tf"><span>Texte du mail ({date}, {heure}, {date_longue})</span><textarea class="ta" data-k="cfg.mailBody" rows="4">' + esc(S.cfg.mailBody) + '</textarea></label></div>' +
-    '<div class="card"><h2>Consignes au patient</h2><textarea class="ta" id="consTa" data-k="consignes" rows="7">' + esc(S.consignes) + '</textarea></div>' +
-    '<div class="card"><h2>Rappel pour l\'opérateur pendant le test</h2>' + choice('opGuide', [['on', 'Affiché'], ['off', 'Masqué']]) +
+  $('sheet').innerHTML = '<div class="sheet"><div class="pane"><h2>' + LG('Réglages', 'Settings') + '</h2>' +
+    '<div class="card"><h2>' + LG('Couloir', 'Corridor') + '</h2><div class="grid2">' + field('couloir', LG('Longueur par défaut', 'Default length'), 'm') + field('depart', LG('Départ, distance au 1er plot', 'Start, distance to 1st cone'), 'm') + '</div><p class="hint">' + LG('Vide si le patient part d\'un plot.', 'Leave empty if the patient starts at a cone.') + '</p></div>' +
+    '<div class="card"><h2>' + LG('En-tête du compte rendu', 'Report header') + '</h2>' + tfield('cfg.etab', LG('Établissement', 'Institution')) + tfield('cfg.service', LG('Service', 'Department')) +
+    '<label class="f tf"><span>' + LG('Adresse, une ligne par ligne', 'Address, one line per line') + '</span><textarea class="ta" data-k="cfg.adresse" rows="2">' + esc(S.cfg.adresse) + '</textarea></label>' + tfield('cfg.operateur', LG('Opérateur', 'Assessor')) + '</div>' +
+    '<div class="card"><h2>' + LG('Envoi par mail', 'Sending by email') + '</h2>' + tfield('cfg.mailTo', LG('Destinataire', 'Recipient'), 'email') + tfield('cfg.mailSubject', LG('Objet', 'Subject')) +
+    '<label class="f tf"><span>' + LG('Texte du mail ({date}, {heure}, {date_longue})', 'Email text ({date}, {time}, {long_date})') + '</span><textarea class="ta" data-k="cfg.mailBody" rows="4">' + esc(S.cfg.mailBody) + '</textarea></label></div>' +
+    '<div class="card"><h2>' + LG('Consignes au patient', 'Instructions to the patient') + '</h2><textarea class="ta" id="consTa" data-k="consignes" rows="7">' + esc(S.consignes) + '</textarea></div>' +
+    '<div class="card"><h2>' + LG('Rappel pour l\'opérateur pendant le test', 'Assessor reminder during the test') + '</h2>' + choice('opGuide', [['on', LG('Affiché', 'Shown')], ['off', LG('Masqué', 'Hidden')]]) +
     '<div style="height:10px"></div><textarea class="ta" data-k="opText" rows="8">' + esc(S.opText) + '</textarea></div>' +
-    '<div class="card"><h2>Vitesse du chronomètre (démonstration)</h2>' + choice('speed', [['1', '×1', 'temps réel'], ['10', '×10', '36 s'], ['30', '×30', '12 s']], 3) + '</div>' +
-    '<div class="card"><h2>Bips</h2>' + choice('beeps', [['on', 'Activés'], ['off', 'Coupés']]) + '</div>' +
-    '<div class="card"><h2>Vibrations</h2>' + choice('vibr', [['on', 'Activées'], ['off', 'Coupées']]) + '</div>' +
-    '<div class="card"><h2>Test</h2><button type="button" class="ghost" style="width:100%" data-new="1">Nouveau test</button></div>' +
-    '<div class="card"><h2>Démonstration</h2><button type="button" class="ghost" style="width:100%" id="demoBtn">Remplir un test d\'exemple et ouvrir le bilan</button></div>' +
-    '<button type="button" class="big" style="width:100%" id="cfgClose">Fermer</button></div></div>';
+    '<div class="card"><h2>' + LG('Vitesse du chronomètre (démonstration)', 'Timer speed (demonstration)') + '</h2>' + choice('speed', [['1', '×1', LG('temps réel', 'real time')], ['10', '×10', '36 s'], ['30', '×30', '12 s']], 3) + '</div>' +
+    '<div class="card"><h2>' + LG('Bips', 'Beeps') + '</h2>' + choice('beeps', [['on', LG('Activés', 'On')], ['off', LG('Coupés', 'Off')]]) + '</div>' +
+    '<div class="card"><h2>Vibrations</h2>' + choice('vibr', [['on', LG('Activées', 'On')], ['off', LG('Coupées', 'Off')]]) + '</div>' +
+    '<div class="card"><h2>' + LG('Langue', 'Language') + '</h2>' + choice('lang', [['auto', LG('Automatique', 'Automatic'), LG('langue de l\'appareil', 'device language')], ['fr', 'Français'], ['en', 'English']], 3) + '</div>' +
+    '<div class="card"><h2>Test</h2><button type="button" class="ghost" style="width:100%" data-new="1">' + LG('Nouveau test', 'New test') + '</button></div>' +
+    '<div class="card"><h2>' + LG('Démonstration', 'Demonstration') + '</h2><button type="button" class="ghost" style="width:100%" id="demoBtn">' + LG('Remplir un test d\'exemple et ouvrir le bilan', 'Fill in a sample test and open the results') + '</button></div>' +
+    '<button type="button" class="big" style="width:100%" id="cfgClose">' + LG('Fermer', 'Close') + '</button></div></div>';
   var sp = String(S.speed); [].forEach.call(document.querySelectorAll('[data-set="speed"]'), function (b) { b.className = 'opt' + (b.getAttribute('data-v') === sp ? ' on' : ''); });
   [].forEach.call(document.querySelectorAll('[data-set="beeps"]'), function (b) { b.className = 'opt' + ((b.getAttribute('data-v') === 'on') === S.beeps ? ' on' : ''); });
   [].forEach.call(document.querySelectorAll('[data-set="vibr"]'), function (b) { b.className = 'opt' + ((b.getAttribute('data-v') === 'on') === S.vibr ? ' on' : ''); });
@@ -1440,6 +1505,8 @@ document.addEventListener('click', function (e) {
     if (sp === 'beeps') { S.beeps = v === 'on'; saveCfg(); refreshSettings(); return; }
     if (sp === 'vibr') { S.vibr = v === 'on'; saveCfg(); refreshSettings(); return; }
     if (sp === 'opGuide') { S.opGuide = v === 'on'; refreshSettings(); return; }
+    // Langue : enregistrée dans la configuration, puis page rechargée (le test en cours est sauvegardé et restauré).
+    if (sp === 'lang') { if (v !== LANG) { var lc = stored(); lc.lang = v; try { localStorage.setItem(CFG_KEY, JSON.stringify(lc)); } catch (e) { } saveTest(); location.reload(); } return; }
     if (b.getAttribute('data-toggle') && get(sp) === v) v = '';
     set(sp, v);
     if (sp === 'o2' || sp === 'o2mode' || sp === 'couloir' || sp === 'exam') { go(S.step); return; }
@@ -1461,7 +1528,7 @@ document.addEventListener('click', function (e) {
   if (pk) { set(pk, b.getAttribute('data-v')); closeSheet(); go(S.step); return; }
   if (b.getAttribute('data-new')) { askNewTest(); return; }
   var mo = b.getAttribute('data-motif');
-  if (mo) { S.motif = mo; [].forEach.call(document.querySelectorAll('[data-motif]'), function (x) { x.className = 'opt' + (x === b ? ' on' : ''); }); $('stopOk').className = 'b-confirm'; $('stopOk').textContent = 'Arrêter le test : ' + mo; return; }
+  if (mo) { S.motif = mo; [].forEach.call(document.querySelectorAll('[data-motif]'), function (x) { x.className = 'opt' + (x === b ? ' on' : ''); }); $('stopOk').className = 'b-confirm'; $('stopOk').textContent = LG('Arrêter le test : ', 'Stop the test: ') + tv(mo); return; }
   switch (b.id) {
     case 'goBtn': case 'goBar': start(); break;
     case 'lapBtn': if (S.running) { S.laps.push(S.t); beep(1200, 0.05); haptic('tap'); renderTest(); } break;
@@ -1472,7 +1539,7 @@ document.addEventListener('click', function (e) {
     case 'o2No': closeSheet(); if (paused()) S.sheet = 'pause', renderPauseSheet(); break;
     case 'o2Ok': if (ok(S.o2new) && S.running) { S.o2ch.push({ t: Math.round(S.t), v: String(num(S.o2new)) }); haptic('tap'); } closeSheet(); go('test'); if (paused()) S.sheet = 'pause', renderPauseSheet(); break;
     case 'o2Undo': S.o2ch.pop(); haptic('undo'); closeSheet(); go('test'); if (paused()) S.sheet = 'pause', renderPauseSheet(); break;
-    case 'resumeBtn': S.pauses[S.pauses.length - 1].e = S.t; S.alert = null; say('Reprise de la marche.'); closeSheet(); renderTest(); break;
+    case 'resumeBtn': S.pauses[S.pauses.length - 1].e = S.t; S.alert = null; say(LG('Reprise de la marche.', 'Walking resumed.')); closeSheet(); renderTest(); break;
     case 'pauseToStop': openStop(); break;
     case 'stopBtn': openStop(); break;
     case 'stopNo': closeSheet(); if (paused()) S.sheet = 'pause', renderPauseSheet(); break;
@@ -1511,19 +1578,19 @@ function restoreTest() {
     awake(true);
     if ((Date.now() - S.t0) / 1000 * S.speed >= TEST) {
       S.t = TEST; finish(null); S.recT0 = S.t0 + TEST * 1000 / S.speed;
-      toast('Test restauré : les 6 minutes se sont écoulées pendant la fermeture.');
+      toast(LG('Test restauré : les 6 minutes se sont écoulées pendant la fermeture.', 'Test restored: the 6 minutes elapsed while the app was closed.'));
       return true;
     }
-    toast('Test en cours restauré.');
-  } else if (S.started) toast('Dernier test restauré.');
+    toast(LG('Test en cours restauré.', 'Test in progress restored.'));
+  } else if (S.started) toast(LG('Dernier test restauré.', 'Last test restored.'));
   go(S.step);
   return true;
 }
 function askNewTest() {
   S.sheet = 'new';
-  $('sheet').innerHTML = '<div class="sheet"><div class="pane"><h2>Nouveau test ?</h2><p class="sub">Les données du test actuel seront effacées de l\'appareil' +
-    (S.stop ? ' : envoyer le compte rendu avant' : '') + '. Les réglages sont conservés.</p>' +
-    '<button type="button" class="b-confirm" id="newOk">Effacer et commencer un nouveau test</button><button type="button" class="ghost b-cancel" id="newNo">Annuler</button></div></div>';
+  $('sheet').innerHTML = '<div class="sheet"><div class="pane"><h2>' + LG('Nouveau test ?', 'New test?') + '</h2><p class="sub">' + LG('Les données du test actuel seront effacées de l\'appareil', 'The current test data will be erased from the device') +
+    (S.stop ? LG(' : envoyer le compte rendu avant', ': send the report first') : '') + LG('. Les réglages sont conservés.', '. Settings are kept.') + '</p>' +
+    '<button type="button" class="b-confirm" id="newOk">' + LG('Effacer et commencer un nouveau test', 'Erase and start a new test') + '</button><button type="button" class="ghost b-cancel" id="newNo">' + LG('Annuler', 'Cancel') + '</button></div></div>';
 }
 function newTest() {
   clearInterval(timer); timer = null; awake(false);
@@ -1549,7 +1616,11 @@ var Report = (function () {
   'use strict';
   const NATIVE = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.native;
   const native = msg => { try { NATIVE && NATIVE.postMessage(msg); } catch (e) { } };
-  const LABELS = {
+  const LABELS = EN ? {
+    o2mode: { air: 'Room air', lunettes: 'Nasal cannula', masque: 'Mask', autre: 'Other interface' },
+    o2src: { porte: 'Carried by the patient', chariot: 'Trolley pushed by the patient', operateur: 'Carried by the assessor' },
+    aide: { aucune: 'None', canne: 'Walking stick', deambulateur: 'Walking frame', rollator: 'Rollator' }
+  } : {
     o2mode: { air: 'Air ambiant', lunettes: 'Lunettes', masque: 'Masque', autre: 'Autre interface' },
     o2src: { porte: 'Portée par le patient', chariot: 'Chariot poussé par le patient', operateur: "Portée par l'opérateur" },
     aide: { aucune: 'Aucune', canne: 'Canne', deambulateur: 'Déambulateur', rollator: 'Rollator' }
@@ -1589,13 +1660,14 @@ var Report = (function () {
   // Texte de l'état de fin, comme l'écran de fin de l'app d'origine.
   function endStatus() {
     const lastMin = Math.floor(endT / 60);
+    if (EN) return stopReason ? `Test stopped at ${mmss(endT)} (${tv(stopReason)}). Readings beyond ${lastMin} min ignored.` : 'Test completed (6 min).';
     return stopReason ? `Test interrompu à ${mmss(endT)} (${stopReason}). Relevés au-delà de ${lastMin} min ignorés.` : 'Test mené à son terme (6 min).';
   }
   function reportText() { const c = compute(); return buildText(c, ok(c.sRest) && ok(c.nadir) ? c.sRest - c.nadir : NaN); }
 
   /* ----- Repris de l'app d'origine ----- */
 const ok = v => isFinite(v);
-const fr = v => String(Math.round(v * 10) / 10).replace('.', ',');
+const fr = v => EN ? String(Math.round(v * 10) / 10) : String(Math.round(v * 10) / 10).replace('.', ',');
 const TEST = 360;
 
 /* ---------- Enright & Sherrill 1998 ---------- */
@@ -1626,7 +1698,7 @@ const corridor = () => ok(num('couloir')) && num('couloir') > 0 ? num('couloir')
 // Départ ailleurs qu'à un plot : le premier aller ne vaut que la distance de la ligne de départ au premier plot.
 const depart = () => { const d = num('depart'), c = corridor(); return ok(d) && d > 0 && d < c ? d : 0; };
 const lapLen = i => i === 0 && depart() ? depart() : corridor();
-const departTxt = () => depart() ? `, départ à ${fr(depart())} m d'un plot` : '';
+const departTxt = () => depart() ? (EN ? `, start ${fr(depart())} m from a cone` : `, départ à ${fr(depart())} m d'un plot`) : '';
 
 const mmss = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
@@ -1673,6 +1745,7 @@ function endOverride(pts, key) {
 
 /* ---------- Texte du courrier ---------- */
 function buildText(c, desat) {
+  if (EN) return buildTextEN(c, desat);
   const F = sex === 'F', Sj = F ? 'La patiente' : 'Le patient';
   const m = v => ok(v) ? v : null;
   const br = (v, label, unit = '') => m(v) != null ? fr(v) + unit : `[${label}]`;
@@ -1738,6 +1811,7 @@ function buildText(c, desat) {
 // sans jugement ; distance « dans les limites de la normale » si elle atteint la limite inférieure.
 // Une donnée manquante supprime la phrase qui en dépend (pas de crochets ici).
 function buildBrief(c, desat) {
+  if (EN) return buildBriefEN(c, desat);
   const out = [], o2 = $('o2mode').value !== 'air';
   const cap = t => t.charAt(0).toUpperCase() + t.slice(1);
   if (titr() && o2) {
@@ -1785,6 +1859,115 @@ function buildBrief(c, desat) {
   else if (ok(rec)) fin.push(`SpO2 ${up(rec)}à ${fr(rec)} % après une minute de récupération`);
   else if (ok(rec3)) fin.push(`SpO2 ${up(rec3)}à ${fr(rec3)} % après trois minutes de récupération`);
   if (fin.length) out.push(`${cap(fin.join(' ; '))}.`);
+  return out.join(' ');
+}
+
+/* ---------- English summaries (same rules as the French ones above) ---------- */
+function buildTextEN(c, desat) {
+  const m = v => ok(v) ? v : null;
+  const br = (v, label, unit = '') => m(v) != null ? fr(v) + unit : `[${label}]`;
+  const o2m = $('o2mode').value, deb = num('o2debit');
+  const iface = { lunettes: 'via nasal cannula', masque: 'via mask', autre: '[interface]' }[o2m];
+  const src = { porte: 'source carried by the patient', chariot: 'trolley pushed by the patient', operateur: 'source carried by the assessor' }[$('o2src').value];
+  const o2 = o2m === 'air' ? 'on room air' : ($('o2type').value === 'pulse'
+    ? `on pulsed oxygen, setting ${ok(deb) ? fr(deb) : '[setting]'}${o2dev() ? ` (device ${o2dev()})` : ''}, ${iface}`
+    : `on continuous oxygen at ${ok(deb) ? fr(deb) : '[flow]'} L/min ${iface}`) + ` (${src})`;
+  const aide = { aucune: 'without a walking aid', canne: 'with a walking stick', deambulateur: 'with a walking frame', rollator: 'with a rollator' }[$('aide').value];
+  const when = sec => `${Math.floor(sec / 60)} min ${String(Math.round(sec % 60)).padStart(2, '0')} s`;
+  const out = [];
+  out.push(titr() && o2m !== 'air'
+    ? `Exertional oxygen titration (6-minute walk test) performed ${o2}, ${aide}, on a ${corridor()} m corridor${departTxt()}.`
+    : `6-minute walk test performed ${o2}, ${aide}, on a ${corridor()} m corridor${departTxt()}.`);
+  if (o2m !== 'air') {
+    const rest = restSteps().map(st => `${fr(st.s)}% ${pulsed() ? `at setting ${fr(st.d)}` : `on ${fr(st.d)} L/min`}`);
+    if (rest.length) out.push(`Oxygen titration at rest: SpO2 ${rest.join(', then ')}.`);
+    if (o2changes.length) {
+      let prev = num('o2debit');
+      const parts = o2changes.map(ch => {
+        const p = `${pulsed() ? 'setting' : 'flow'} changed from ${ok(prev) ? fr(prev) : '[value]'} to ${pulsed() ? fr(ch.v) : `${fr(ch.v)} L/min`} at ${when(ch.t)}`;
+        prev = ch.v; return p;
+      });
+      out.push(`Oxygen titration during the test: ${parts.join(', then ')}.`);
+    }
+  }
+  let d = `Distance walked ${Math.round(c.dist)} m`;
+  if (c.pr) d += `, i.e. ${c.pct}% of the predicted value (${c.pr.p} m), ${c.dist < c.pr.lin ? 'below' : 'above'} the lower limit of normal (${c.pr.lin} m).`;
+  else d += ` [predicted value not calculated, age, height or weight missing].`;
+  out.push(d);
+  if (stopReason) out.push(`Test stopped at ${when(endT)} because of ${tv(stopReason)}.`);
+  if (pauses.length) out.push(`The patient made ${pauses.length === 1 ? 'one stop' : pauses.length + ' stops'} lasting ${Math.round(pauseTotal())} s in total, with the timer kept running.`);
+  else if (!stopReason) out.push('Test completed without stopping.');
+  let s = `SpO2 went from ${br(c.sRest, 'resting SpO2', '%')} at rest to ${br(c.sEnd, 'end-test SpO2', '%')} at the end of the test`;
+  if (ok(c.nadir) && ok(desat)) s += desat > 0 ? `, with a nadir of ${c.nadir}%, i.e. a desaturation of ${desat} point${desat > 1 ? 's' : ''}.` : ', without desaturation.';
+  else if (ok(c.nadir)) s += `, with a nadir of ${c.nadir}% [resting SpO2 missing].`;
+  else s += ', [nadir not entered].';
+  out.push(s);
+  let f = `Heart rate went from ${br(c.fRest, 'resting HR', '/min')} to ${br(c.fEnd, 'end-test HR', '/min')}`;
+  if (ok(c.fPeak)) f += `, with a peak of ${c.fPeak}/min${ok(c.fmt) ? `, i.e. ${Math.round(c.fPeak / c.fmt * 100)}% of predicted maximum HR` : ''}.`; else f += '.';
+  out.push(f);
+  const ta0 = taStr('ta0s', 'ta0d'), ta1 = taStr('ta1s', 'ta1d'), taR = taStr('taRs', 'taRd');
+  if (ta0 || ta1) out.push(`Blood pressure went from ${ta0 ?? '[resting BP]'} at rest to ${ta1 ?? '[end-test BP]'} at the end of the test.`);
+  const bv = id => $(id).value === '' ? null : fr(parseFloat($(id).value));
+  const bd0 = bv('borgD0'), bd1 = bv('borgD1'), bf0 = bv('borgF0'), bf1 = bv('borgF1');
+  out.push(`Borg dyspnoea from ${bd0 ?? '[rest]'} to ${bd1 ?? '[end]'}, Borg leg fatigue from ${bf0 ?? '[rest]'} to ${bf1 ?? '[end]'}.`);
+  const sy = symptoms();
+  if (sy.length) out.push(`Limiting symptom${sy.length > 1 ? 's' : ''} reported: ${sy.map(tv).join(', ')}.`);
+  if (ok(num('spo2Rec')) || ok(num('fcRec'))) out.push(`After one minute of recovery, SpO2 ${br(num('spo2Rec'), 'not recorded', '%')} and HR ${br(num('fcRec'), 'not recorded', '/min')}${taR ? `, blood pressure ${taR}` : ''}.`);
+  else if (taR) out.push(`After one minute of recovery, blood pressure ${taR}.`);
+  const taR3 = taStr('taR3s', 'taR3d');
+  if (ok(num('spo2Rec3')) || ok(num('fcRec3'))) out.push(`After three minutes of recovery, SpO2 ${br(num('spo2Rec3'), 'not recorded', '%')} and HR ${br(num('fcRec3'), 'not recorded', '/min')}${taR3 ? `, blood pressure ${taR3}` : ''}.`);
+  else if (taR3) out.push(`After three minutes of recovery, blood pressure ${taR3}.`);
+  return `${buildBriefEN(c, desat)}\n\n${out.join(' ')}`;
+}
+function buildBriefEN(c, desat) {
+  const out = [], o2 = $('o2mode').value !== 'air';
+  const cap = t => t.charAt(0).toUpperCase() + t.slice(1);
+  const when = sec => `${Math.floor(sec / 60)} min ${String(Math.round(sec % 60)).padStart(2, '0')} s`;
+  if (titr() && o2) {
+    const bits = [], u = v => pulsed() ? `at setting ${fr(v)}` : `on ${fr(v)} L/min`;
+    const steps = restSteps().map(st => `${fr(st.s)}% ${u(st.d)}`);
+    if (steps.length) bits.push(`at rest, SpO2 ${steps.length > 1 ? steps.slice(0, -1).join(', ') + ' and ' + steps[steps.length - 1] : steps[0]}`);
+    const a = num('o2debit'), b = o2At(Infinity);
+    if (o2changes.length && ok(a) && ok(b) && a !== b) bits.push(`during the walk, ${pulsed() ? `setting changed from position ${fr(a)} to ${fr(b)}` : `flow changed from ${fr(a)} to ${fr(b)} L/min`}`);
+    else if (ok(a)) bits.push(`during the walk, ${pulsed() ? `setting kept at position ${fr(a)}` : `flow kept at ${fr(a)} L/min`}`);
+    out.push(`Exertional oxygen titration${o2dev() ? ` (device ${o2dev()})` : ''}${bits.length ? ': ' + bits.join('; ') : ''}.`);
+  }
+  if (c.pr) {
+    out.push(`Distance walked ${Math.round(c.dist)} m, i.e. ${c.pct}% of the expected value: walking capacity ${c.dist < c.pr.lin ? 'reduced' : 'within normal limits'}.`);
+    if (c.pr.outOfRange) out.push('Age outside the reference population of the equations (40 to 80 years).');
+  } else if (c.dist > 0) out.push(`Distance walked ${Math.round(c.dist)} m.`);
+  if (ok(c.sRest) && ok(c.nadir)) {
+    const on = o2 ? (o2dev() && !titr() ? ` on pulsed oxygen (device ${o2dev()})` : ' on oxygen') : '';
+    out.push(ok(desat) && desat >= 4
+      ? `Significant exertional desaturation${on}, from ${fr(c.sRest)}% at rest to a lowest value of ${fr(c.nadir)}%.`
+      : `No significant exertional desaturation${on} (SpO2 from ${fr(c.sRest)}% to ${fr(c.nadir)}%).`);
+  }
+  if (o2 && o2changes.length && !titr()) {
+    const a = num('o2debit'), b = o2At(Infinity);
+    if (ok(a) && ok(b) && a !== b) {
+      const dir = b > a ? 'increased' : 'decreased';
+      out.push(pulsed() ? `Oxygen setting ${dir} during the walk, from position ${fr(a)} to ${fr(b)}.` : `Oxygen flow ${dir} during the walk, from ${fr(a)} to ${fr(b)} L/min.`);
+    }
+  }
+  const sy = symptoms();
+  const borgEnd = id => $(id).value === '' ? '' : `, rated ${fr(parseFloat($(id).value))} out of 10 at the end of the test`;
+  if (sy.includes('dyspnée')) out.push(`Limiting dyspnoea${borgEnd('borgD1')}.`);
+  if (sy.includes('fatigue des membres inférieurs')) out.push(`Limiting leg fatigue${borgEnd('borgF1')}.`);
+  const other = sy.filter(v => v !== 'dyspnée' && v !== 'fatigue des membres inférieurs');
+  if (other.length) out.push(`Limiting symptom${other.length > 1 ? 's' : ''}: ${other.map(tv).join(', ')}.`);
+  const hemo = [];
+  if (ok(c.fRest) && ok(c.fEnd)) hemo.push(`heart rate from ${fr(c.fRest)} to ${fr(c.fEnd)}/min${ok(c.fPeak) && ok(c.fmt) ? ` (${Math.round(c.fPeak / c.fmt * 100)}% of predicted maximum HR)` : ''}`);
+  const ta0 = taStr('ta0s', 'ta0d'), ta1 = taStr('ta1s', 'ta1d');
+  if (ta0 && ta1) hemo.push(`blood pressure from ${ta0.replace(' mmHg', '')} to ${ta1}`);
+  if (hemo.length) out.push(`${cap(hemo.join(', '))}.`);
+  const fin = [];
+  if (stopReason) fin.push(`test stopped at ${when(endT)} because of ${tv(stopReason)}`);
+  if (pauses.length) fin.push(pauses.length === 1 ? `one stop of ${Math.round(pauseTotal())} s` : `${pauses.length} stops, ${Math.round(pauseTotal())} s in total`);
+  const rec = num('spo2Rec'), rec3 = num('spo2Rec3'), at = v => ok(c.sEnd) && v > c.sEnd ? 'back up to' : 'at';
+  if (ok(rec) && ok(rec3)) fin.push(`SpO2 ${at(rec)} ${fr(rec)}% after one minute and ${fr(rec3)}% after three minutes of recovery`);
+  else if (ok(rec)) fin.push(`SpO2 ${at(rec)} ${fr(rec)}% after one minute of recovery`);
+  else if (ok(rec3)) fin.push(`SpO2 ${at(rec3)} ${fr(rec3)}% after three minutes of recovery`);
+  if (fin.length) out.push(`${cap(fin.join('; '))}.`);
   return out.join(' ');
 }
 
@@ -1844,7 +2027,7 @@ function svgPng(markup, cw = 960, ch = 390) {
 const tw = mm => Math.round(mm * 56.693), emu = mm => Math.round(mm * 36000);
 const PAGE_W = 11906, MARGIN = 1134, BODY_W = PAGE_W - 2 * MARGIN;
 const GREY = '595959';
-const run = (t, o = {}) => `<w:r><w:rPr>${o.b ? '<w:b/>' : ''}${o.i ? '<w:i/>' : ''}${o.color ? `<w:color w:val="${o.color}"/>` : ''}${o.sz ? `<w:sz w:val="${o.sz}"/><w:szCs w:val="${o.sz}"/>` : ''}</w:rPr><w:t xml:space="preserve">${xesc(t)}</w:t></w:r>`;
+const run = (t, o = {}) => `<w:r><w:rPr>${o.b ? '<w:b/>' : ''}${o.i ? '<w:i/>' : ''}${o.color ? `<w:color w:val="${o.color}"/>` : ''}${o.sz ? `<w:sz w:val="${o.sz}"/><w:szCs w:val="${o.sz}"/>` : ''}</w:rPr><w:t xml:space="preserve">${xesc(EN ? pctEN(t) : t)}</w:t></w:r>`;
 const para = (runs, o = {}) => `<w:p><w:pPr>${o.keep ? '<w:keepNext/>' : ''}${o.pageBreak ? '<w:pageBreakBefore/>' : ''}${o.rule ? '<w:pBdr><w:bottom w:val="single" w:sz="6" w:space="2" w:color="000000"/></w:pBdr>' : ''}<w:spacing w:before="${o.before ?? 0}" w:after="${o.after ?? 80}"/>${o.jc ? `<w:jc w:val="${o.jc}"/>` : ''}</w:pPr>${[].concat(runs).join('')}</w:p>`;
 const P = (t, o = {}) => para(run(t, o), o);
 const H = t => para(run(t, { b: true, sz: 21 }), { before: 260, after: 100, keep: true, rule: true });
@@ -1905,8 +2088,8 @@ function polySvg(c, st) {
   const W = 640, L = 70, PR = 460, LEG = 476, fs = 11, xMax = has3 ? endT / 60 + 3.4 : 7;
   const x = min => L + Math.min(min, xMax) / xMax * (PR - L);
   const endMin = endT / 60, air = $('o2mode').value === 'air';
-  const lanes = [{ k: 's', name: 'SpO2', unit: '%', h: 72 }, { k: 'f', name: 'FC', unit: '/min', h: 72 }, { k: 'v', name: 'Vitesse', unit: 'km/h', h: 62 }];
-  if (!air) lanes.push({ k: 'o', name: 'O2', unit: pulsed() ? 'réglage' : 'L/min', h: 44 });
+  const lanes = [{ k: 's', name: 'SpO2', unit: '%', h: 72 }, { k: 'f', name: LG('FC', 'HR'), unit: '/min', h: 72 }, { k: 'v', name: LG('Vitesse', 'Speed'), unit: 'km/h', h: 62 }];
+  if (!air) lanes.push({ k: 'o', name: 'O2', unit: pulsed() ? LG('réglage', 'setting') : 'L/min', h: 44 });
   let y0 = 4; lanes.forEach(l => { l.top = y0; y0 += l.h; l.bot = y0; });
   const top = 4, bot = y0, H = bot + 34;
   let g = '';
@@ -1946,17 +2129,17 @@ function polySvg(c, st) {
       // Mesures prises pendant les arrêts : tracées au début de l'arrêt, comme dans le bilan.
       const pts = endOverride(c.pts.filter(p => ok(p[l.k])), l.k).concat(pauseVals.filter(p => ok(p[l.k]))).sort((a, b) => a.t - b.t).map(p => ({ t: p.t, v: p[l.k] }));
       const recs = [c.rec, c.rec3].filter(r => r && ok(r[l.k])).map(r => ({ t: Math.min(r.t, xMax), v: r[l.k] }));
-      if (!pts.length) { g += `<text x="${(L + PR) / 2}" y="${(l.top + l.bot) / 2 + 4}" text-anchor="middle" font-size="${fs - 1}" fill="var(--muted)">Aucun relevé</text>`; return; }
+      if (!pts.length) { g += `<text x="${(L + PR) / 2}" y="${(l.top + l.bot) / 2 + 4}" text-anchor="middle" font-size="${fs - 1}" fill="var(--muted)">${LG('Aucun relevé', 'No readings')}</text>`; return; }
       const r = series(l, pts, recs, 1, []);
       g += r.s;
-      if (l.k === 's') g += legend(l, ['Cercle vide : récupération']);
+      if (l.k === 's') g += legend(l, [LG('Cercle vide : récupération', 'Open circle: recovery')]);
     } else if (l.k === 'v') {
       const pts = speedSegments().map(sg => ({ t: (sg.a + sg.b) / 120, v: Math.round(sg.v * 0.06 * 10) / 10 }));
-      if (!pts.length) { g += `<text x="${(L + PR) / 2}" y="${(l.top + l.bot) / 2 + 4}" text-anchor="middle" font-size="${fs - 1}" fill="var(--muted)">Heures de passage non enregistrées</text>`; return; }
+      if (!pts.length) { g += `<text x="${(L + PR) / 2}" y="${(l.top + l.bot) / 2 + 4}" text-anchor="middle" font-size="${fs - 1}" fill="var(--muted)">${LG('Heures de passage non enregistrées', 'Passage times not recorded')}</text>`; return; }
       const r = series(l, pts, [], 2, st ? [st.kmhWalk] : []);
       if (st) g += `<line x1="${L}" x2="${x(endMin)}" y1="${r.y(st.kmhWalk)}" y2="${r.y(st.kmhWalk)}" stroke="var(--alert)" stroke-dasharray="5 3" stroke-width="1"/>`;
       g += r.s;
-      g += legend(l, ['Un point par aller', st ? `Tirets : moyenne ${fr(st.kmhWalk)} km/h` : '', pauses.length ? 'Bande grise : arrêt' : ''].filter(Boolean));
+      g += legend(l, [LG('Un point par aller', 'One point per length'), st ? LG(`Tirets : moyenne ${fr(st.kmhWalk)} km/h`, `Dashes: mean ${fr(st.kmhWalk)} km/h`) : '', pauses.length ? LG('Bande grise : arrêt', 'Grey band: stop') : ''].filter(Boolean));
     } else {
       const v0 = num('o2debit'), steps = [{ t: 0, v: v0 }, ...o2changes.map(ch => ({ t: ch.t / 60, v: ch.v }))].filter(p => ok(p.v));
       if (!steps.length) return;
@@ -1967,20 +2150,22 @@ function polySvg(c, st) {
       g += `<polyline fill="none" stroke="var(--ink)" stroke-width="2.2" points="${pts.join(' ')}"/>`;
       steps.forEach((p, i) => { g += `<text x="${x(p.t) + 4}" y="${y(p.v) - 4}" font-size="${fs - 1}" fill="var(--ink)">${fr(p.v)}${i ? ` (${mmss(p.t * 60)})` : ''}</text>`; });
       const rest = restSteps();
-      g += legend(l, rest.length ? ['Repos : ' + rest.slice(0, 2).map(st2 => `${fr(st2.s)} % à ${fr(st2.d)}`).join(', ') + (rest.length > 2 ? ',' : ''), rest.length > 2 ? rest.slice(2).map(st2 => `${fr(st2.s)} % à ${fr(st2.d)}`).join(', ') : ''].filter(Boolean) : ['Valeur appliquée']);
+      const at2 = st2 => EN ? `${fr(st2.s)}% at ${fr(st2.d)}` : `${fr(st2.s)} % à ${fr(st2.d)}`;
+      g += legend(l, rest.length ? [LG('Repos : ', 'Rest: ') + rest.slice(0, 2).map(at2).join(', ') + (rest.length > 2 ? ',' : ''), rest.length > 2 ? rest.slice(2).map(at2).join(', ') : ''].filter(Boolean) : [LG('Valeur appliquée', 'Value applied')]);
     }
   });
   // Trait de fin et axe du temps.
   g += `<line x1="${x(endMin)}" x2="${x(endMin)}" y1="${top}" y2="${bot}" stroke="var(--ink)" stroke-width="1.8"/>`;
   for (let t = 0; t <= 6; t++) if (Math.abs(t - endMin) > 0.15) g += `<text x="${x(t)}" y="${bot + 14}" text-anchor="middle" font-size="${fs - 1}" fill="var(--muted)">${t}</text>`;
-  g += `<text x="${x(endMin)}" y="${bot + 14}" text-anchor="middle" font-size="${fs}" font-weight="bold" fill="var(--ink)">Fin${stopReason ? ' ' + mmss(endT) : ''}</text>`;
+  g += `<text x="${x(endMin)}" y="${bot + 14}" text-anchor="middle" font-size="${fs}" font-weight="bold" fill="var(--ink)">${LG('Fin', 'End')}${stopReason ? ' ' + mmss(endT) : ''}</text>`;
   [[c.rec, '+1 min'], [c.rec3, '+3 min']].forEach(([r, lab]) => { if (r && (ok(r.s) || ok(r.f))) g += `<text x="${x(Math.min(r.t, xMax))}" y="${bot + 14}" text-anchor="middle" font-size="${fs - 1}" fill="var(--muted)">${lab}</text>`; });
-  g += `<text x="${(L + PR) / 2}" y="${bot + 29}" text-anchor="middle" font-size="${fs - 1}" fill="var(--muted)">Temps (min)</text>`;
+  g += `<text x="${(L + PR) / 2}" y="${bot + 29}" text-anchor="middle" font-size="${fs - 1}" fill="var(--muted)">${LG('Temps (min)', 'Time (min)')}</text>`;
   return { svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">${g}</svg>`, W, H };
 }
 
 const testDate = () => new Date(t0 || Date.now());
-const testWhen = d => `${d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })} à ${d.getHours()} h ${pad2(d.getMinutes())}`;
+const testWhen = d => EN ? `${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })} at ${pad2(d.getHours())}:${pad2(d.getMinutes())}`
+  : `${d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })} à ${d.getHours()} h ${pad2(d.getMinutes())}`;
 
 async function buildDocx() {
   refresh();
@@ -1998,29 +2183,36 @@ async function buildDocx() {
   if (cfg.service.trim()) head.push(P(cfg.service.trim(), { sz: 18, after: 0 }));
   cfg.adresse.split('\n').map(l => l.trim()).filter(Boolean).forEach(l => head.push(P(l, { sz: 16, color: GREY, after: 0 })));
   const isTitr = titr() && !air;
-  head.push(P(isTitr ? "Titration de l'oxygène à l'effort" : 'Test de marche de 6 minutes', { b: true, sz: 30, before: head.length ? 240 : 0, after: isTitr ? 0 : 40 }));
-  if (isTitr) head.push(P('Test de marche de 6 minutes', { sz: 20, color: GREY, after: 40 }));
-  head.push(P(`Examen du ${testWhen(d)}`, { sz: 20, after: 0 }));
+  head.push(P(isTitr ? LG("Titration de l'oxygène à l'effort", 'Exertional oxygen titration') : LG('Test de marche de 6 minutes', '6-minute walk test'), { b: true, sz: 30, before: head.length ? 240 : 0, after: isTitr ? 0 : 40 }));
+  if (isTitr) head.push(P(LG('Test de marche de 6 minutes', '6-minute walk test'), { sz: 20, color: GREY, after: 40 }));
+  head.push(P(LG(`Examen du ${testWhen(d)}`, `Test on ${testWhen(d)}`), { sz: 20, after: 0 }));
   body.push(tbl([tr([cell(head.join(''), LEFT_W), cell('', LBL_W)], { h: tw(45), hRule: 'atLeast' })], [LEFT_W, LBL_W], { borders: NOBORDER }));
 
   // Conditions de réalisation, avant tout le reste : un encadré, intitulés en gras.
   const half = cols([0.5, 0.5]);
   const deb = raw('o2debit') || dash;
-  const ageTxt = [raw('age') && `${raw('age')} ans`, raw('taille') && `${raw('taille')} cm`, raw('poids') && `${raw('poids')} kg`].filter(Boolean).join(', ') || 'âge, taille et poids non renseignés';
-  const srcTxt = opt('o2src').toLowerCase().replace('le patient', sex === 'F' ? 'la patiente' : 'le patient');
-  const o2txt = air ? 'air ambiant' : `${opt('o2mode').toLowerCase()}, ${pulsed() ? `débit pulsé, réglage ${deb}${o2dev() ? `, dispositif ${o2dev()}` : ''}` : `débit continu, ${deb} L/min`}, ${srcTxt}`;
-  const aideTxt = $('aide').value === 'aucune' ? 'sans aide' : `avec ${opt('aide').toLowerCase()}`;
-  const line = (k, v) => para([run(`${k} : `, { b: true }), run(v)], { after: 40 });
+  const ageTxt = [raw('age') && `${raw('age')} ${LG('ans', 'years')}`, raw('taille') && `${raw('taille')} cm`, raw('poids') && `${raw('poids')} kg`].filter(Boolean).join(', ') || LG('âge, taille et poids non renseignés', 'age, height and weight not entered');
+  const srcTxt = EN ? opt('o2src').toLowerCase() : opt('o2src').toLowerCase().replace('le patient', sex === 'F' ? 'la patiente' : 'le patient');
+  const o2txt = EN ? (air ? 'room air' : `${opt('o2mode').toLowerCase()}, ${pulsed() ? `pulsed flow, setting ${deb}${o2dev() ? `, device ${o2dev()}` : ''}` : `continuous flow, ${deb} L/min`}, ${srcTxt}`)
+    : air ? 'air ambiant' : `${opt('o2mode').toLowerCase()}, ${pulsed() ? `débit pulsé, réglage ${deb}${o2dev() ? `, dispositif ${o2dev()}` : ''}` : `débit continu, ${deb} L/min`}, ${srcTxt}`;
+  const aideTxt = $('aide').value === 'aucune' ? LG('sans aide', 'no walking aid') : `${LG('avec', 'with a')} ${opt('aide').toLowerCase()}`;
+  const line = (k, v) => para([run(`${k}${LG(' : ', ': ')}`, { b: true }), run(v)], { after: 40 });
   body.push(H('Conditions'));
   body.push(tbl([tr([cell(
-    line(sex === 'F' ? 'Patiente' : 'Patient', `${ageTxt}.`) +
-    line('Oxygène', `${o2txt}.`) +
-    line('Marche', `${aideTxt}, couloir de ${corridor()} m${departTxt()}.`), BODY_W)])], [BODY_W]));
+    line(EN ? 'Patient' : sex === 'F' ? 'Patiente' : 'Patient', `${ageTxt}.`) +
+    line(LG('Oxygène', 'Oxygen'), `${o2txt}.`) +
+    line(LG('Marche', 'Walk'), `${aideTxt}, ${LG(`couloir de ${corridor()} m`, `${corridor()} m corridor`)}${departTxt()}.`), BODY_W)])], [BODY_W]));
 
   // Performance, juste après : le tableau le plus parlant.
   const c = compute(), desat = ok(c.sRest) && ok(c.nadir) ? c.sRest - c.nadir : NaN, sp = speedStats(c.dist);
   const sy = symptoms();
-  const perf = [
+  const perf = EN ? [
+    ['Distance', `${Math.round(c.dist)} m${c.pr ? `, i.e. ${c.pct}% of the predicted value (${c.pr.p} m; lower limit ${c.pr.lin} m)` : ', predicted value not calculated (age, height or weight missing)'}`],
+    ['Speed', sp ? (pauses.length ? `${fr(sp.kmhTot)} km/h overall (${fr(sp.mTot)} m/min), ${fr(sp.kmhWalk)} km/h while walking (${fr(sp.mWalk)} m/min)` : `${fr(sp.kmhTot)} km/h (${fr(sp.mTot)} m/min), no stops`) : dash],
+    ['Oxygenation', ok(c.nadir) ? `Nadir ${c.nadir}%, ${!ok(desat) ? 'desaturation not calculated (resting SpO2 missing)' : desat > 0 ? `desaturation of ${desat} point${desat > 1 ? 's' : ''}` : 'no desaturation'}` : dash],
+    ['Course of the test', `${$('endStatus').textContent} ${pauses.length ? `${pauses.length === 1 ? 'One stop' : `${pauses.length} stops`}, ${Math.round(pauseTotal())} s in total.` : 'No stops.'}`],
+    ['Limiting symptoms', sy.length ? sy.map(tv).join(', ') : 'none reported']
+  ] : [
     ['Distance', `${Math.round(c.dist)} m${c.pr ? `, soit ${c.pct} % de la valeur théorique (${c.pr.p} m ; limite inférieure ${c.pr.lin} m)` : ', valeur théorique non calculée (âge, taille ou poids manquant)'}`],
     ['Vitesse', sp ? (pauses.length ? `${fr(sp.kmhTot)} km/h globale (${fr(sp.mTot)} m/min), ${fr(sp.kmhWalk)} km/h pendant la marche (${fr(sp.mWalk)} m/min)` : `${fr(sp.kmhTot)} km/h (${fr(sp.mTot)} m/min), sans arrêt`) : dash],
     ['Oxygénation', ok(c.nadir) ? `Nadir ${c.nadir} %, ${!ok(desat) ? 'désaturation non calculée (SpO2 de repos manquante)' : desat > 0 ? `désaturation de ${desat} point${desat > 1 ? 's' : ''}` : 'sans désaturation'}` : dash],
@@ -2032,32 +2224,32 @@ async function buildDocx() {
 
   // Puis l'interprétation.
   const parts = $('txt').value.split(/\n\s*\n/).map(t => t.trim()).filter(Boolean);
-  body.push(H('Synthèse'));
+  body.push(H(LG('Synthèse', 'Summary')));
   (parts[0] || '').split(/\n+/).filter(Boolean).forEach(l => body.push(P(l, { jc: 'both' })));
 
   // Récapitulatif repos / fin / récupération (mêmes calculs que l'app).
   const fmtPct = ok(c.fPeak) && ok(c.fmt) ? Math.round(c.fPeak / c.fmt * 100) : null;
   const spoEnd = ok(c.sEnd) ? `${c.sEnd}${ok(c.nadir) && c.nadir < c.sEnd ? ` (nadir ${c.nadir})` : ''}` : (ok(c.nadir) ? `nadir ${c.nadir}` : '');
-  const fcEnd = ok(c.fEnd) ? `${c.fEnd}${ok(c.fPeak) && c.fPeak > c.fEnd ? ` (max ${c.fPeak}` : ''}${fmtPct != null ? `${ok(c.fPeak) && c.fPeak > c.fEnd ? ', ' : ' ('}${fmtPct} % FMT)` : (ok(c.fPeak) && c.fPeak > c.fEnd ? ')' : '')}` : '';
+  const fcEnd = ok(c.fEnd) ? `${c.fEnd}${ok(c.fPeak) && c.fPeak > c.fEnd ? ` (max ${c.fPeak}` : ''}${fmtPct != null ? `${ok(c.fPeak) && c.fPeak > c.fEnd ? ', ' : ' ('}${fmtPct} % ${LG('FMT', 'max HR')})` : (ok(c.fPeak) && c.fPeak > c.fEnd ? ')' : '')}` : '';
   const taCell = (sId, dId) => (taStr(sId, dId) || '').replace(' mmHg', '');
   const bg = id => $(id).value === '' ? '' : fr(parseFloat($(id).value));
   const recap = [
     ['SpO2 (%)', cellv(c.sRest), spoEnd, cellv(num('spo2Rec'))],
-    ['Fréquence cardiaque (/min)', cellv(c.fRest), fcEnd, cellv(num('fcRec'))],
-    ['Pression artérielle (mmHg)', taCell('ta0s', 'ta0d'), taCell('ta1s', 'ta1d'), taCell('taRs', 'taRd')],
-    ['Dyspnée (Borg)', bg('borgD0'), bg('borgD1'), ''],
-    ['Fatigue des membres inférieurs (Borg)', bg('borgF0'), bg('borgF1'), '']
+    [LG('Fréquence cardiaque (/min)', 'Heart rate (/min)'), cellv(c.fRest), fcEnd, cellv(num('fcRec'))],
+    [LG('Pression artérielle (mmHg)', 'Blood pressure (mmHg)'), taCell('ta0s', 'ta0d'), taCell('ta1s', 'ta1d'), taCell('taRs', 'taRd')],
+    [LG('Dyspnée (Borg)', 'Dyspnoea (Borg)'), bg('borgD0'), bg('borgD1'), ''],
+    [LG('Fatigue des membres inférieurs (Borg)', 'Leg fatigue (Borg)'), bg('borgF0'), bg('borgF1'), '']
   ];
-  if (!air) recap.push([pulsed() ? 'Oxygène (réglage)' : 'Oxygène (L/min)', cellv(num('o2debit')), cellv(o2At(endT)), cellv(o2At(endT))]);
+  if (!air) recap.push([pulsed() ? LG('Oxygène (réglage)', 'Oxygen (setting)') : LG('Oxygène (L/min)', 'Oxygen (L/min)'), cellv(num('o2debit')), cellv(o2At(endT)), cellv(o2At(endT))]);
   const has3 = ['spo2Rec3', 'fcRec3', 'taR3s', 'taR3d'].some(id => raw(id));
   if (has3) {
     const r3 = [cellv(num('spo2Rec3')), cellv(num('fcRec3')), taCell('taR3s', 'taR3d'), '', ''];
     recap.forEach((row, i) => row.push(i < r3.length ? r3[i] : cellv(o2At(endT))));
   }
-  body.push(H('Récapitulatif'));
-  body.push(ruled(['Paramètre', 'Repos', stopReason ? `Arrêt (${mmss(endT)})` : 'Fin du test', 'Récupération (1 min)', ...(has3 ? ['Récupération (3 min)'] : [])], recap, has3 ? cols([0.3, 0.14, 0.2, 0.18, 0.18]) : cols([0.36, 0.17, 0.27, 0.2])));
+  body.push(H(LG('Récapitulatif', 'Measurements')));
+  body.push(ruled([LG('Paramètre', 'Parameter'), LG('Repos', 'Rest'), stopReason ? `${LG('Arrêt', 'Stop')} (${mmss(endT)})` : LG('Fin du test', 'End of test'), LG('Récupération (1 min)', 'Recovery (1 min)'), ...(has3 ? [LG('Récupération (3 min)', 'Recovery (3 min)')] : [])], recap, has3 ? cols([0.3, 0.14, 0.2, 0.18, 0.18]) : cols([0.36, 0.17, 0.27, 0.2])));
 
-  const methods = "Méthodes. Valeur théorique et limite inférieure de la normale selon Enright et Sherrill (1998), équations établies chez des adultes de 40 à 80 ans. FMT théorique : 220 moins l'âge. Dyspnée et fatigue : échelle de Borg CR10. Nadir : SpO2 la plus basse relevée pendant le test, arrêts compris. Désaturation significative : baisse d'au moins 4 points de SpO2 entre le repos et le nadir. Vitesse globale : distance rapportée à la durée du test ; vitesse de marche : distance rapportée à la durée hors arrêts.";
+  const methods = EN ? 'Methods. Predicted value and lower limit of normal according to Enright and Sherrill (1998), equations established in adults aged 40 to 80 years. Predicted maximum HR: 220 minus age. Dyspnoea and fatigue: Borg CR10 scale. Nadir: lowest SpO2 recorded during the test, stops included. Significant desaturation: fall of at least 4 SpO2 points between rest and nadir. Overall speed: distance divided by the test duration; walking speed: distance divided by the duration excluding stops.' : "Méthodes. Valeur théorique et limite inférieure de la normale selon Enright et Sherrill (1998), équations établies chez des adultes de 40 à 80 ans. FMT théorique : 220 moins l'âge. Dyspnée et fatigue : échelle de Borg CR10. Nadir : SpO2 la plus basse relevée pendant le test, arrêts compris. Désaturation significative : baisse d'au moins 4 points de SpO2 entre le repos et le nadir. Vitesse globale : distance rapportée à la durée du test ; vitesse de marche : distance rapportée à la durée hors arrêts.";
 
   // Figure polygraphique : toutes les pistes dans un même cadre, un seul axe du temps.
   const media = [];
@@ -2065,70 +2257,64 @@ async function buildDocx() {
   const png = await svgPng(poly.svg, 1600, Math.round(1600 * poly.H / poly.W));
   const figW = Math.round(BODY_W / 56.693), figH = figW * poly.H / poly.W;
   // Titre et figure ensemble en haut de la page 2 (le titre ne reste pas seul en bas de la page 1).
-  body.push(para(run('Évolution au cours du test', { b: true, sz: 21 }), { before: 0, after: 100, keep: true, rule: true, pageBreak: true }));
+  body.push(para(run(LG('Évolution au cours du test', 'Course of the test'), { b: true, sz: 21 }), { before: 0, after: 100, keep: true, rule: true, pageBreak: true }));
   if (png) { media.push({ n: 1, png }); body.push(para(picture(1, figW, figH), { after: 0 })); }
-  else body.push(P('Figure non disponible.', { i: true, sz: 15 }));
+  else body.push(P(LG('Figure non disponible.', 'Figure not available.'), { i: true, sz: 15 }));
 
   // 6. Détail, présenté comme une feuille de surveillance : les minutes en colonnes.
   const last = endT >= TEST ? 6 : Math.floor(endT / 60);
-  const heads = ['', 'Repos', ...Array.from({ length: last }, (_, i) => `${i + 1} min`), stopReason ? 'Arrêt' : 'Fin', has3 ? 'Récup. 1 min' : 'Récup.', ...(has3 ? ['Récup. 3 min'] : [])];
+  const heads = ['', LG('Repos', 'Rest'), ...Array.from({ length: last }, (_, i) => `${i + 1} min`), stopReason ? LG('Arrêt', 'Stop') : LG('Fin', 'End'), has3 ? LG('Récup. 1 min', 'Rec. 1 min') : LG('Récup.', 'Rec.'), ...(has3 ? [LG('Récup. 3 min', 'Rec. 3 min')] : [])];
   const rowOf = (label, ids) => [label, ...ids.map(id => raw(id))];
   const minIds = f => Array.from({ length: last }, (_, i) => `m${i + 1}${f}`);
-  const det = [rowOf('SpO2 (%)', ['m0spo2', ...minIds('spo2'), 'spo2End', 'spo2Rec', ...(has3 ? ['spo2Rec3'] : [])]), rowOf('FC (/min)', ['m0fc', ...minIds('fc'), 'fcEnd', 'fcRec', ...(has3 ? ['fcRec3'] : [])])];
+  const det = [rowOf('SpO2 (%)', ['m0spo2', ...minIds('spo2'), 'spo2End', 'spo2Rec', ...(has3 ? ['spo2Rec3'] : [])]), rowOf(LG('FC (/min)', 'HR (/min)'), ['m0fc', ...minIds('fc'), 'fcEnd', 'fcRec', ...(has3 ? ['fcRec3'] : [])])];
   const firstW = Math.round(BODY_W * 0.17), restW = Math.floor((BODY_W - firstW) / (heads.length - 1));
   const detW = [firstW, ...heads.slice(1).map(() => restW)];
-  body.push(H('Détail minute par minute'));
+  body.push(H(LG('Détail minute par minute', 'Minute-by-minute detail')));
   body.push(ruled(heads, det, detW));
   const notes = [];
-  if (raw('nadirIn')) notes.push(`Nadir lu sur l'oxymètre : ${raw('nadirIn')} %.`);
+  if (raw('nadirIn')) notes.push(LG(`Nadir lu sur l'oxymètre : ${raw('nadirIn')} %.`, `Nadir read on the oximeter: ${raw('nadirIn')}%.`));
   notes.forEach(t => body.push(P(t, { before: 60, after: 0 })));
 
   if (parts.length > 1) {
-    body.push(H('Synthèse détaillée'));
+    body.push(H(LG('Synthèse détaillée', 'Detailed summary')));
     parts.slice(1).join('\n').split(/\n+/).filter(Boolean).forEach(l => body.push(P(l, { jc: 'both' })));
   }
 
   // Indices exploratoires du bilan (analysis(), premier bloc de script), mêmes valeurs ; les indices non calculables sont omis.
   // Sources abrégées, reprises des textes du bilan (le détail reste dans le bilan), pour tenir dans les 2 pages.
-  const SRC = { 'Score ODDS': 'Nathan 2025', 'SpO2 à 1 min': 'García-Talavera 2023', 'Désaturation moyenne': 'Sunayama 2024',
-    'Réponse chronotrope': 'Holland 2013', 'Indice chronotrope': 'COPDGene 2022', 'Récupération de la FC à 1 min': 'Rezende 2022, COPDGene 2021',
-    'Produit distance × saturation': 'Gupta 2022', 'Travail de marche (6MWW)': 'Chuang 2001', 'Distance par minute': 'Dalgas 2014',
-    'Fatigabilité à la marche': 'Van Geel 2019', "Variabilité de l'allure": 'Huang 2023', 'Vitesse, 1re puis 2e moitié': 'Lancaster 2018' };
   const explo = (typeof analysis === 'function' && S.stop ? analysis().explo : []).filter(r => r[1] !== null);
   if (explo.length) {
     // Tableau récapitulatif, trois indices par ligne (intitulé, valeur) ; sources dans l'encart Méthodes.
-    body.push(para(run('Indices exploratoires', { b: true, sz: 21 }), { before: 160, after: 80, keep: true, rule: true }));
-    const SHORT = { 'Récupération de la FC à 1 min': 'Récup. FC à 1 min', 'Produit distance × saturation': 'Distance × SpO2', 'Travail de marche (6MWW)': '6MWW',
-      'Vitesse, 1re puis 2e moitié': 'Vitesse 1re / 2e moitié', 'Fatigabilité à la marche': 'Fatigabilité', 'Distance par minute': 'Distance par min', 'Désaturation moyenne': 'Désat. moyenne' };
-    const xw = cols([0.19, 0.14, 0.19, 0.14, 0.20, 0.14]), rows = [], c = (t, b, w) => cell(P(SHORT[t] || t, { b, sz: 14, after: 0 }), w);
+    body.push(para(run(LG('Indices exploratoires', 'Exploratory indices'), { b: true, sz: 21 }), { before: 160, after: 80, keep: true, rule: true }));
+    const xw = cols([0.19, 0.14, 0.19, 0.14, 0.20, 0.14]), rows = [], c = (t, b, w) => cell(P(t, { b, sz: 14, after: 0 }), w);
     for (let i = 0; i < explo.length; i += 3) {
       const r = [0, 1, 2].map(k => explo[i + k] || ['', '']);
-      rows.push(tr(r.flatMap((x, k) => [c(x[0], false, xw[2 * k]), c(x[1], true, xw[2 * k + 1])])));
+      rows.push(tr(r.flatMap((x, k) => [c(x[4] || x[0], false, xw[2 * k]), c(x[1], true, xw[2 * k + 1])])));
     }
     body.push(tbl(rows, xw));
   }
 
   body.push(para('', { before: 40, after: 0 }));
   body.push(tbl([tr([
-    cell(P(`Opérateur : ${cfg.operateur.trim() || '______________________'}`), half[0]),
-    cell(P('Signature :'), half[1])
+    cell(P(`${LG('Opérateur : ', 'Assessor: ')}${cfg.operateur.trim() || '______________________'}`), half[0]),
+    cell(P(LG('Signature :', 'Signature:')), half[1])
   ])], half, { borders: NOBORDER }));
 
-  const methodsAll = methods + (explo.length ? ' Indices exploratoires, descriptifs (repères établis dans d\'autres populations) : ' + Array.from(new Set(explo.map(r => SRC[r[0]]).filter(Boolean))).join(' ; ') + '.' : '');
+  const methodsAll = methods + (explo.length ? LG(' Indices exploratoires, descriptifs (repères établis dans d\'autres populations) : ', ' Exploratory indices, descriptive (reference points established in other populations): ') + Array.from(new Set(explo.map(r => r[3]).filter(Boolean))).join(LG(' ; ', '; ')) + '.' : '');
   // Encart Méthodes en bas de page : cadre ancré au bas de la dernière page, hors du flux du texte.
   const box = ['top', 'left', 'bottom', 'right'].map(sd => `<w:${sd} w:val="single" w:sz="4" w:space="4" w:color="000000"/>`).join('');
   body.push(`<w:p><w:pPr><w:framePr w:w="${BODY_W}" w:wrap="notBeside" w:vAnchor="margin" w:hAnchor="margin" w:yAlign="bottom"/><w:pBdr>${box}</w:pBdr><w:spacing w:before="0" w:after="0"/><w:jc w:val="both"/></w:pPr>${run(methodsAll, { sz: 14, color: GREY })}</w:p>`);
 
   const XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
   const W_NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
-  const footLeft = [isTitr ? "Titration de l'oxygène à l'effort" : 'Test de marche de 6 minutes', testWhen(d), cfg.service.trim()].filter(Boolean).join(' – ');
-  const footer_xml = `${XML}<w:ftr ${W_NS}><w:p><w:pPr><w:pBdr><w:top w:val="single" w:sz="4" w:space="4" w:color="000000"/></w:pBdr><w:tabs><w:tab w:val="right" w:pos="${BODY_W}"/></w:tabs><w:spacing w:before="0" w:after="0"/></w:pPr>${run(footLeft, { sz: 16 })}<w:r><w:rPr><w:sz w:val="16"/></w:rPr><w:tab/></w:r>${run('Page ', { sz: 16 })}${field('PAGE')}${run(' sur ', { sz: 16 })}${field('NUMPAGES')}</w:p></w:ftr>`;
+  const footLeft = [isTitr ? LG("Titration de l'oxygène à l'effort", 'Exertional oxygen titration') : LG('Test de marche de 6 minutes', '6-minute walk test'), testWhen(d), cfg.service.trim()].filter(Boolean).join(' – ');
+  const footer_xml = `${XML}<w:ftr ${W_NS}><w:p><w:pPr><w:pBdr><w:top w:val="single" w:sz="4" w:space="4" w:color="000000"/></w:pBdr><w:tabs><w:tab w:val="right" w:pos="${BODY_W}"/></w:tabs><w:spacing w:before="0" w:after="0"/></w:pPr>${run(footLeft, { sz: 16 })}<w:r><w:rPr><w:sz w:val="16"/></w:rPr><w:tab/></w:r>${run('Page ', { sz: 16 })}${field('PAGE')}${run(LG(' sur ', ' of '), { sz: 16 })}${field('NUMPAGES')}</w:p></w:ftr>`;
   const document_xml = `${XML}<w:document ${W_NS} xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><w:body>${body.join('')}<w:sectPr><w:footerReference w:type="default" r:id="rIdFooter"/><w:pgSz w:w="${PAGE_W}" w:h="16838"/><w:pgMar w:top="1000" w:right="${MARGIN}" w:bottom="1000" w:left="${MARGIN}" w:header="500" w:footer="500" w:gutter="0"/></w:sectPr></w:body></w:document>`;
-  const styles = `${XML}<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/><w:sz w:val="20"/><w:szCs w:val="20"/><w:lang w:val="fr-FR"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="80" w:line="264" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style><w:style w:type="table" w:default="1" w:styleId="TableNormal"><w:name w:val="Normal Table"/><w:tblPr><w:tblInd w:w="0" w:type="dxa"/><w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="108" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="108" w:type="dxa"/></w:tblCellMar></w:tblPr></w:style></w:styles>`;
+  const styles = `${XML}<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/><w:sz w:val="20"/><w:szCs w:val="20"/><w:lang w:val="${EN ? 'en-GB' : 'fr-FR'}"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="80" w:line="264" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style><w:style w:type="table" w:default="1" w:styleId="TableNormal"><w:name w:val="Normal Table"/><w:tblPr><w:tblInd w:w="0" w:type="dxa"/><w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="108" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="108" w:type="dxa"/></w:tblCellMar></w:tblPr></w:style></w:styles>`;
   const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
   const docRels = `${XML}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdStyles" Type="${REL}/styles" Target="styles.xml"/><Relationship Id="rIdFooter" Type="${REL}/footer" Target="footer1.xml"/>${media.map(m => `<Relationship Id="rIdImg${m.n}" Type="${REL}/image" Target="media/figure${m.n}.png"/>`).join('')}</Relationships>`;
   const rootRels = `${XML}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${REL}/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>`;
-  const core = `${XML}<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>Compte rendu – Test de marche de 6 minutes</dc:title><dcterms:created xsi:type="dcterms:W3CDTF">${new Date().toISOString().replace(/\.\d+Z$/, 'Z')}</dcterms:created></cp:coreProperties>`;
+  const core = `${XML}<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>${LG('Compte rendu – Test de marche de 6 minutes', 'Report – 6-minute walk test')}</dc:title><dcterms:created xsi:type="dcterms:W3CDTF">${new Date().toISOString().replace(/\.\d+Z$/, 'Z')}</dcterms:created></cp:coreProperties>`;
   const types = `${XML}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>`;
   return zip([
     { name: '[Content_Types].xml', data: utf8(types) },
@@ -2146,7 +2332,8 @@ async function buildDocx() {
 function base64(u8) { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); }
 function mailParts() {
   const d = testDate(), dd = `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()}`, hh = `${pad2(d.getHours())}h${pad2(d.getMinutes())}`;
-  const fill = t => String(t).replace(/\{date_longue\}/g, testWhen(d)).replace(/\{date\}/g, dd).replace(/\{heure\}/g, hh);
+  // {time} et {long_date} : équivalents anglais de {heure} et {date_longue}, acceptés dans les deux langues.
+  const fill = t => String(t).replace(/\{(date_longue|long_date)\}/g, testWhen(d)).replace(/\{date\}/g, dd).replace(/\{(heure|time)\}/g, hh);
   return {
     filename: `TM6_${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}_${hh}.docx`,
     subject: fill(cfg.mailSubject), body: fill(cfg.mailBody)
@@ -2157,15 +2344,16 @@ function mailParts() {
   const say = t => { const b = document.getElementById('sendBtn'); if (b) b.textContent = t; };
   // Appelée par l'app native une fois le mail ou le partage terminé.
   window.mailDone = r => {
-    say({ sent: 'Mail envoyé', saved: 'Brouillon enregistré dans Mail', cancelled: 'Envoi annulé', failed: "Échec de l'envoi", shared: 'Document partagé', unshared: 'Partage annulé' }[r] || 'Envoyer le compte rendu');
-    setTimeout(() => say('Envoyer le compte rendu'), 4000);
+    say((EN ? { sent: 'Email sent', saved: 'Draft saved in Mail', cancelled: 'Sending cancelled', failed: 'Sending failed', shared: 'Document shared', unshared: 'Sharing cancelled' }
+      : { sent: 'Mail envoyé', saved: 'Brouillon enregistré dans Mail', cancelled: 'Envoi annulé', failed: "Échec de l'envoi", shared: 'Document partagé', unshared: 'Partage annulé' })[r] || LG('Envoyer le compte rendu', 'Send the report'));
+    setTimeout(() => say(LG('Envoyer le compte rendu', 'Send the report')), 4000);
   };
   let pendingShare = null;
   const shareFile = f => {
     navigator.share({ files: [f.file], title: f.subject, text: f.body }).then(
       () => window.mailDone('shared'),
       e => {
-        if (e && e.name === 'NotAllowedError') { pendingShare = f; say('Toucher pour partager le document'); }
+        if (e && e.name === 'NotAllowedError') { pendingShare = f; say(LG('Toucher pour partager le document', 'Tap to share the document')); }
         else window.mailDone('unshared');
       });
   };
@@ -2177,9 +2365,9 @@ function mailParts() {
       if (!S.stop) return;
       // Version web : si le partage a été refusé faute de geste récent, ce second toucher partage le document déjà prêt.
       if (pendingShare) { const f = pendingShare; pendingShare = null; shareFile(f); return; }
-      say('Préparation du document…');
+      say(LG('Préparation du document…', 'Preparing the document…'));
       let bytes;
-      try { load(); bytes = await buildDocx(); } catch (e) { say('Échec de la création du document'); return; }
+      try { load(); bytes = await buildDocx(); } catch (e) { say(LG('Échec de la création du document', 'Could not create the document')); return; }
       const m = mailParts();
       if (NATIVE) { native({ action: 'mail', to: String(cfg.mailTo).trim(), subject: m.subject, body: m.body, filename: m.filename, data: base64(bytes) }); return; }
       const type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
@@ -2189,7 +2377,7 @@ function mailParts() {
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }));
       a.download = m.filename; a.click();
-      say('Document téléchargé');
+      say(LG('Document téléchargé', 'Document downloaded'));
     }
   };
 })();

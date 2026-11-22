@@ -2,7 +2,7 @@
 
 *[English](README.md) · Français*
 
-TM6 est une application web qui accompagne l'opérateur pendant un test de marche de 6 minutes ou une titration de l'oxygène à l'effort, puis produit un compte rendu Word prêt à être envoyé. Elle s'utilise sur iPad, iPhone ou téléphone Android, s'installe depuis le navigateur et fonctionne ensuite sans réseau.
+TM6 est une application web qui accompagne l'opérateur pendant un test de marche de 6 minutes ou une titration de l'oxygène à l'effort, puis produit un compte rendu Word prêt à être envoyé. Elle s'utilise sur iPad, iPhone ou téléphone Android, s'installe depuis le navigateur et fonctionne ensuite sans réseau. Son interface est en français ou en anglais : elle suit la langue de l'appareil, et un réglage permet de choisir la langue.
 
 **Ouvrir l'application : https://wanderingpacemaker.github.io/tm6/**
 
@@ -30,7 +30,7 @@ Le chronomètre ne part qu'au **départ**. Pendant le **test**, l'opérateur com
 
 Le document est transmis par la feuille de partage du système : on choisit Mail, Fichiers ou toute autre application.
 
-Exemple, produit par l'application à partir de son test de démonstration (patiente fictive, en-tête laissé vide) : [compte rendu Word](exemples/compte-rendu-exemple.docx), et la même chose [en PDF](exemples/compte-rendu-exemple.pdf) pour le lire directement dans GitHub.
+Exemple, produit par l'application à partir de son test de démonstration (patiente fictive, en-tête laissé vide) : [compte rendu Word](exemples/compte-rendu-exemple.docx), et la même chose [en PDF](exemples/compte-rendu-exemple.pdf) pour le lire directement dans GitHub. Le compte rendu est rédigé dans la langue de l'application.
 
 <p>
   <img src="captures/cr-1.png" alt="Page 1 du compte rendu : conditions, tableau de performance, synthèse et récapitulatif des mesures" width="300">
@@ -57,7 +57,7 @@ Un test interrompu (fermeture de l'application, appel) est restauré à la réou
 
 ## Références
 
-L'application suit la norme technique ERS/ATS de 2014, et l'énoncé de l'ATS de 2002 là où la norme de 2014 ne dit rien.
+L'application suit la norme technique ERS/ATS de 2014, et l'énoncé de l'ATS de 2002 là où la norme de 2014 ne dit rien. En anglais, les textes dits au patient (consignes, encouragements, échelle de Borg) sont ceux des normes d'origine.
 
 - Holland AE, Spruit MA, Troosters T, et al. An official European Respiratory Society/American Thoracic Society technical standard: field walking tests in chronic respiratory disease. *Eur Respir J* 2014;44:1428-46. doi:10.1183/09031936.00150314 — consignes au patient, encouragements, conduite à tenir lors des arrêts et en cas de désaturation.
 - ATS Committee on Proficiency Standards for Clinical Pulmonary Function Laboratories. ATS statement: guidelines for the six-minute walk test. *Am J Respir Crit Care Med* 2002;166:111-7. doi:10.1164/ajrccm.166.1.at1102 — échelle de Borg modifiée (tableau 2, traduction de travail) et rappel à l'opérateur.
