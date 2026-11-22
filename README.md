@@ -43,6 +43,8 @@ L'application s'installe depuis le navigateur, sans magasin d'applications ni co
 - **iPhone et iPad** : ouvrir l'adresse dans Safari, toucher le bouton Partager, puis « Sur l'écran d'accueil ».
 - **Android** : ouvrir l'adresse dans Chrome, puis choisir « Installer l'application » ou « Ajouter à l'écran d'accueil » dans le menu.
 
+Une notice d'une page à imprimer, avec un QR code vers l'application, est disponible en Word : [Installer-TM6.docx](Installer-TM6.docx).
+
 La première ouverture doit se faire avec du réseau pour que l'application se mette en mémoire ; elle fonctionne ensuite sans connexion. Quand une nouvelle version est publiée, elle est prise en compte au lancement qui suit.
 
 ## Données et confidentialité
