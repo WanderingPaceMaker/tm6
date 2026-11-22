@@ -1,0 +1,35 @@
+# Release notes
+
+*English · [Français](NOTES-DE-VERSION.md)*
+
+## 22 November 2026 — documentation in English
+
+The repository pages (README, calculation methods, release notes) are now in English, with a French version linked at the top of each page.
+
+## 22 November 2026 — fixes
+
+The reminder of the baseline Borg rating no longer shows duplicated parentheses. On iPhone, the step bar stays visible below the clock when scrolling through the results. In the settings, choosing an option no longer scrolls the sheet back to the top.
+
+## 22 November 2026 — start halfway along the corridor
+
+The patient can start somewhere other than at a cone, for example from a room halfway along the corridor. A setting gives the distance between the starting line and the first cone reached: the first length counts this distance, the following ones the corridor length, and the corridor drawing shows the starting line. The report mentions the start, so that the test can be repeated on the same course, as required by the ERS/ATS standard of 2014.
+
+## 22 November 2026 — web version
+
+The app is now published as an installable web app: it opens from Safari or Chrome, can be added to the home screen and works offline after the first launch. It no longer needs to be signed or reinstalled every week. Outside the original iOS app, the screen stays on during the test through the browser's screen wake lock, beeps use a playback audio session, and the report is passed to the system share sheet.
+
+## 13 October 2026
+
+The SpO2 threshold setting is removed, from the app and from the report. Without a resting SpO2, the report states that desaturation could not be calculated instead of concluding that there was none; measurements taken during stops are plotted on the figure. The start of the workflow is lighter: no more "incomplete" marks on the steps, predicted distance shown only once it can be calculated, test conditions entered through drop-down lists. The exploratory indices of the results appear in the report, as a summary table, with their sources in the methods box.
+
+## 12 October 2026
+
+Compliance with the ERS/ATS technical standard of 2014: 15 minutes of rest, standardised instructions and encouragement, management of stops, alert for SpO2 below 80%, constant oxygen flow during a walk test. The nadir is the lowest SpO2 recorded during the test, stops included, excluding the resting value, in the results as in the report. Additions: Word report and sending, saving and restoring the test in progress, oxygen titration (steps at rest, time-stamped changes during the walk and during stops), stored pulsed oxygen devices, ODDS score for idiopathic pulmonary fibrosis, layout for iPhone in portrait and landscape.
+
+## 11 October 2026 — guided workflow
+
+Complete redesign of the interface as a seven-step guided workflow for the department's iPad: return to any step at any time, timer that starts only at the start, corridor drawing, full-screen Borg scale facing the patient, timed recovery, results with figure, standard values and sourced exploratory indices.
+
+## 4 October 2026
+
+First version used in the department on iPhone: counting of lengths, minute-by-minute readings, Word report with figure, sending by email, oxygen titration.

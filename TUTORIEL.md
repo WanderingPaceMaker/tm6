@@ -1,6 +1,6 @@
 # Premier test avec TM6
 
-Ce guide accompagne un premier test de marche de 6 minutes avec TM6, de l'installation des réglages jusqu'à l'envoi du compte rendu. Les captures viennent d'un iPhone ; sur iPad, les étapes sont les mêmes, rangées dans une colonne à gauche de l'écran. Pour installer l'application, voir la [notice d'installation](Installer-TM6.docx) ou la partie « Installer » du [README](README.md).
+Ce guide accompagne un premier test de marche de 6 minutes avec TM6, de l'installation des réglages jusqu'à l'envoi du compte rendu. Les captures viennent d'un iPhone ; sur iPad, les étapes sont les mêmes, rangées dans une colonne à gauche de l'écran. Pour installer l'application, voir la [notice d'installation](Installer-TM6.docx) ou la partie « Installer » du [README](README.fr.md).
 
 Le test se déroule en sept étapes, numérotées en haut de l'écran. On peut toucher un numéro à tout moment pour revenir corriger une donnée, y compris pendant la marche, et rien ne bloque si une valeur manque : les calculs se refont dès qu'elle est saisie.
 

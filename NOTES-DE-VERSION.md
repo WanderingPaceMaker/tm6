@@ -1,5 +1,11 @@
 # Notes de version
 
+*[English](RELEASE-NOTES.md) · Français*
+
+## 22 novembre 2026 — documentation en anglais
+
+Les pages du dépôt (README, méthodes de calcul, notes de version) sont désormais en anglais, avec une version française liée en haut de chaque page.
+
 ## 22 novembre 2026 — corrections
 
 Le rappel de la cote de Borg d'avant le test se lit sans parenthèses en double. Sur iPhone, la barre des étapes reste visible sous l'heure quand on fait défiler le bilan. Dans les réglages, choisir une option ne fait plus remonter la feuille tout en haut.

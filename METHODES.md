@@ -1,5 +1,7 @@
 # Méthodes de calcul
 
+*[English](METHODS.md) · Français*
+
 Cette page décrit chaque valeur calculée par TM6 : sa formule, les données qu'elle utilise, la raison du choix et la source. Elle suit le code de l'application (`index.html`) ; en cas d'écart, c'est le code qui fait foi et cette page qui doit être corrigée.
 
 Toutes les mesures viennent de la saisie de l'opérateur : SpO2 et FC lues sur l'oxymètre à chaque minute, à l'arrêt, pendant les pauses et pendant la récupération, heure de chaque passage à un plot, distance du dernier aller partiel. L'application ne reçoit aucun enregistrement continu de l'oxymètre. Les calculs se refont à chaque modification, et une valeur dont une donnée manque n'est pas affichée.

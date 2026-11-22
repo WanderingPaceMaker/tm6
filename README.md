@@ -1,73 +1,75 @@
-# TM6 — test de marche de 6 minutes
+# TM6 — 6-minute walk test
 
-TM6 est une application web qui accompagne l'opérateur pendant un test de marche de 6 minutes ou une titration de l'oxygène à l'effort, puis produit un compte rendu Word prêt à être envoyé. Elle s'utilise sur iPad, iPhone ou téléphone Android, s'installe depuis le navigateur et fonctionne ensuite sans réseau.
+*English · [Français](README.fr.md)*
 
-**Ouvrir l'application : https://wanderingpacemaker.github.io/tm6/**
+TM6 is a web app that guides the assessor through a 6-minute walk test or an exertional oxygen titration, then produces a Word report ready to be sent. It runs on iPad, iPhone or Android phones, installs from the browser and then works offline. Its interface is currently in French; an English version is in preparation.
 
-Pour un premier test, suivre le [guide pas à pas](TUTORIEL.md), illustré de captures d'écran.
+**Open the app: https://wanderingpacemaker.github.io/tm6/**
 
-<p>
-  <img src="captures/test.png" alt="Écran du test : chronomètre, relevés minute par minute, couloir dessiné et bouton de comptage des allers" width="300">
-  &nbsp;
-  <img src="captures/bilan.png" alt="Bilan : distance, SpO2 la plus basse, FC la plus haute, vitesse de marche et courbes du test" width="300">
-</p>
-
-## Ce que fait l'application
-
-Le test se déroule en sept étapes, toujours accessibles depuis la barre du haut, si bien qu'on peut revenir corriger une donnée à tout moment, y compris pendant la marche. Aucune donnée manquante ne bloque le parcours : les calculs se refont dès qu'elle est saisie.
-
-L'opérateur renseigne d'abord le **patient** (sexe, âge, taille, poids), ce qui affiche la distance théorique et sa limite inférieure. Il précise ensuite les **conditions** : type d'examen, oxygène (interface, mode continu ou pulsé, débit ou réglage, source), aide à la marche ; la longueur du couloir est fixée une fois pour toutes dans les réglages, de même que l'emplacement de la ligne de départ quand le patient ne part pas d'un plot (par exemple depuis une salle située au milieu du couloir). Au **repos**, il note SpO2, FC, pression artérielle et cotation de Borg (dyspnée puis fatigue), l'échelle étant présentée en plein écran face au patient, qui ne touche jamais l'appareil. L'écran **Prêt** affiche les consignes standardisées à lire au patient.
-
-Le chronomètre ne part qu'au **départ**. Pendant le **test**, l'opérateur compte les allers d'un toucher, l'heure de chaque passage étant enregistrée pour calculer la vitesse ; l'application affiche les encouragements standardisés de la norme, demande à chaque minute la SpO2 et la FC lues sur l'oxymètre, et signale une SpO2 inférieure à 80 %. Les arrêts sont horodatés, avec leurs mesures facultatives et la phrase de reprise. En titration, les changements de débit ou de réglage d'oxygène sont horodatés eux aussi.
-
-À la fin, un minuteur rappelle les relevés de **récupération** à 1 et 3 minutes, et l'opérateur note la distance partielle, la cotation de Borg de fin et les symptômes limitants. Le **bilan** réunit la distance, la SpO2 la plus basse, la FC la plus haute, la vitesse de marche, une figure de l'évolution au cours du test, une synthèse et des indices exploratoires.
-
-## Le compte rendu
-
-« Envoyer le compte rendu » construit un document Word de deux pages au plus, en noir et gris, avec un emplacement libre en haut à droite pour l'étiquette du patient. La première page présente les conditions du test, un tableau de performance (distance, vitesse, oxygénation, déroulement, symptômes), la synthèse et un récapitulatif des mesures. La seconde porte une figure polygraphique sur un axe de temps unique (SpO2, FC, vitesse de chaque aller, oxygène), le détail minute par minute, la synthèse détaillée, un tableau des indices exploratoires et, en bas de page, un encart de méthodes qui cite les références utilisées.
-
-Le document est transmis par la feuille de partage du système : on choisit Mail, Fichiers ou toute autre application.
-
-Exemple, produit par l'application à partir de son test de démonstration (patiente fictive, en-tête laissé vide) : [compte rendu Word](exemples/compte-rendu-exemple.docx), et la même chose [en PDF](exemples/compte-rendu-exemple.pdf) pour le lire directement dans GitHub.
+A step-by-step guide to a first test, with screenshots, is available in French: [TUTORIEL.md](TUTORIEL.md).
 
 <p>
-  <img src="captures/cr-1.png" alt="Page 1 du compte rendu : conditions, tableau de performance, synthèse et récapitulatif des mesures" width="300">
+  <img src="captures/test.png" alt="Test screen: timer, minute-by-minute readings, corridor drawing and length counter button" width="300">
   &nbsp;
-  <img src="captures/cr-2.png" alt="Page 2 du compte rendu : figure de l'évolution au cours du test, détail minute par minute, synthèse détaillée, indices exploratoires et méthodes" width="300">
+  <img src="captures/bilan.png" alt="Results: distance, lowest SpO2, highest heart rate, walking speed and test curves" width="300">
 </p>
 
-## Installer
+## What the app does
 
-L'application s'installe depuis le navigateur, sans magasin d'applications ni compte.
+The test runs through seven steps, always reachable from the top bar, so any value can be corrected at any time, including during the walk. A missing value never blocks the workflow: calculations are redone as soon as it is entered.
 
-- **iPhone et iPad** : ouvrir l'adresse dans Safari, toucher le bouton Partager, puis « Sur l'écran d'accueil ».
-- **Android** : ouvrir l'adresse dans Chrome, puis choisir « Installer l'application » ou « Ajouter à l'écran d'accueil » dans le menu.
+The assessor first enters the **patient** (sex, age, height, weight), which displays the predicted distance and its lower limit of normal. The **conditions** come next: type of test, oxygen (interface, continuous or pulsed flow, flow or setting, source) and walking aid. The corridor length is set once and for all in the settings, as is the position of the starting line when the patient does not start at a cone (for example from a room halfway along the corridor). At **rest**, the assessor records SpO2, heart rate, blood pressure and the Borg ratings (dyspnoea, then fatigue); the scale is shown full screen to the patient, who never touches the device. The **Ready** screen displays the standardised instructions to read to the patient.
 
-Une notice d'une page à imprimer, avec un QR code vers l'application, est disponible en Word : [Installer-TM6.docx](Installer-TM6.docx).
+The timer starts only at **START**. During the **test**, the assessor counts each length with one tap, and the time of each passage is recorded to compute walking speed. The app displays the standardised encouragement of the technical standard, asks every minute for the SpO2 and heart rate read on the oximeter, and flags an SpO2 below 80%. Stops are time-stamped, with their optional measurements and the phrase to resume walking. During a titration, changes in oxygen flow or setting are time-stamped too.
 
-La première ouverture doit se faire avec du réseau pour que l'application se mette en mémoire ; elle fonctionne ensuite sans connexion. Quand une nouvelle version est publiée, elle est prise en compte au lancement qui suit.
+At the end, a timer prompts the **recovery** readings at 1 and 3 minutes, and the assessor enters the final partial length, the end-of-test Borg ratings and the limiting symptoms. The **results** screen brings together distance, lowest SpO2, highest heart rate, walking speed, a figure of the course of the test, a summary and exploratory indices.
 
-## Données et confidentialité
+## The report
 
-Aucune donnée ne quitte l'appareil. Le test en cours, les réglages et la liste des dispositifs d'oxygène sont conservés dans le stockage local du navigateur ; il n'y a ni serveur, ni compte, ni mesure d'audience. Le serveur ne fait que fournir les fichiers de l'application. Le compte rendu n'est envoyé que lorsque l'opérateur le partage lui-même.
+"Send the report" builds a Word document of no more than two pages, in black and grey, with an empty space at the top right for the patient label. The first page presents the test conditions, a performance table (distance, speed, oxygenation, course of the test, symptoms), the summary and an overview of the measurements. The second page carries a polygraph-style figure on a single time axis (SpO2, heart rate, speed of each length, oxygen), the minute-by-minute detail, the detailed summary, a table of exploratory indices and, at the bottom of the page, a methods box citing the references used.
 
-Un test interrompu (fermeture de l'application, appel) est restauré à la réouverture pendant 12 heures. Sur iPhone et iPad, il faut utiliser l'application installée sur l'écran d'accueil plutôt que l'onglet de Safari, dont iOS peut effacer les données d'un site peu visité.
+The document is passed to the system share sheet: choose Mail, Files or any other app.
 
-## Références
+Example produced by the app from its demonstration test (fictitious patient, empty header), currently in French: [Word report](exemples/compte-rendu-exemple.docx), and the same [as a PDF](exemples/compte-rendu-exemple.pdf) to read it directly on GitHub.
 
-L'application suit la norme technique ERS/ATS de 2014, et l'énoncé de l'ATS de 2002 là où la norme de 2014 ne dit rien.
+<p>
+  <img src="captures/cr-1.png" alt="Report page 1: conditions, performance table, summary and overview of measurements" width="300">
+  &nbsp;
+  <img src="captures/cr-2.png" alt="Report page 2: figure of the course of the test, minute-by-minute detail, detailed summary, exploratory indices and methods" width="300">
+</p>
 
-- Holland AE, Spruit MA, Troosters T, et al. An official European Respiratory Society/American Thoracic Society technical standard: field walking tests in chronic respiratory disease. *Eur Respir J* 2014;44:1428-46. doi:10.1183/09031936.00150314 — consignes au patient, encouragements, conduite à tenir lors des arrêts et en cas de désaturation.
-- ATS Committee on Proficiency Standards for Clinical Pulmonary Function Laboratories. ATS statement: guidelines for the six-minute walk test. *Am J Respir Crit Care Med* 2002;166:111-7. doi:10.1164/ajrccm.166.1.at1102 — échelle de Borg modifiée (tableau 2, traduction de travail) et rappel à l'opérateur.
-- Enright PL, Sherrill DL. Reference equations for the six-minute walk in healthy adults. *Am J Respir Crit Care Med* 1998;158:1384-7. doi:10.1164/ajrccm.158.5.9710086 — distance théorique et limite inférieure de la normale, établies chez des adultes de 40 à 80 ans.
-- Nathan SD, et al. *Eur Respir J* 2025;66:2402565. doi:10.1183/13993003.02565-2024 — score ODDS, affiché dans le bilan et le compte rendu, validé dans la fibrose pulmonaire idiopathique seulement.
+## Installing
 
-Le détail de chaque calcul (formule, données utilisées, raison du choix et source) est dans [METHODES.md](METHODES.md).
+The app installs from the browser, with no app store and no account.
 
-Les autres indices exploratoires du bilan sont descriptifs : leurs repères ont été établis dans d'autres populations et ne donnent lieu à aucun verdict. Chacun est affiché avec sa formule et sa source (auteur et année), que l'encart Méthodes du compte rendu reprend.
+- **iPhone and iPad**: open the address in Safari, tap the Share button, then "Add to Home Screen".
+- **Android**: open the address in Chrome, then choose "Install app" or "Add to Home screen" from the menu.
 
-## Fichiers
+A one-page printable notice with a QR code to the app is available in French as a Word file: [Installer-TM6.docx](Installer-TM6.docx).
 
-Ce dépôt contient l'application telle qu'elle est servie : `index.html` (toute l'application, en HTML et JavaScript sans bibliothèque, y compris la fabrication du fichier Word), les polices Atkinson Hyperlegible, l'icône, le manifeste et `sw.js`, qui met l'application en mémoire pour l'usage sans réseau. L'historique des versions est dans [NOTES-DE-VERSION.md](NOTES-DE-VERSION.md).
+The first launch must be online so that the app can be stored on the device; it then works without a connection. When a new version is published, it is picked up at the next launch.
 
-Le code est publié pour être lu ; aucune licence de réutilisation n'est accordée (tous droits réservés).
+## Data and privacy
+
+No data leaves the device. The current test, the settings and the list of oxygen devices are kept in the browser's local storage; there is no server, no account and no analytics. The server only delivers the app files. The report is sent only when the assessor shares it.
+
+An interrupted test (app closed, phone call) is restored on reopening for up to 12 hours. On iPhone and iPad, use the app installed on the home screen rather than a Safari tab, because iOS may erase the data of a rarely visited website.
+
+## References
+
+The app follows the ERS/ATS technical standard of 2014, and the ATS statement of 2002 where the 2014 standard is silent.
+
+- Holland AE, Spruit MA, Troosters T, et al. An official European Respiratory Society/American Thoracic Society technical standard: field walking tests in chronic respiratory disease. *Eur Respir J* 2014;44:1428-46. doi:10.1183/09031936.00150314 — instructions to the patient, encouragement, management of stops and of desaturation.
+- ATS Committee on Proficiency Standards for Clinical Pulmonary Function Laboratories. ATS statement: guidelines for the six-minute walk test. *Am J Respir Crit Care Med* 2002;166:111-7. doi:10.1164/ajrccm.166.1.at1102 — modified Borg scale (table 2) and reminders for the assessor.
+- Enright PL, Sherrill DL. Reference equations for the six-minute walk in healthy adults. *Am J Respir Crit Care Med* 1998;158:1384-7. doi:10.1164/ajrccm.158.5.9710086 — predicted distance and lower limit of normal, established in adults aged 40 to 80 years.
+- Nathan SD, et al. *Eur Respir J* 2025;66:2402565. doi:10.1183/13993003.02565-2024 — ODDS score, shown in the results and the report, validated in idiopathic pulmonary fibrosis only.
+
+Each calculation (formula, data used, reason for the choice and source) is detailed in [METHODS.md](METHODS.md).
+
+The other exploratory indices in the results are descriptive: their reference points were established in other populations and lead to no verdict. Each one is shown with its formula and source (author and year), which the methods box of the report repeats.
+
+## Files
+
+This repository contains the app as it is served: `index.html` (the whole app, in HTML and JavaScript without any library, including the Word file generation), the Atkinson Hyperlegible fonts, the icon, the manifest and `sw.js`, which stores the app for offline use. The version history is in [RELEASE-NOTES.md](RELEASE-NOTES.md).
+
+The code is published to be read; no licence to reuse it is granted (all rights reserved).
