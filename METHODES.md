@@ -70,9 +70,11 @@ La dyspnée et la fatigue sont cotées au repos et à la fin, sur l'échelle de 
 
 ## Indices exploratoires
 
-Ces indices sont descriptifs. Leurs repères ont été établis dans des populations précises, souvent une seule cohorte, et l'application n'en tire aucune conclusion. Le bilan les affiche avec leur formule et leur source. Le compte rendu les reprend en tableau, avec les sources dans l'encart Méthodes ; le score ODDS ne figure que dans le bilan. Un indice dont une donnée manque n'est pas affiché.
+Ces indices sont descriptifs. Leurs repères ont été établis dans des populations précises, souvent une seule cohorte, et l'application n'en tire aucune conclusion. Le bilan les affiche avec leur formule et leur source. Le compte rendu les reprend tous en tableau, score ODDS compris, avec les sources dans l'encart Méthodes. Un indice dont une donnée manque n'est pas affiché.
 
-### Score ODDS (fibrose pulmonaire idiopathique seulement)
+### Score ODDS (validé dans la fibrose pulmonaire idiopathique seulement)
+
+L'application ne connaît pas le diagnostic : le score est calculé pour tout test où ses données sont présentes, et ne s'interprète que chez un patient atteint de FPI.
 
 Score pronostique de décès ou d'hospitalisation pour cause respiratoire, sur 100 points, qui additionne quatre composantes :
 

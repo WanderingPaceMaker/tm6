@@ -30,6 +30,12 @@ Le document est transmis par la feuille de partage du système : on choisit Mail
 
 Exemple, produit par l'application à partir de son test de démonstration (patiente fictive, en-tête laissé vide) : [compte rendu Word](exemples/compte-rendu-exemple.docx), et la même chose [en PDF](exemples/compte-rendu-exemple.pdf) pour le lire directement dans GitHub.
 
+<p>
+  <img src="captures/cr-1.png" alt="Page 1 du compte rendu : conditions, tableau de performance, synthèse et récapitulatif des mesures" width="300">
+  &nbsp;
+  <img src="captures/cr-2.png" alt="Page 2 du compte rendu : figure de l'évolution au cours du test, détail minute par minute, synthèse détaillée, indices exploratoires et méthodes" width="300">
+</p>
+
 ## Installer
 
 L'application s'installe depuis le navigateur, sans magasin d'applications ni compte.
@@ -52,7 +58,7 @@ L'application suit la norme technique ERS/ATS de 2014, et l'énoncé de l'ATS de
 - Holland AE, Spruit MA, Troosters T, et al. An official European Respiratory Society/American Thoracic Society technical standard: field walking tests in chronic respiratory disease. *Eur Respir J* 2014;44:1428-46. doi:10.1183/09031936.00150314 — consignes au patient, encouragements, conduite à tenir lors des arrêts et en cas de désaturation.
 - ATS Committee on Proficiency Standards for Clinical Pulmonary Function Laboratories. ATS statement: guidelines for the six-minute walk test. *Am J Respir Crit Care Med* 2002;166:111-7. doi:10.1164/ajrccm.166.1.at1102 — échelle de Borg modifiée (tableau 2, traduction de travail) et rappel à l'opérateur.
 - Enright PL, Sherrill DL. Reference equations for the six-minute walk in healthy adults. *Am J Respir Crit Care Med* 1998;158:1384-7. doi:10.1164/ajrccm.158.5.9710086 — distance théorique et limite inférieure de la normale, établies chez des adultes de 40 à 80 ans.
-- Nathan SD, et al. *Eur Respir J* 2025;66:2402565. doi:10.1183/13993003.02565-2024 — score ODDS, affiché dans le bilan pour la fibrose pulmonaire idiopathique seulement.
+- Nathan SD, et al. *Eur Respir J* 2025;66:2402565. doi:10.1183/13993003.02565-2024 — score ODDS, affiché dans le bilan et le compte rendu, validé dans la fibrose pulmonaire idiopathique seulement.
 
 Le détail de chaque calcul (formule, données utilisées, raison du choix et source) est dans [METHODES.md](METHODES.md).
 
