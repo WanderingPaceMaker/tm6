@@ -2335,7 +2335,8 @@ function mailParts() {
   // {time} et {long_date} : équivalents anglais de {heure} et {date_longue}, acceptés dans les deux langues.
   const fill = t => String(t).replace(/\{(date_longue|long_date)\}/g, testWhen(d)).replace(/\{date\}/g, dd).replace(/\{(heure|time)\}/g, hh);
   return {
-    filename: `TM6_${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}_${hh}.docx`,
+    // En anglais : abréviation anglaise (6MWT) et heure 10-18, « 10h18 » étant une notation française.
+    filename: (EN ? '6MWT_' : 'TM6_') + `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}_` + (EN ? `${pad2(d.getHours())}-${pad2(d.getMinutes())}` : hh) + '.docx',
     subject: fill(cfg.mailSubject), body: fill(cfg.mailBody)
   };
 }
