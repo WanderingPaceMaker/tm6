@@ -1,5 +1,9 @@
 # Notes de version
 
+## 22 novembre 2026 — corrections
+
+Le rappel de la cote de Borg d'avant le test se lit sans parenthèses en double. Sur iPhone, la barre des étapes reste visible sous l'heure quand on fait défiler le bilan. Dans les réglages, choisir une option ne fait plus remonter la feuille tout en haut.
+
 ## 22 novembre 2026 — départ au milieu du couloir
 
 Le patient peut partir ailleurs qu'à un plot, par exemple depuis une salle située au milieu du couloir. Un réglage indique la distance entre la ligne de départ et le premier plot atteint : le premier aller compte cette distance, les suivants la longueur du couloir, et le couloir dessiné montre la ligne de départ. Le compte rendu mentionne le départ, pour que le test puisse être refait sur le même parcours, comme le demande la norme ERS/ATS de 2014.

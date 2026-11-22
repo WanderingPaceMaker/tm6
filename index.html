@@ -40,7 +40,8 @@
   --spo2:#5cb0ee; --fc:#ef8a4f; --alert:#ff7a6c; --alert-soft:#3b1814; --warn:#e5a845; --warn-soft:#352a12; --ok:#55c98a;
   color-scheme:dark}
 *{box-sizing:border-box}
-html,body{height:100%}
+html{height:100%}
+body{min-height:100%}
 body{background:var(--bg);color:var(--fg);font:17px/1.4 var(--f-body);margin:0;-webkit-text-size-adjust:100%}
 button,input{font:inherit;color:inherit}
 button{cursor:pointer}
@@ -875,7 +876,7 @@ function borg(path, label) {
 function openScale(path) {
   var kind = path.split('.').pop(), atEnd = path.indexOf('end.') === 0, before = atEnd ? S.rest[kind] : '';
   var opText = atEnd
-    ? (before !== '' ? 'Rappeler au patient sa cote d\'avant le test (' + before + (BORG_LBL[before] ? ', ' + BORG_LBL[before].toLowerCase() : '') + '), puis poser la question.' : 'Poser la question.')
+    ? (before !== '' ? 'Rappeler au patient sa cote d\'avant le test : ' + before + (BORG_LBL[before] ? ', ' + BORG_LBL[before].toLowerCase() : '') + '. Puis poser la question.' : 'Poser la question.')
     : 'Montrer l\'échelle au patient, puis poser la question.';
   var h = '<div class="scale"><div class="schead"><div class="scop">' + opText + '</div>' +
     '<p class="scq">' + BORG_Q[kind] + '</p>' +
@@ -1377,6 +1378,12 @@ function openStop() {
   h += '</div><button type="button" class="b-confirm disabled" id="stopOk">Choisir un motif</button><button type="button" class="ghost b-cancel" id="stopNo">Continuer le test</button></div></div>';
   $('sheet').innerHTML = h; S.motif = null;
 }
+// Redessine les réglages sans perdre la position de lecture (sinon la feuille remonte en haut à chaque choix).
+function refreshSettings() {
+  var p = document.querySelector('#sheet .pane'), y = p ? p.scrollTop : 0;
+  openSettings();
+  var q = document.querySelector('#sheet .pane'); if (q) q.scrollTop = y;
+}
 function openSettings() {
   S.sheet = 'cfg';
   $('sheet').innerHTML = '<div class="sheet"><div class="pane"><h2>Réglages</h2>' +
@@ -1429,10 +1436,10 @@ document.addEventListener('click', function (e) {
   var sp = b.getAttribute('data-set');
   if (sp) {
     var v = b.getAttribute('data-v');
-    if (sp === 'speed') { S.speed = +v; openSettings(); return; }
-    if (sp === 'beeps') { S.beeps = v === 'on'; saveCfg(); openSettings(); return; }
-    if (sp === 'vibr') { S.vibr = v === 'on'; saveCfg(); openSettings(); return; }
-    if (sp === 'opGuide') { S.opGuide = v === 'on'; openSettings(); return; }
+    if (sp === 'speed') { S.speed = +v; refreshSettings(); return; }
+    if (sp === 'beeps') { S.beeps = v === 'on'; saveCfg(); refreshSettings(); return; }
+    if (sp === 'vibr') { S.vibr = v === 'on'; saveCfg(); refreshSettings(); return; }
+    if (sp === 'opGuide') { S.opGuide = v === 'on'; refreshSettings(); return; }
     if (b.getAttribute('data-toggle') && get(sp) === v) v = '';
     set(sp, v);
     if (sp === 'o2' || sp === 'o2mode' || sp === 'couloir' || sp === 'exam') { go(S.step); return; }
