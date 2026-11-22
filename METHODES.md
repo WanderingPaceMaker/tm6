@@ -4,7 +4,7 @@ Cette page décrit chaque valeur calculée par TM6 : sa formule, les données qu
 
 Toutes les mesures viennent de la saisie de l'opérateur : SpO2 et FC lues sur l'oxymètre à chaque minute, à l'arrêt, pendant les pauses et pendant la récupération, heure de chaque passage à un plot, distance du dernier aller partiel. L'application ne reçoit aucun enregistrement continu de l'oxymètre. Les calculs se refont à chaque modification, et une valeur dont une donnée manque n'est pas affichée.
 
-Deux mentions reviennent ci-dessous. **Choix clinique** désigne une règle décidée par le médecin responsable de l'application, et non tirée d'une publication. **Référence non vérifiée** signale une donnée qui n'a pas encore été contrôlée dans le texte de la source.
+La mention **Choix clinique**, ci-dessous, désigne une règle décidée par le médecin responsable de l'application, et non tirée d'une publication.
 
 ## Normes suivies
 
@@ -36,7 +36,7 @@ TM6 utilise les équations d'Enright et Sherrill, établies chez 117 hommes et 1
 La limite inférieure de la normale (LIN) est la valeur théorique moins 153 m chez l'homme et 139 m chez la femme. Le pourcentage de la théorique est la distance parcourue divisée par la valeur théorique. Sans sexe, âge, taille ou poids, aucune valeur théorique n'est affichée. Hors de 40 à 80 ans, le compte rendu signale que l'âge sort de la population de référence.
 
 - Source : Enright PL, Sherrill DL. Reference equations for the six-minute walk in healthy adults. *Am J Respir Crit Care Med* 1998;158:1384-7. doi:10.1164/ajrccm.158.5.9710086. Les équations ont été vérifiées sur le résumé de l'article.
-- **Référence non vérifiée** : les valeurs de 153 et 139 m ne figurent pas dans le résumé. Elles concordent avec les calculateurs en ligne qui citent cet article, mais n'ont pas été lues dans son tableau.
+- Vérifié dans le texte intégral (tableau 3 et résultats) : « subtract 153 m for the LLN » chez l'homme, 139 m chez la femme ; la LIN y est définie comme le 5e percentile. L'article précise que ses équations valent pour le premier test d'un patient, et appelle à la prudence hors de 40 à 80 ans et chez les personnes non caucasiennes.
 - Pourquoi cette équation : c'est la plus utilisée. La norme de 2014 recommande, quand c'est possible, une équation établie dans la population locale ; des équations européennes plus récentes existent, et le choix reste ouvert.
 
 **Interprétation dans la synthèse** (choix clinique) : « dans les limites de la normale » si la distance atteint la LIN, « diminuée » sinon.
