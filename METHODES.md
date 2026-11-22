@@ -23,7 +23,7 @@ Un aller est un passage à un plot. Quand le patient ne part pas d'un plot (par 
 
 > distance = *d* + longueur du couloir × (nombre d'allers − 1) + mètres partiels
 
-Tant qu'aucun plot n'est atteint, les mètres partiels se mesurent depuis la ligne de départ et ne peuvent pas dépasser *d*. La norme ne fixe pas l'emplacement de la ligne de départ. Elle demande en revanche de garder le même parcours d'un test à l'autre chez un même patient : c'est pourquoi le compte rendu mentionne le départ quand il n'est pas à un plot.
+Tant qu'aucun plot n'est atteint, les mètres partiels se mesurent depuis la ligne de départ et ne peuvent pas dépasser *d*. La norme de 2014 ne fixe pas l'emplacement de la ligne de départ. L'énoncé de l'ATS de 2002 la plaçait à un bout du couloir (« A starting line, which marks the beginning and end of each 60-m lap »), mais la norme de 2014, que suit l'application, ne reprend pas cette exigence. Elle demande en revanche de garder le même parcours d'un test à l'autre chez un même patient : c'est pourquoi le compte rendu mentionne le départ quand il n'est pas à un plot.
 
 ## Distance théorique et limite inférieure de la normale
 
