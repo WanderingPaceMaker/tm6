@@ -690,7 +690,8 @@ h1{font-size:28px;line-height:1.15;margin:20px 0 4px;text-wrap:balance}
   .mrow.on .f .box{padding:0 8px}
   .mrow.on .f input{font-size:30px;padding:3px 0;text-align:center}
   .mok{min-height:40px;border-radius:10px;border:2px solid var(--line);background:var(--surface);font-weight:700}
-  .cols.test .lap{min-height:130px}
+  .cols.test:has(.o2run) .mrow{min-height:40px} /* titration : place pour la rangée Oxygène */
+  .cols.test .lap{min-height:100px} /* 130 : en titration, la rangée Oxygène poussait les boutons sous la barre d’accueil (iPhone 17 Pro) */
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style></head><body>
@@ -774,7 +775,7 @@ var S = {
   step: 'patient', seen: { patient: 1 },
   sex: '', age: '', taille: '', poids: '',
   exam: 'tm6', couloir: '30', depart: '', o2: 'air', o2mode: 'continu', o2if: 'lunettes', o2debit: '', o2src: 'porte', aide: 'aucune',
-  o2dev: '', rt: [{ d: '', s: '' }, { d: '', s: '' }, { d: '', s: '' }, { d: '', s: '' }, { d: '', s: '' }], o2ch: [],
+  o2dev: '', o2air: false, rt: [{ d: '', s: '' }, { d: '', s: '' }, { d: '', s: '' }, { d: '', s: '' }, { d: '', s: '' }], o2ch: [],
   rest: { spo2: '', fc: '', pas: '', pad: '', bd: '', bf: '' },
   ready: { oxy: false, line: false, consignes: false },
   running: false, started: false, t: 0, t0: 0, laps: [], lapsLate: 0, pauses: [], mins: {}, fired: {}, nadir: '', bad: {},
@@ -949,7 +950,7 @@ function pauseTotal() { var s = 0; S.pauses.forEach(function (p) { s += (p.e == 
 function missing() {
   var m = [];
   if (!S.sex || !ok(S.age) || !ok(S.taille) || !ok(S.poids)) m.push({ step: 'patient', txt: LG('Sexe, âge, taille ou poids manquant : pas de valeur théorique', 'Sex, age, height or weight missing: no predicted value') });
-  if (S.o2 === 'o2' && !ok(S.o2debit)) m.push({ step: 'cond', txt: LG('Débit ou réglage d\'oxygène manquant', 'Oxygen flow or setting missing') });
+  if (S.o2 === 'o2' && !S.o2air && !ok(S.o2debit)) m.push({ step: 'cond', txt: LG('Débit ou réglage d\'oxygène manquant', 'Oxygen flow or setting missing') });
   if (!ok(S.rest.spo2) || !ok(S.rest.fc)) m.push({ step: 'repos', txt: LG('SpO2 ou FC de repos manquante', 'Resting SpO2 or HR missing') });
   if (S.stop) {
     if (!ok(S.end.spo2) || !ok(S.end.fc)) m.push({ step: 'recup', txt: LG('SpO2 ou FC à l\'arrêt manquante', 'End-test SpO2 or HR missing') });
@@ -1050,20 +1051,19 @@ var SCREENS = {
       sel('aide', LG('Aide à la marche', 'Walking aid'), S.aide, [['aucune', LG('Aucune', 'None')], ['canne', LG('Canne', 'Walking stick')], ['deambulateur', LG('Déambulateur', 'Walking frame')], ['rollator', 'Rollator']]);
     if (S.o2 === 'o2') {
       h += sel('o2mode', 'Mode', S.o2mode, [['continu', LG('Continu', 'Continuous')], ['pulse', LG('Pulsé', 'Pulsed')]]) +
-        field('o2debit', pulse ? LG('Réglage', 'Setting') : LG('Débit', 'Flow'), pulse ? 'pos.' : 'L/min') +
+        (S.o2air && S.o2ch.length ? '<p class="hint">' + LG('Départ en air ambiant, oxygène à partir de ', 'Started on room air, oxygen from ') + mmss(S.o2ch[0].t) + '.</p>' : field('o2debit', pulse ? LG('Réglage', 'Setting') : LG('Débit', 'Flow'), pulse ? 'pos.' : 'L/min')) +
         sel('o2src', LG('Source d\'oxygène', 'Oxygen source'), S.o2src, [['porte', LG('Portée par le patient', 'Carried by the patient')], ['chariot', LG('Chariot poussé par le patient', 'Trolley pushed by the patient')], ['operateur', LG('Portée par l\'opérateur', 'Carried by the assessor')]], true) +
         (pulse ? '<label class="f' + (S.o2dev ? '' : ' empty') + '"><span>' + LG('Dispositif (modèle)', 'Device (model)') + '</span><span class="box"><input class="dev" list="devList" autocomplete="off" autocapitalize="off" spellcheck="false" data-k="o2dev" value="' + esc(S.o2dev) + '"></span><datalist id="devList">' +
           devices().map(function (d) { return '<option value="' + esc(d) + '"></option>'; }).join('') + '</datalist></label>' : '<span></span>');
     }
     h += '</div><p class="hint corr">' + LG('Couloir : ', 'Corridor: ') + corridor() + ' m' + departTxt() + '. <button type="button" class="linkbtn" id="gearInline">' + LG('Modifier', 'Change') + '</button></p>';
-    if (S.exam === 'titr' && S.o2 === 'air') h += '<p class="hint" style="margin-top:10px">' + LG('La titration se fait sous oxygène : choisir une interface d\'oxygène.', 'Titration is done on oxygen: choose an oxygen interface.') + '</p>';
     return h + '</div>';
   },
   repos: function () {
     nextBar('cond', LG('Suivant : préparer le départ', 'Next: get ready to start'), 'pret');
     return '<h1>' + LG('Repos, avant le départ', 'Rest, before the start') + '</h1><p class="lead">' + LG('Patient assis près de la ligne de départ, au repos au moins 15 minutes avant le test. Vérifier les contre-indications ; relever SpO2, FC et pression artérielle, puis dyspnée et fatigue.', 'Patient seated near the starting line, resting for at least 15 minutes before the test. Check contraindications; record SpO2, HR and blood pressure, then dyspnoea and fatigue.') + '</p>' +
       '<div class="cols"><div class="col"><div class="card"><div class="grid2">' + field('rest.spo2', 'SpO2', '%') + field('rest.fc', LG('FC', 'HR'), '/min') + field('rest.pas', LG('PAS', 'SBP'), 'mmHg') + field('rest.pad', LG('PAD', 'DBP'), 'mmHg') + '</div>' + flags('repos') + '</div>' + restTitr() + '</div>' +
-      '<div class="col"><div class="card' + (titrOn() ? ' borgpair' : '') + '"><h2>' + LG('Borg avant le test', 'Borg before the test') + '</h2>' + borg('rest.bd', LG('Dyspnée', 'Dyspnoea')) + borg('rest.bf', 'Fatigue') + '</div></div></div>';
+      '<div class="col"><div class="card' + (restTitrOn() ? ' borgpair' : '') + '"><h2>' + LG('Borg avant le test', 'Borg before the test') + '</h2>' + borg('rest.bd', LG('Dyspnée', 'Dyspnoea')) + borg('rest.bf', 'Fatigue') + '</div></div></div>';
   },
   pret: function () {
     $('next').style.display = 'block';
@@ -1142,11 +1142,14 @@ var SCREENS = {
 };
 
 // Titration au repos : cinq paliers facultatifs (débit ou réglage, SpO2), dans l'ordre où ils ont été faits.
-function titrOn() { return S.exam === 'titr' && S.o2 === 'o2'; }
+// Titration : le bouton Oxygène est présent même au départ en air ambiant (la désaturation en air se montre d'abord ;
+// décision d'Allan du 23 novembre 2026). Le premier passage sous O2 fixe l'interface, le mode et la source (S.o2air).
+function titrOn() { return S.exam === 'titr'; }
+function restTitrOn() { return S.exam === 'titr' && S.o2 === 'o2'; }
 function o2Unit() { return S.o2mode === 'pulse' ? 'pos.' : 'L/min'; }
-function o2Val(v) { return S.o2mode === 'pulse' ? 'position ' + v : v + ' L/min'; }
+function o2Val(v) { if (v === 'air') return LG('air ambiant', 'room air'); return S.o2mode === 'pulse' ? 'position ' + v : v + ' L/min'; }
 function restTitr() {
-  if (!titrOn()) return '';
+  if (!restTitrOn()) return '';
   // Paliers en colonnes, deux lignes (valeur appliquée, SpO2) : tient sous les relevés de repos, même sur téléphone en paysage.
   var cell = function (path) { var bad = S.bad && S.bad[path] != null, v = bad ? S.bad[path] : get(path); return '<label class="f' + (v === '' ? ' empty' : '') + (bad ? ' bad' : '') + '"><span class="box"><input type="text" inputmode="decimal" autocomplete="off" data-k="' + path + '" value="' + esc(v) + '"></span></label>'; };
   var h = '<div class="card"><h2>' + LG('Titration au repos', 'Titration at rest') + '</h2><div class="rtg"><span></span>', i;
@@ -1158,18 +1161,25 @@ function restTitr() {
   return h + '</div></div>';
 }
 // Oxygène pendant la marche (titration seulement : en test de marche, le débit reste constant, ERS/ATS 2014).
-function o2Now() { return S.o2ch.length ? S.o2ch[S.o2ch.length - 1].v : S.o2debit; }
+function o2Now() { return S.o2ch.length ? S.o2ch[S.o2ch.length - 1].v : S.o2 === 'air' ? 'air' : S.o2debit; }
 function o2Run() {
   if (!titrOn()) return '';
-  return '<div class="o2run"><button type="button" class="o2btn" id="o2Btn">' + LG('Oxygène : ', 'Oxygen: ') + '<b>' + (ok(o2Now()) ? o2Val(o2Now()) : '?') + '</b>' + LG(', modifier', ', change') + '</button>' +
-    '<p class="hint" style="margin:4px 0 0">' + (S.o2ch.length ? S.o2ch.length + LG(' changement', ' change') + (S.o2ch.length > 1 ? 's' : '') + LG(', le dernier à ', ', the last at ') + mmss(S.o2ch[S.o2ch.length - 1].t) + '.' : LG('Valeur de départ, inchangée.', 'Starting value, unchanged.')) + '</p></div>';
+  return '<div class="o2run"><button type="button" class="o2btn" id="o2Btn">' + LG('Oxygène : ', 'Oxygen: ') + '<b>' + (o2Now() === 'air' || ok(o2Now()) ? o2Val(o2Now()) : '?') + '</b>' + LG(', modifier', ', change') + '</button>' +
+    '<p class="hint" style="margin:4px 0 0">' + (S.o2ch.length ? S.o2ch.length + LG(' changement', ' change') + (S.o2ch.length > 1 ? 's' : '') + LG(', le dernier à ', ', the last at ') + mmss(S.o2ch[S.o2ch.length - 1].t) + '.' : (S.o2 === 'air' ? LG('Air ambiant depuis le départ.', 'Room air since the start.') : LG('Valeur de départ, inchangée.', 'Starting value, unchanged.'))) + '</p></div>';
 }
-function openO2() {
-  S.sheet = 'o2'; S.o2new = '';
+function openO2(keep) {
+  S.sheet = 'o2'; if (!keep) S.o2new = '';
+  var first = S.o2 === 'air', pulse = S.o2mode === 'pulse';
   var list = S.o2ch.map(function (c) { return mmss(c.t) + LG(' : ', ': ') + o2Val(c.v); }).join(LG(' ; ', '; '));
-  $('sheet').innerHTML = '<div class="sheet"><div class="pane"><h2>' + (S.o2mode === 'pulse' ? LG('Changer le réglage', 'Change the setting') : LG('Changer le débit', 'Change the flow')) + '</h2>' +
-    '<p class="sub">' + LG('Actuellement : ', 'Current: ') + (ok(o2Now()) ? o2Val(o2Now()) : LG('non renseigné', 'not entered')) + (list ? LG('. Changements : ', '. Changes: ') + list : '') + '.</p>' +
-    '<div class="grid2">' + field('o2new', S.o2mode === 'pulse' ? LG('Nouveau réglage', 'New setting') : LG('Nouveau débit', 'New flow'), o2Unit()) + '<span></span></div>' +
+  // Premier passage sous O2 depuis l'air ambiant : interface, mode et source se choisissent ici (repris dans Conditions).
+  var setup = first ? '<div class="grid2 sels">' +
+    sel('o2if', LG('Interface', 'Interface'), S.o2if, [['lunettes', LG('Lunettes', 'Nasal cannula')], ['masque', LG('Masque', 'Mask')], ['autre', LG('Autre interface', 'Other interface')]]) +
+    sel('o2mode', 'Mode', S.o2mode, [['continu', LG('Continu', 'Continuous')], ['pulse', LG('Pulsé', 'Pulsed')]]) +
+    sel('o2src', LG('Source d\'oxygène', 'Oxygen source'), S.o2src, [['porte', LG('Portée par le patient', 'Carried by the patient')], ['chariot', LG('Chariot poussé par le patient', 'Trolley pushed by the patient')], ['operateur', LG('Portée par l\'opérateur', 'Carried by the assessor')]], true) +
+    '</div>' : '';
+  $('sheet').innerHTML = '<div class="sheet"><div class="pane"><h2>' + (first ? LG('Passer sous oxygène', 'Switch to oxygen') : pulse ? LG('Changer le réglage', 'Change the setting') : LG('Changer le débit', 'Change the flow')) + '</h2>' +
+    '<p class="sub">' + LG('Actuellement : ', 'Current: ') + (o2Now() === 'air' || ok(o2Now()) ? o2Val(o2Now()) : LG('non renseigné', 'not entered')) + (list ? LG('. Changements : ', '. Changes: ') + list : '') + '.</p>' + setup +
+    '<div class="grid2">' + field('o2new', pulse ? LG('Nouveau réglage', 'New setting') : LG('Nouveau débit', 'New flow'), o2Unit()) + '<span></span></div>' +
     '<button type="button" class="big o2ok" id="o2Ok">' + LG('Valider', 'Confirm') + '</button>' +
     (S.o2ch.length ? '<button type="button" class="ghost b-cancel" id="o2Undo">' + LG('Annuler le dernier changement', 'Undo the last change') + '</button>' : '') +
     '<button type="button" class="ghost b-cancel" id="o2No">' + LG('Fermer', 'Close') + '</button></div></div>';
@@ -1185,7 +1195,9 @@ function o2Lc() { var l = o2Label(); return l.indexOf('O2') === 0 ? l : l.charAt
 function o2Label() {
   if (S.o2 === 'air') return LG('Air ambiant', 'Room air');
   var v = ok(S.o2debit) ? S.o2debit : '?';
-  var src = (EN ? { porte: 'carried by the patient', chariot: 'pushed trolley', operateur: 'carried by the assessor' } : { porte: 'portée par le patient', chariot: 'chariot poussé', operateur: 'portée par l\'opérateur' })[S.o2src];
+  var src0 = (EN ? { porte: 'carried by the patient', chariot: 'pushed trolley', operateur: 'carried by the assessor' } : { porte: 'portée par le patient', chariot: 'chariot poussé', operateur: 'portée par l\'opérateur' })[S.o2src];
+  var src = src0;
+  if (S.o2air) return LG('Air ambiant, puis O2 ', 'Room air, then O2 ') + (S.o2mode === 'pulse' ? LG('pulsé', 'pulsed') : LG('continu', 'continuous')) + ', ' + src;
   return (S.o2mode === 'pulse' ? LG('O2 pulsé, position ', 'Pulsed O2, position ') + v + (S.o2dev ? ' (' + S.o2dev + ')' : '') : LG('O2 continu, ', 'Continuous O2, ') + v + ' L/min') + ', ' + src;
 }
 
@@ -1263,8 +1275,8 @@ function analysis() {
     [LG('Borg dyspnée', 'Borg dyspnoea'), isNaN(bd0) ? null : bdv(S.rest.bd) + ' → ' + (isNaN(bd1) ? '—' : bdv(S.end.bd)), ''],
     ['Borg fatigue', isNaN(bf0) ? null : bdv(S.rest.bf) + ' → ' + (isNaN(bf1) ? '—' : bdv(S.end.bf)), ''],
     [LG('Récupération à 1 min', 'Recovery at 1 min'), ok(S.rec[1].spo2) ? 'SpO2 ' + S.rec[1].spo2 + LG(' %, FC ', ' %, HR ') + S.rec[1].fc + ' /min' : null, ''],
-    [LG('Oxygène', 'Oxygen'), S.o2 === 'o2' ? (ok(S.o2debit) ? o2Val(S.o2debit) : '—') + (S.o2ch.length ? S.o2ch.map(function (c) { return ', ' + o2Val(c.v) + LG(' à ', ' at ') + mmss(c.t); }).join('') : '') : LG('air ambiant', 'room air'),
-      (function () { var r = S.rt.filter(function (x) { return ok(x.d) && ok(x.s); }); return titrOn() && r.length ? LG('Au repos : ', 'At rest: ') + r.map(function (x) { return x.s + LG(' % à ', ' % at ') + o2Val(x.d); }).join(', ') : ''; })()],
+    [LG('Oxygène', 'Oxygen'), S.o2 === 'o2' ? (S.o2air ? LG('air ambiant', 'room air') : ok(S.o2debit) ? o2Val(S.o2debit) : '—') + (S.o2ch.length ? S.o2ch.map(function (c) { return ', ' + o2Val(c.v) + LG(' à ', ' at ') + mmss(c.t); }).join('') : '') : LG('air ambiant', 'room air'),
+      (function () { var r = S.rt.filter(function (x) { return ok(x.d) && ok(x.s); }); return restTitrOn() && r.length ? LG('Au repos : ', 'At rest: ') + r.map(function (x) { return x.s + LG(' % à ', ' % at ') + o2Val(x.d); }).join(', ') : ''; })()],
     [LG('Récupération à 3 min', 'Recovery at 3 min'), ok(S.rec[3].spo2) ? 'SpO2 ' + S.rec[3].spo2 + LG(' %, FC ', ' %, HR ') + S.rec[3].fc + ' /min' : null, '']
   ];
   // ODDS (Nathan, Eur Respir J 2025;66:2402565, tableau 2) : Borg de dyspnée, débit d'O2, distance, nadir de SpO2.
@@ -1272,7 +1284,7 @@ function analysis() {
   // compté 28 comme dans la cohorte de validation ; O2 pulsé non convertible en débit, donc pas de total ; Borg de fin de marche
   // (le moment du Borg n'est pas précisé dans le texte de l'article) ; nadir = SpO2 la plus basse relevée (lue chaque minute).
   A.odds = (function () {
-    var bd = num(S.end.bd), d = A.dist, pulse = S.o2 === 'o2' && S.o2mode === 'pulse', flow = S.o2 === 'o2' ? num(S.o2debit) : 0;
+    var bd = num(S.end.bd), d = A.dist, pulse = S.o2 === 'o2' && S.o2mode === 'pulse', flow = S.o2 === 'o2' && !S.o2air ? num(S.o2debit) : 0;
     var miss = [];
     if (isNaN(bd)) miss.push(LG('Borg de dyspnée de fin', 'end-test Borg dyspnoea'));
     if (isNaN(A.nadir)) miss.push(LG('SpO2 la plus basse', 'lowest SpO2'));
@@ -1617,7 +1629,7 @@ document.addEventListener('change', function (e) {
   if (sk) {
     var v = e.target.value;
     if (sk === 'oxy') { if (v === 'air') S.o2 = 'air'; else { S.o2 = 'o2'; S.o2if = v; } } else S[sk] = v;
-    go(S.step); return;
+    go(S.step); if (S.sheet === 'o2') openO2(true); return;
   }
   var k = e.target.getAttribute('data-k'); if (k) checkSpo2(k, e.target.value);
   var lab = e.target.parentNode && e.target.parentNode.parentNode;
@@ -1671,8 +1683,8 @@ document.addEventListener('click', function (e) {
     case 'o2Btn': openO2(); break;
     // Pendant un arrêt, la fenêtre d'oxygène revient au panneau d'arrêt (le patient n'est pas reparti).
     case 'o2No': closeSheet(); if (paused()) S.sheet = 'pause', renderPauseSheet(); break;
-    case 'o2Ok': if (ok(S.o2new) && S.running) { S.o2ch.push({ t: Math.round(S.t), v: String(num(S.o2new)) }); haptic('tap'); } closeSheet(); go('test'); if (paused()) S.sheet = 'pause', renderPauseSheet(); break;
-    case 'o2Undo': S.o2ch.pop(); haptic('undo'); closeSheet(); go('test'); if (paused()) S.sheet = 'pause', renderPauseSheet(); break;
+    case 'o2Ok': if (ok(S.o2new) && S.running) { if (S.o2 === 'air') { S.o2 = 'o2'; S.o2air = true; S.o2debit = ''; } S.o2ch.push({ t: Math.round(S.t), v: String(num(S.o2new)) }); haptic('tap'); } closeSheet(); go('test'); break;
+    case 'o2Undo': S.o2ch.pop(); if (S.o2air && !S.o2ch.length) { S.o2 = 'air'; S.o2air = false; } haptic('undo'); closeSheet(); go('test'); break;
     case 'resumeBtn': S.pauses[S.pauses.length - 1].e = S.t; S.alert = null; say(LG('Reprise de la marche.', 'Walking resumed.')); closeSheet(); renderTest(); break;
     case 'pauseToStop': openStop(); break;
     case 'stopBtn': openStop(); break;
@@ -1703,7 +1715,7 @@ document.addEventListener('click', function (e) {
 // Un appel, une bascule d'app ou une purge mémoire par iOS ne doivent pas faire perdre un test. Même clé que l'app
 // d'origine (« tm6-test ») mais version 3 : chacune ignore les sauvegardes de l'autre. Restauration jusqu'à 12 h.
 var SAVE_KEY = 'tm6-test', SAVE_MAX_AGE = 12 * 3600 * 1000;
-var TEST_KEYS = ['step', 'seen', 'sex', 'age', 'taille', 'poids', 'exam', 'o2', 'o2mode', 'o2if', 'o2debit', 'o2src', 'o2dev', 'aide', 'rest', 'rt', 'ready',
+var TEST_KEYS = ['step', 'seen', 'sex', 'age', 'taille', 'poids', 'exam', 'o2', 'o2mode', 'o2if', 'o2debit', 'o2src', 'o2dev', 'o2air', 'aide', 'rest', 'rt', 'ready',
   'running', 'started', 't', 't0', 'laps', 'pauses', 'mins', 'fired', 'nadir', 'stop', 'end', 'rec', 'recT', 'recT0', 'recFired', 'rpane', 'lastPhrase', 'alert', 'o2ch', 'speed', 'bad', 'lapsLate'];
 var FRESH = (function () { var o = {}; TEST_KEYS.forEach(function (k) { o[k] = S[k]; }); return JSON.stringify(o); })();
 function saveTest() {
@@ -1768,7 +1780,7 @@ var Report = (function () {
     o2src: { porte: 'Portée par le patient', chariot: 'Chariot poussé par le patient', operateur: "Portée par l'opérateur" },
     aide: { aucune: 'Aucune', canne: 'Canne', deambulateur: 'Déambulateur', rollator: 'Rollator' }
   };
-  const running = false; let o2changes = [];
+  const running = false; let o2changes = [], air0 = false; // air0 : titration partie en air ambiant (débit de départ 0)
   let pauseVals = [], sex, laps, lapTimes, pauses, endT, stopReason, examType, t0, cfg, V = {};
   // Valeurs de l'état S, sous les identifiants des champs de l'app d'origine.
   function load() {
@@ -1780,7 +1792,7 @@ var Report = (function () {
     examType = S.exam || null; t0 = S.t0 || 0; cfg = S.cfg;
     V = {
       age: S.age, taille: S.taille, poids: S.poids, couloir: S.couloir, depart: S.depart,
-      o2mode: S.o2 === 'air' ? 'air' : S.o2if, o2type: S.o2mode, o2debit: S.o2debit, o2src: S.o2src, o2dev: S.o2dev || '', aide: S.aide,
+      o2mode: S.o2 === 'air' ? 'air' : S.o2if, o2type: S.o2mode, o2debit: S.o2air ? '0' : S.o2debit, o2src: S.o2src, o2dev: S.o2dev || '', aide: S.aide,
       m0spo2: S.rest.spo2, m0fc: S.rest.fc, ta0s: S.rest.pas, ta0d: S.rest.pad,
       spo2End: S.end.spo2, fcEnd: S.end.fc, ta1s: S.end.pas, ta1d: S.end.pad, partiel: S.end.partiel, nadirIn: S.nadir,
       spo2Rec: S.rec[1].spo2, fcRec: S.rec[1].fc, taRs: S.rec[1].pas, taRd: S.rec[1].pad,
@@ -1789,6 +1801,7 @@ var Report = (function () {
     };
     for (let i = 1; i <= 6; i++) { const r = S.mins[i] || {}; V[`m${i}spo2`] = r.s || ''; V[`m${i}fc`] = r.f || ''; V[`m${i}t`] = r.ts != null ? r.ts / 60 : ''; }
     S.rt.forEach((r, i) => { V[`rt${i + 1}d`] = r.d; V[`rt${i + 1}s`] = r.s; });
+    air0 = S.o2 === 'o2' && !!S.o2air;
     o2changes = S.exam === 'titr' && S.o2 === 'o2' ? S.o2ch.map(c => ({ t: c.t, v: parseFloat(String(c.v).replace(',', '.')) })) : [];
   }
   const $ = id => ({
@@ -1896,7 +1909,7 @@ function buildText(c, desat) {
   const iface = { lunettes: 'aux lunettes', masque: 'au masque', autre: '[interface]' }[o2m];
   const lePat = F ? 'la patiente' : 'le patient';
   const src = { porte: `source portée par ${lePat}`, chariot: `chariot poussé par ${lePat}`, operateur: "source portée par l'opérateur" }[$('o2src').value];
-  const o2 = o2m === 'air' ? 'sous air ambiant' : ($('o2type').value === 'pulse'
+  const o2 = o2m === 'air' ? 'sous air ambiant' : air0 ? `sous air ambiant au départ, puis sous oxygène en débit ${$('o2type').value === 'pulse' ? `pulsé${o2dev() ? ` (dispositif ${o2dev()})` : ''}` : 'continu'} ${iface} (${src})` : ($('o2type').value === 'pulse'
     ? `sous oxygène en débit pulsé, réglage ${ok(deb) ? fr(deb) : '[réglage]'}${o2dev() ? ` (dispositif ${o2dev()})` : ''}, ${iface}`
     : `sous oxygène en débit continu à ${ok(deb) ? fr(deb) : '[débit]'} L/min ${iface}`) + ` (${src})`;
   const aide = { aucune: 'sans aide à la marche', canne: 'avec une canne', deambulateur: 'avec un déambulateur', rollator: 'avec un rollator' }[$('aide').value];
@@ -1911,7 +1924,8 @@ function buildText(c, desat) {
       let prev = num('o2debit');
       const parts = o2changes.map(ch => {
         const when = `${Math.floor(ch.t / 60)} min ${String(ch.t % 60).padStart(2, '0')} s`;
-        const p = `${pulsed() ? 'réglage porté' : 'débit porté'} de ${ok(prev) ? fr(prev) : '[valeur]'} à ${pulsed() ? fr(ch.v) : `${fr(ch.v)} L/min`} à ${when}`;
+        const p = air0 && prev === 0 ? `passage de l'air ambiant ${pulsed() ? `au réglage ${fr(ch.v)}` : `à ${fr(ch.v)} L/min`} à ${when}`
+          : `${pulsed() ? 'réglage porté' : 'débit porté'} de ${ok(prev) ? fr(prev) : '[valeur]'} à ${pulsed() ? fr(ch.v) : `${fr(ch.v)} L/min`} à ${when}`;
         prev = ch.v; return p;
       });
       out.push(`Titration en oxygène au cours du test : ${parts.join(', puis ')}.`);
@@ -1962,7 +1976,8 @@ function buildBrief(c, desat) {
     const steps = restSteps().map(st => `${fr(st.s)} % ${u(st.d)}`);
     if (steps.length) bits.push(`au repos, SpO2 à ${steps.length > 1 ? steps.slice(0, -1).join(', ') + ' et ' + steps[steps.length - 1] : steps[0]}`);
     const a = num('o2debit'), b = o2At(Infinity);
-    if (o2changes.length && ok(a) && ok(b) && a !== b) bits.push(`pendant la marche, ${pulsed() ? `réglage porté de la position ${fr(a)} à ${fr(b)}` : `débit porté de ${fr(a)} à ${fr(b)} L/min`}`);
+    if (air0 && o2changes.length && ok(b)) bits.push(`pendant la marche, passage de l'air ambiant ${pulsed() ? `au réglage ${fr(b)}` : `à ${fr(b)} L/min`}`);
+    else if (o2changes.length && ok(a) && ok(b) && a !== b) bits.push(`pendant la marche, ${pulsed() ? `réglage porté de la position ${fr(a)} à ${fr(b)}` : `débit porté de ${fr(a)} à ${fr(b)} L/min`}`);
     else if (ok(a)) bits.push(`pendant la marche, ${pulsed() ? `réglage maintenu à la position ${fr(a)}` : `débit maintenu à ${fr(a)} L/min`}`);
     out.push(`Titration de l'oxygène à l'effort${o2dev() ? ` (dispositif ${o2dev()})` : ''}${bits.length ? ' : ' + bits.join(' ; ') : ''}.`);
   }
@@ -1970,7 +1985,7 @@ function buildBrief(c, desat) {
     out.push(`Distance parcourue de ${Math.round(c.dist)} m, soit ${c.pct} % de la valeur théorique (${c.pr.p} m ; LIN ${c.pr.lin} m) : capacité de marche ${c.dist < c.pr.lin ? 'diminuée' : 'dans les limites de la normale'}.`);
   } else if (c.dist > 0) out.push(`Distance parcourue de ${Math.round(c.dist)} m.`);
   if (ok(c.sRest) && ok(c.nadir)) {
-    const sous = o2 ? (o2dev() && !titr() ? ` sous oxygène pulsé (dispositif ${o2dev()})` : ' sous oxygène') : '';
+    const sous = o2 && !air0 ? (o2dev() && !titr() ? ` sous oxygène pulsé (dispositif ${o2dev()})` : ' sous oxygène') : '';
     out.push(ok(desat) && desat >= 4
       ? `Désaturation significative à l'effort${sous}, de ${fr(c.sRest)} % au repos à ${fr(c.nadir)} % au plus bas.`
       : `Pas de désaturation significative à l'effort${sous} (SpO2 de ${fr(c.sRest)} % à ${fr(c.nadir)} %).`);
@@ -2011,7 +2026,7 @@ function buildTextEN(c, desat) {
   const o2m = $('o2mode').value, deb = num('o2debit');
   const iface = { lunettes: 'via nasal cannula', masque: 'via mask', autre: '[interface]' }[o2m];
   const src = { porte: 'source carried by the patient', chariot: 'trolley pushed by the patient', operateur: 'source carried by the assessor' }[$('o2src').value];
-  const o2 = o2m === 'air' ? 'on room air' : ($('o2type').value === 'pulse'
+  const o2 = o2m === 'air' ? 'on room air' : air0 ? `on room air at the start, then on ${$('o2type').value === 'pulse' ? `pulsed oxygen${o2dev() ? ` (device ${o2dev()})` : ''}` : 'continuous oxygen'} ${iface} (${src})` : ($('o2type').value === 'pulse'
     ? `on pulsed oxygen, setting ${ok(deb) ? fr(deb) : '[setting]'}${o2dev() ? ` (device ${o2dev()})` : ''}, ${iface}`
     : `on continuous oxygen at ${ok(deb) ? fr(deb) : '[flow]'} L/min ${iface}`) + ` (${src})`;
   const aide = { aucune: 'without a walking aid', canne: 'with a walking stick', deambulateur: 'with a walking frame', rollator: 'with a rollator' }[$('aide').value];
@@ -2026,7 +2041,8 @@ function buildTextEN(c, desat) {
     if (o2changes.length) {
       let prev = num('o2debit');
       const parts = o2changes.map(ch => {
-        const p = `${pulsed() ? 'setting' : 'flow'} changed from ${ok(prev) ? fr(prev) : '[value]'} to ${pulsed() ? fr(ch.v) : `${fr(ch.v)} L/min`} at ${when(ch.t)}`;
+        const p = air0 && prev === 0 ? `switch from room air to ${pulsed() ? `setting ${fr(ch.v)}` : `${fr(ch.v)} L/min`} at ${when(ch.t)}`
+          : `${pulsed() ? 'setting' : 'flow'} changed from ${ok(prev) ? fr(prev) : '[value]'} to ${pulsed() ? fr(ch.v) : `${fr(ch.v)} L/min`} at ${when(ch.t)}`;
         prev = ch.v; return p;
       });
       out.push(`Oxygen titration during the test: ${parts.join(', then ')}.`);
@@ -2070,7 +2086,8 @@ function buildBriefEN(c, desat) {
     const steps = restSteps().map(st => `${fr(st.s)}% ${u(st.d)}`);
     if (steps.length) bits.push(`at rest, SpO2 ${steps.length > 1 ? steps.slice(0, -1).join(', ') + ' and ' + steps[steps.length - 1] : steps[0]}`);
     const a = num('o2debit'), b = o2At(Infinity);
-    if (o2changes.length && ok(a) && ok(b) && a !== b) bits.push(`during the walk, ${pulsed() ? `setting changed from position ${fr(a)} to ${fr(b)}` : `flow changed from ${fr(a)} to ${fr(b)} L/min`}`);
+    if (air0 && o2changes.length && ok(b)) bits.push(`during the walk, switch from room air to ${pulsed() ? `setting ${fr(b)}` : `${fr(b)} L/min`}`);
+    else if (o2changes.length && ok(a) && ok(b) && a !== b) bits.push(`during the walk, ${pulsed() ? `setting changed from position ${fr(a)} to ${fr(b)}` : `flow changed from ${fr(a)} to ${fr(b)} L/min`}`);
     else if (ok(a)) bits.push(`during the walk, ${pulsed() ? `setting kept at position ${fr(a)}` : `flow kept at ${fr(a)} L/min`}`);
     out.push(`Exertional oxygen titration${o2dev() ? ` (device ${o2dev()})` : ''}${bits.length ? ': ' + bits.join('; ') : ''}.`);
   }
@@ -2078,7 +2095,7 @@ function buildBriefEN(c, desat) {
     out.push(`Distance walked ${Math.round(c.dist)} m, i.e. ${c.pct}% of the predicted value (${c.pr.p} m; LLN ${c.pr.lin} m): walking capacity ${c.dist < c.pr.lin ? 'reduced' : 'within normal limits'}.`);
   } else if (c.dist > 0) out.push(`Distance walked ${Math.round(c.dist)} m.`);
   if (ok(c.sRest) && ok(c.nadir)) {
-    const on = o2 ? (o2dev() && !titr() ? ` on pulsed oxygen (device ${o2dev()})` : ' on oxygen') : '';
+    const on = o2 && !air0 ? (o2dev() && !titr() ? ` on pulsed oxygen (device ${o2dev()})` : ' on oxygen') : '';
     out.push(ok(desat) && desat >= 4
       ? `Significant exertional desaturation${on}, from ${fr(c.sRest)}% at rest to a lowest value of ${fr(c.nadir)}%.`
       : `No significant exertional desaturation${on} (SpO2 from ${fr(c.sRest)}% to ${fr(c.nadir)}%).`);
@@ -2334,7 +2351,9 @@ async function buildDocx() {
   const deb = raw('o2debit') || dash;
   const ageTxt = [raw('age') && `${raw('age')} ${LG('ans', 'years')}`, raw('taille') && `${raw('taille')} cm`, raw('poids') && `${raw('poids')} kg`].filter(Boolean).join(', ') || LG('âge, taille et poids non renseignés', 'age, height and weight not entered');
   const srcTxt = EN ? opt('o2src').toLowerCase() : opt('o2src').toLowerCase().replace('le patient', sex === 'F' ? 'la patiente' : 'le patient');
-  const o2txt = EN ? (air ? 'room air' : `${opt('o2mode').toLowerCase()}, ${pulsed() ? `pulsed flow, setting ${deb}${o2dev() ? `, device ${o2dev()}` : ''}` : `continuous flow, ${deb} L/min`}, ${srcTxt}`)
+  const o2txt = air0 ? (EN ? `room air at the start, then ${opt('o2mode').toLowerCase()}, ${pulsed() ? `pulsed flow${o2dev() ? `, device ${o2dev()}` : ''}` : 'continuous flow'}, ${srcTxt}`
+      : `air ambiant au départ, puis ${opt('o2mode').toLowerCase()}, ${pulsed() ? `débit pulsé${o2dev() ? `, dispositif ${o2dev()}` : ''}` : 'débit continu'}, ${srcTxt}`)
+    : EN ? (air ? 'room air' : `${opt('o2mode').toLowerCase()}, ${pulsed() ? `pulsed flow, setting ${deb}${o2dev() ? `, device ${o2dev()}` : ''}` : `continuous flow, ${deb} L/min`}, ${srcTxt}`)
     : air ? 'air ambiant' : `${opt('o2mode').toLowerCase()}, ${pulsed() ? `débit pulsé, réglage ${deb}${o2dev() ? `, dispositif ${o2dev()}` : ''}` : `débit continu, ${deb} L/min`}, ${srcTxt}`;
   const aideTxt = $('aide').value === 'aucune' ? LG('sans aide', 'no walking aid') : `${LG('avec', 'with a')} ${opt('aide').toLowerCase()}`;
   const line = (k, v) => para([run(`${k}${LG(' : ', ': ')}`, { b: true }), run(v)], { after: 40 });
@@ -2381,7 +2400,7 @@ async function buildDocx() {
     [LG('Dyspnée (Borg)', 'Dyspnoea (Borg)'), bg('borgD0'), bg('borgD1'), ''],
     [LG('Fatigue des membres inférieurs (Borg)', 'Leg fatigue (Borg)'), bg('borgF0'), bg('borgF1'), '']
   ];
-  if (!air) recap.push([pulsed() ? LG('Oxygène (réglage)', 'Oxygen (setting)') : LG('Oxygène (L/min)', 'Oxygen (L/min)'), cellv(num('o2debit')), cellv(o2At(endT)), cellv(o2At(endT))]);
+  if (!air) recap.push([pulsed() ? LG('Oxygène (réglage)', 'Oxygen (setting)') : LG('Oxygène (L/min)', 'Oxygen (L/min)'), air0 ? LG('air', 'air') : cellv(num('o2debit')), cellv(o2At(endT)), cellv(o2At(endT))]);
   const has3 = ['spo2Rec3', 'fcRec3', 'taR3s', 'taR3d'].some(id => raw(id));
   if (has3) {
     const r3 = [cellv(num('spo2Rec3')), cellv(num('fcRec3')), taCell('taR3s', 'taR3d'), '', ''];

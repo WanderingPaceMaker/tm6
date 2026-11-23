@@ -2,6 +2,10 @@
 
 *[English](RELEASE-NOTES.md) · Français*
 
+## 23 novembre 2026 — titration partie en air ambiant
+
+Une titration peut commencer en air ambiant, pour montrer d'abord la désaturation en air. Pendant le test, le bouton « Oxygène : air ambiant, modifier » ouvre « Passer sous oxygène », où l'on choisit l'interface, le mode, la source et le débit ou le réglage ; les changements suivants se font comme avant, et annuler le premier changement ramène à l'air ambiant. Le compte rendu l'écrit (« air ambiant au départ, puis lunettes, débit continu », « passage de l'air ambiant à 2 L/min à 1 min 42 s »), et la piste O2 de la figure part de zéro. Sur iPhone, l'écran du test d'une titration tient désormais sans que les boutons du bas passent sous la barre d'accueil.
+
 ## 23 novembre 2026 — écran du test
 
 Sur iPhone, l'écran du test montre un tableau des six minutes en gros chiffres : SpO2, FC et nombre d'allers de chaque minute. La ligne de la minute en cours s'ouvre d'elle-même, et on peut toucher n'importe quelle ligne pour la remplir ou la corriger ; une minute choisie à la main n'est plus reprise au changement de minute. Sur iPad, la carte de la minute suit de même le chronomètre, et les six minutes restent touchables. « Le patient s'arrête » ne fait plus apparaître de panneau : le bouton reste enfoncé et affiche la durée de l'arrêt, la case de la phrase donne la phrase de reprise et le temps restant avant de la redire, et on touche de nouveau le bouton quand le patient repart. Les SpO2 et FC saisies pendant un arrêt gardent leur heure et sont tracées à ce moment, dans la bande de l'arrêt, sur la figure du bilan et du compte rendu ; la ligne de la minute porte la mention « arrêt ». La distance est exprimée partout de la même façon : pourcentage de la valeur théorique, suivi de la valeur théorique et de la limite inférieure de la normale (LIN).

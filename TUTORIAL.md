@@ -30,7 +30,7 @@ Choose the sex, then enter age, height and weight. The predicted distance (Enrig
 
 ## 2. Conditions
 
-Choose the type of test, 6-minute walk test or exertional oxygen titration, then oxygen and walking aid. If the patient is on oxygen, further lists appear: interface, continuous or pulsed mode, flow or setting, source. The corridor length is recalled below the lists, with a link to change it.
+Choose the type of test, 6-minute walk test or exertional oxygen titration, then oxygen and walking aid. If the patient is on oxygen, further lists appear: interface, continuous or pulsed mode, flow or setting, source. A titration can also start on room air: during the test, the "Oxygen: room air, change" button switches to oxygen, choosing then the interface, the mode, the source and the flow or setting; each change is time-stamped. The corridor length is recalled below the lists, with a link to change it.
 
 <img src="captures/tutorial/conditions.png" alt="Conditions screen: test, oxygen, walking aid" width="260">
 

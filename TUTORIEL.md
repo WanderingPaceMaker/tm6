@@ -30,7 +30,7 @@ On choisit le sexe, puis on saisit l'âge, la taille et le poids. La distance th
 
 ## 2. Conditions
 
-On choisit le type d'examen, test de marche de 6 minutes ou titration de l'oxygène à l'effort, puis l'oxygène et l'aide à la marche. Si le patient est sous oxygène, de nouvelles listes apparaissent : interface, mode continu ou pulsé, débit ou réglage, source. La longueur du couloir est rappelée sous les listes, avec un lien pour la modifier.
+On choisit le type d'examen, test de marche de 6 minutes ou titration de l'oxygène à l'effort, puis l'oxygène et l'aide à la marche. Si le patient est sous oxygène, de nouvelles listes apparaissent : interface, mode continu ou pulsé, débit ou réglage, source. Une titration peut aussi commencer en air ambiant : pendant le test, le bouton « Oxygène : air ambiant, modifier » permet de passer sous oxygène, en choisissant alors l'interface, le mode, la source et le débit ou le réglage ; chaque changement est horodaté. La longueur du couloir est rappelée sous les listes, avec un lien pour la modifier.
 
 <img src="captures/tutoriel/conditions.png" alt="Écran Conditions : examen, oxygène, aide à la marche" width="260">
 

@@ -2,6 +2,10 @@
 
 *English · [Français](NOTES-DE-VERSION.md)*
 
+## 23 November 2026 — titration starting on room air
+
+A titration can start on room air, to show desaturation on air first. During the test, the "Oxygen: room air, change" button opens "Switch to oxygen", where the interface, the mode, the source and the flow or setting are chosen; later changes work as before, and undoing the first change returns to room air. The report states it ("room air at the start, then nasal cannula, continuous flow", "switch from room air to 2 L/min at 1 min 42 s"), and the O2 track of the figure starts from zero. On iPhone, the test screen of a titration now fits without the bottom buttons going under the home bar.
+
 ## 23 November 2026 — test screen
 
 On iPhone, the test screen shows a table of the six minutes in large figures: SpO2, HR and number of lengths for each minute. The row of the current minute opens on its own, and any row can be tapped to fill it in or correct it; a minute picked by hand is no longer taken away when the minute changes. On iPad, the minute card likewise follows the timer, and all six minutes can be tapped. "Patient stops" no longer opens a panel: the button stays pressed and shows the duration of the stop, the phrase box gives the phrase to resume walking and the time left before saying it again, and the button is tapped again when the patient walks on. SpO2 and HR entered during a stop keep their time and are plotted at that moment, within the stop band, on the figure of the results and of the report; the row of the minute is marked "stop". Distance is expressed the same way everywhere: percentage of the predicted value, followed by the predicted value and the lower limit of normal (LLN).
