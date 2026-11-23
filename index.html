@@ -192,6 +192,7 @@ h1{font-size:28px;line-height:1.15;margin:20px 0 4px;text-wrap:balance}
 .mn b{display:block;font:700 17px var(--f-num);color:var(--fg)}
 .mn.due{border-color:var(--warn);background:var(--warn-soft);color:var(--warn)}
 .mn.ok{border-color:var(--ok)}
+.mn.on{outline:3px solid var(--warn);outline-offset:1px}
 .prompt{border:3px solid var(--warn);background:var(--warn-soft);border-radius:var(--r);padding:12px;margin-bottom:12px}
 .prompt h3{margin:0 0 8px;font-size:19px;color:var(--warn)}
 .prompt .grid2{grid-gap:10px}
@@ -205,6 +206,7 @@ h1{font-size:28px;line-height:1.15;margin:20px 0 4px;text-wrap:balance}
 .ctl button{border-radius:var(--r);font-weight:700;font-size:17px;min-height:64px;padding:8px}
 .b-undo{border:2px solid var(--line);background:var(--surface)}
 .b-pause{border:3px solid var(--warn);background:var(--surface);color:var(--warn)}
+.b-pause.on{background:var(--warn);color:#fff}
 .b-stop{border:3px solid var(--alert);background:var(--surface);color:var(--alert)}
 
 /* Panneaux pleine largeur (pause, arrêt, minute) */
@@ -439,7 +441,6 @@ h1{font-size:28px;line-height:1.15;margin:20px 0 4px;text-wrap:balance}
   .bar{margin:6px 0 2px;height:10px}
   .phrase{min-height:0;font-size:15px;margin:6px 0 8px;padding:6px 10px}
   .mn{min-height:44px;padding:3px 0}
-  #promptBox:not(:empty) + .minstrip{display:none}
   .prompt{padding:8px 10px;margin-bottom:8px}
   .prompt h3{font-size:16px;margin:0 0 4px}
   .prompt .row{margin-top:6px}
@@ -573,7 +574,6 @@ h1{font-size:28px;line-height:1.15;margin:20px 0 4px;text-wrap:balance}
   .minstrip{grid-template-columns:repeat(3,1fr);grid-gap:4px;margin-bottom:4px}
   .mn{min-height:34px;padding:1px 0;font-size:11px}
   .mn b{font-size:14px}
-  #promptBox:not(:empty) + .minstrip{display:none}
   .prompt{padding:6px 8px;margin-bottom:4px}
   .prompt h3{font-size:14px;margin:0 0 2px}
   .prow{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-gap:6px}
@@ -640,6 +640,57 @@ h1{font-size:28px;line-height:1.15;margin:20px 0 4px;text-wrap:balance}
   .text{font-size:14px;padding:8px 10px}
   .vals th,.ix > b{font-size:13px}
   .vals td,.ix .v{font-size:14px}
+}
+.stepsbtn,.phoneonly,.mtab{display:none}
+@media (max-width:699px) and (orientation:portrait){
+  /* Test sur iPhone : l'écran entier au test ; lire en haut, toucher en bas (pouce) ; couloir gardé (repère du tour en cours) */
+  .phoneonly{display:block}
+  body[data-step="test"]:not(.showsteps) .top{display:none}
+  body[data-step="test"] .stepsbtn{display:block;position:absolute;top:calc(6px + env(safe-area-inset-top,0px));left:12px;z-index:6;min-height:34px;padding:4px 12px;font-size:14px;border-radius:17px;border:1px solid var(--line);background:var(--bg);color:var(--muted)}
+  body[data-step="test"].showsteps .stepsbtn{display:none}
+  body[data-step="test"]:not(.showsteps) main{padding-top:calc(8px + env(safe-area-inset-top,0px))}
+  body[data-step="test"].showsteps .cols.test{min-height:calc(100vh - 90px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+  .testinfo,#pinfo,.cols.test .guide,.cols.test .nadirrow{display:none}
+  .cols.test{display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;min-height:calc(100vh - 24px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+  .cols.test > .col:nth-child(2){-webkit-flex:1 1 auto;flex:1 1 auto;display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;-webkit-order:3;order:3}
+  .cols.test > .col:nth-child(3){-webkit-order:2;order:2}
+  .cols.test .lap{-webkit-flex:1 1 auto;flex:1 1 auto;min-height:180px}
+  .cols.test .lap .p{font-size:56px}
+  .cols.test .lap .d{font-size:22px}
+  .clock{text-align:center;margin-top:0}
+  .clock .t{font-size:84px;line-height:1}
+  .clock .r{font-size:17px}
+  .phrase{font-size:18px;padding:8px 10px}
+  .minstrip{grid-gap:4px}
+  .mn{min-height:34px;font-size:11px;padding:1px 0}
+  .mn b{font-size:15px}
+  .prompt h3{font-size:18px}
+  .prompt input{font-size:28px}
+  .cols.test .ctl{margin-bottom:4px}
+  .clock .t{font-size:60px}
+  .clock .r{font-size:15px}
+  .phrase{font-size:16px;padding:6px 10px;margin:6px 0}
+  #promptBox,.minstrip{display:none}
+  .mtab{display:block;margin:2px 0 6px}
+  .mh,.mrow{display:grid;grid-template-columns:44px 1fr 1fr 64px;-webkit-align-items:center;align-items:center;grid-gap:8px;width:100%}
+  .mh{font-size:13px;color:var(--muted);padding:0 10px 2px;text-align:center}
+  .mh span:first-child{text-align:left}
+  .mrow{min-height:46px;margin:0 0 4px;padding:0 10px;border:2px solid var(--line);border-radius:12px;background:var(--surface);text-align:center;font:inherit;color:var(--fg)}
+  button.mrow{-webkit-appearance:none;appearance:none}
+  .mrow .mm{font-size:15px;color:var(--muted);text-align:left}
+  .mrow b{font:700 26px/1 var(--f-num);font-variant-numeric:tabular-nums}
+  .mrow b.bad{color:var(--alert)}
+  .mrow .ml{font:700 22px/1 var(--f-num);color:var(--muted)}
+  .mrow.due{border-color:var(--warn);background:var(--warn-soft)}
+  .mrow.ok{border-color:var(--ok)}
+  .mrow.cur .mm{font-weight:700;color:var(--fg)}
+  .mrow .mm i{display:block;font:italic 11px/1 var(--f-body);color:var(--warn)}
+  .mrow.on{border:3px solid var(--warn);background:var(--warn-soft);grid-template-columns:30px 1fr 1fr 30px 52px;min-height:46px;padding:2px 6px}
+  .mrow.on .f > span:first-child{display:none}
+  .mrow.on .f .box{padding:0 8px}
+  .mrow.on .f input{font-size:30px;padding:3px 0;text-align:center}
+  .mok{min-height:40px;border-radius:10px;border:2px solid var(--line);background:var(--surface);font-weight:700}
+  .cols.test .lap{min-height:130px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style></head><body>
@@ -1035,11 +1086,11 @@ var SCREENS = {
     $('next').style.display = 'none';
     if (!S.started) return '<h1>Test</h1><div class="card"><p>' + LG('Le test n\'a pas commencé.', 'The test has not started.') + '</p><button type="button" class="big" style="width:100%" data-go="pret">' + LG('Aller au départ', 'Go to the start') + '</button></div>';
     var ticks = ''; for (var m = 1; m < 6; m++) ticks += '<em style="left:' + (m / 6 * 100) + '%"></em>';
-    return '<p class="testinfo">' + examLabel() + ', ' + o2Lc() + LG(', couloir de ' + corridor() + ' m', ', ' + corridor() + ' m corridor') + departTxt() + '</p>' +
+    return '<button type="button" class="stepsbtn" id="stepsBtn">' + LG('Étapes', 'Steps') + '</button><p class="testinfo">' + examLabel() + ', ' + o2Lc() + LG(', couloir de ' + corridor() + ' m', ', ' + corridor() + ' m corridor') + departTxt() + '</p>' +
       '<div class="cols test"><div class="col"><div class="clock"><div class="t" id="clk">0:00</div><div class="r" id="rem"></div></div>' +
       '<div class="bar"><b id="prog" style="width:0"></b>' + ticks + '</div>' +
       '<div id="alertBox"></div><div class="phrase" id="phrase">' + esc(S.lastPhrase || LG('Départ. Marchez aussi loin que possible pendant 6 minutes.', 'Start. Walk as far as possible for 6 minutes.')) + '</div>' +
-      '<div id="promptBox"></div><div class="minstrip" id="minstrip"></div></div><div class="col">' +
+      '<div id="promptBox"></div><div class="minstrip" id="minstrip"></div><div class="mtab" id="mtab"></div></div><div class="col">' +
       '<div class="track" id="track"></div><button type="button" class="lap' + (S.running || S.stop ? '' : ' disabled') + '" id="lapBtn"><span class="p">' + LG('+1 aller', '+1 length') + '</span><span class="d" id="lapD">' + LG('0 m · 0 aller', '0 m, 0 lengths') + '</span></button>' +
       '<div class="ctl"><button type="button" class="b-undo" id="undoBtn">' + LG('Annuler 1', 'Undo 1') + '</button>' +
       '<button type="button" class="b-pause' + (S.running ? '' : ' disabled') + '" id="pauseBtn">' + LG('Le patient s\'arrête', 'Patient stops') + '</button>' +
@@ -1059,6 +1110,7 @@ var SCREENS = {
       '<div class="rtabs"><span class="rtstop">' + stopTxt + '</span><span class="rtclk" id="rtClk"></span>' + [LG('Arrêt', 'End'), LG('Borg, symptômes', 'Borg, symptoms'), LG('Récupération', 'Recovery')].map(function (t, i) { return '<button type="button" class="rtab' + ((S.rpane || 0) === i ? ' on' : '') + '" data-rpane="' + i + '">' + t + '</button>'; }).join('') + '</div>' +
       '<div class="cols rcp" data-pane="' + (S.rpane || 0) + '"><div class="col"><div class="rec"><div class="rt" id="rt1"><span>' + LG('Récupération', 'Recovery') + '</span><b id="recClk">0:00</b></div><div class="rt" id="rt3"><span id="recLbl">' + LG('Relevé à 1 min dans', 'Reading at 1 min in') + '</span><b id="recNext">1:00</b></div></div>' +
       '<div class="card"><h2>' + LG('À l\'arrêt', 'At the end') + '</h2><div class="grid2">' + field('end.spo2', 'SpO2', '%') + field('end.fc', LG('FC', 'HR'), '/min') + field('end.pas', LG('PAS', 'SBP'), 'mmHg') + field('end.pad', LG('PAD', 'DBP'), 'mmHg') + '</div>' +
+      '<div class="nadirrow phoneonly">' + field('nadir', LG('Nadir lu sur l\'oxymètre, s\'il est plus bas qu\'un relevé', 'Nadir read on the oximeter, if lower than a reading'), '%') + '</div>' +
       '<div style="height:12px"></div><div class="f"><span>' + (nLaps() === 0 && depart() ? LG('Mètres depuis la ligne de départ', 'Metres from the starting line') : LG('Mètres depuis le dernier plot', 'Metres from the last cone')) + LG(' : ', ': ') + '<b id="partV">' + (S.end.partiel || 0) + ' m</b></span>' +
       '<input class="slider" type="range" min="0" max="' + partMax() + '" step="1" value="' + (S.end.partiel || 0) + '" data-k="end.partiel"></div>' + flags('recup') + '</div></div><div class="col">' +
       '<div class="card"><h2>' + LG('Borg à la fin', 'Borg at the end') + '</h2>' + borg('end.bd', LG('Dyspnée', 'Dyspnoea')) + borg('end.bf', 'Fatigue') + '</div>' +
@@ -1072,7 +1124,7 @@ var SCREENS = {
     if (!S.stop) return '<h1>' + LG('Bilan', 'Results') + '</h1><div class="card"><p>' + LG('Le bilan apparaît une fois le test terminé.', 'The results appear once the test is finished.') + '</p></div>';
     var A = analysis();
     var k = '<div class="kpis">' +
-      kpi(Math.round(A.dist) + ' m', A.pr ? A.pct + LG(' % de la théorique, LIN ', '% of predicted, LLN ') + A.pr.lin + ' m' : LG('pas de valeur théorique', 'no predicted value'), A.pr && A.dist < A.pr.lin) +
+      kpi(Math.round(A.dist) + ' m', A.pr ? A.pct + LG(' % de la valeur théorique (', '% of predicted value (') + A.pr.p + LG(' m ; LIN ', ' m; LLN ') + A.pr.lin + ' m)' : LG('pas de valeur théorique', 'no predicted value'), A.pr && A.dist < A.pr.lin) +
       kpi(isNaN(A.nadir) ? '—' : A.nadir + ' %', LG('SpO2 la plus basse', 'Lowest SpO2') + (isNaN(A.desat) ? '' : LG(', baisse de ', ', fall of ') + A.desat + ' points'), A.desat >= 4) +
       kpi(isNaN(A.fPeak) ? '—' : A.fPeak + '/min', LG('FC la plus haute', 'Highest HR') + (isNaN(A.pFmt) ? '' : ', ' + A.pFmt + LG(' % de la FMT', '% of predicted max HR')), false) +
       kpi(isNaN(A.vWalk) ? '—' : fr1(A.vWalk) + ' km/h', LG('vitesse pendant la marche', 'walking speed'), false) + '</div>';
@@ -1202,7 +1254,7 @@ function analysis() {
   var bd0 = num(S.rest.bd), bd1 = num(S.end.bd), bf0 = num(S.rest.bf), bf1 = num(S.end.bf);
   var v = function (x, u) { return isNaN(x) ? null : x + (u || ''); };
   A.usual = [
-    ['Distance', Math.round(A.dist) + ' m', A.pr ? A.pct + LG(' % de la valeur théorique (Enright), LIN ', '% of predicted (Enright), LLN ') + A.pr.lin + ' m' : ''],
+    ['Distance', Math.round(A.dist) + ' m', A.pr ? A.pct + LG(' % de la valeur théorique (', '% of predicted value (') + A.pr.p + LG(' m ; LIN ', ' m; LLN ') + A.pr.lin + ' m)' : ''],
     [LG('Vitesse globale', 'Overall speed'), isNaN(A.vTot) ? null : fr1(A.vTot) + ' km/h', ''],
     [LG('Vitesse pendant la marche', 'Walking speed'), isNaN(A.vWalk) ? null : fr1(A.vWalk) + ' km/h', S.pauses.length ? S.pauses.length + LG(' arrêt', ' stop') + (S.pauses.length > 1 ? 's' : '') + ', ' + Math.round(pauseTotal()) + ' s' : LG('sans arrêt', 'no stops')],
     [LG('SpO2 repos, fin, nadir', 'SpO2 rest, end, nadir'), isNaN(A.sRest) ? null : A.sRest + ' %, ' + (isNaN(A.sEnd) ? '—' : A.sEnd + ' %') + ', ' + (isNaN(A.nadir) ? '—' : A.nadir + ' %'), isNaN(A.desat) ? '' : LG('baisse de ', 'fall of ') + A.desat + ' points'],
@@ -1267,7 +1319,7 @@ function figure(A) {
   var endM = S.stop.t / 60, xMax = Math.max(6, endM) + 3.4, W = 640, L = 64, R = 18, x = function (m) { return L + m / xMax * (W - L - R); };
   var lastMin = S.stop.t >= TEST ? 6 : Math.floor(S.stop.t / 60);
   var spts = [{ t: 0, v: A.sRest }], fpts = [{ t: 0, v: A.fRest }];
-  for (var m = 1; m <= lastMin; m++) if (S.mins[m]) { spts.push({ t: m, v: num(S.mins[m].s) }); fpts.push({ t: m, v: num(S.mins[m].f) }); }
+  for (var m = 1; m <= lastMin; m++) if (S.mins[m]) { var tm = S.mins[m].ts != null ? S.mins[m].ts / 60 : m; spts.push({ t: tm, v: num(S.mins[m].s) }); fpts.push({ t: tm, v: num(S.mins[m].f) }); }
   if (S.stop.t < TEST) { spts.push({ t: endM, v: num(S.end.spo2) }); fpts.push({ t: endM, v: num(S.end.fc) }); }
   // Mesures prises pendant les arrêts : placées à l'heure du début de l'arrêt.
   S.pauses.forEach(function (p) { if (ok(p.spo2)) spts.push({ t: p.s / 60, v: num(p.spo2) }); if (ok(p.fc)) fpts.push({ t: p.s / 60, v: num(p.fc) }); });
@@ -1330,6 +1382,7 @@ function demoFill() {
 function go(step) {
   if (step === 'test' && !S.started) step = 'pret';
   S.step = step; S.seen[step] = 1;
+  document.body.setAttribute('data-step', step); document.body.className = document.body.className.replace(/ ?showsteps/g, '');
   var h = SCREENS[step]();
   // Anglais : « 95% » sans espace (les valeurs mesurées restent dans des champs, non touchés).
   $('main').innerHTML = EN ? pctEN(h) : h;
@@ -1355,7 +1408,7 @@ function tick() {
     var due = []; for (var k in PHRASES) if (S.t >= +k && !S.fired[k]) due.push(+k);
     due.forEach(function (k, i) {
       S.fired[k] = 1;
-      if (k % 60 === 0) { var m = k / 60; if (!S.mins[m]) S.mins[m] = { s: '', f: '' }; S.mins[m].due = true; if (S.minOpen == null) S.minOpen = m; }
+      if (k % 60 === 0) { var m = k / 60; if (!S.mins[m]) S.mins[m] = { s: '', f: '' }; S.mins[m].due = true; if (!minTyping() && Date.now() - (S.minPick || 0) > 15000) S.minOpen = m; }
       if (i === due.length - 1) { if (k % 60 === 0) { beep(880, 0.2); haptic('minute'); } else beep(880, 0.15, 2); say(PHRASES[k]); }
     });
     if (S.t >= TEST) { finish(null); return; }
@@ -1393,6 +1446,26 @@ function checkSpo2(k, val) {
   if ($('alertBox')) $('alertBox').innerHTML = alertHtml();
   if (S.sheet === 'pause') pauseHint();
 }
+// La carte de la minute suit le chronomètre, sauf si l'opérateur est en train d'y écrire.
+function minTyping() { var a = document.activeElement, b = $('promptBox'); return !!(a && b && a.tagName === 'INPUT' && b.contains(a)); }
+// Une minute choisie à la main reste ouverte 15 s (temps réel) même si une nouvelle minute commence.
+// iPhone en portrait : tableau des six minutes (SpO2, FC, allers de la minute), saisie dans la ligne touchée.
+function phoneTab() { return !!(window.matchMedia && matchMedia('(max-width:699px) and (orientation:portrait)').matches); }
+function lapsIn(m) { var n = 0; S.laps.forEach(function (t) { if (t >= (m - 1) * 60 && t < m * 60) n++; }); return n; }
+function renderMtab() {
+  var tab = $('mtab'), cur = S.running ? Math.min(6, Math.floor(S.t / 60) + 1) : 0;
+  if (!tab.firstChild) tab.innerHTML = '<div class="mh"><span>min</span><span>SpO2 %</span><span>' + LG('FC /min', 'HR /min') + '</span><span>' + LG('allers', 'lengths') + '</span></div>' + [1, 2, 3, 4, 5, 6].map(function (m) { return '<div class="mrw" id="mrw' + m + '"></div>'; }).join('');
+  for (var m = 1; m <= 6; m++) {
+    var r = S.mins[m], el = $('mrw' + m), open = S.minOpen === m, nl = (S.started && (m <= cur || !S.running)) ? String(lapsIn(m)) : '';
+    var hasPz = S.pauses.some(function (p) { var e = p.e == null ? S.t : p.e; return e > (m - 1) * 60 && p.s < m * 60; });
+    var st = (open ? ' on' : '') + (m === cur ? ' cur' : '') + (hasPz ? ' pz' : '') + (r && ok(r.s) && ok(r.f) ? ' ok' : r && r.due ? ' due' : '');
+    var cell = function (k) { var b = S.bad[k] != null; var v = b ? S.bad[k] : get(k); return '<b class="' + (b ? 'bad' : '') + '">' + (v === '' || v == null ? '·' : esc(v)) + '</b>'; };
+    var h = open ? '<div class="mrow' + st + '"><span class="mm">' + m + (hasPz ? '<i>' + LG('arrêt', 'stop') + '</i>' : '') + '</span>' + field('mins.' + m + '.s', '', '') + field('mins.' + m + '.f', '', '') + '<span class="ml">' + nl + '</span><button type="button" class="mok" id="minDone">OK</button></div>'
+      : '<button type="button" class="mrow' + st + '" data-min="' + m + '"><span class="mm">' + m + (hasPz ? '<i>' + LG('arrêt', 'stop') + '</i>' : '') + '</span>' + cell('mins.' + m + '.s') + cell('mins.' + m + '.f') + '<span class="ml">' + nl + '</span></button>';
+    if (open && minTyping() && el.contains(document.activeElement)) { var c = el.firstChild; if (c) { c.className = 'mrow' + st; c.querySelector('.ml').textContent = nl; } continue; }
+    if (el.getAttribute('data-h') !== h) { el.innerHTML = h; el.setAttribute('data-h', h); }
+  }
+}
 function renderTest(light) {
   var t = S.t;
   if (!$('clk')) return;
@@ -1402,13 +1475,19 @@ function renderTest(light) {
   $('prog').style.width = (t / TEST * 100) + '%';
   $('lapD').textContent = cumDist(nLaps()) + ' m, ' + nLaps() + LG(' aller', ' length') + (nLaps() > 1 || (EN && nLaps() === 0) ? 's' : '') + (S.lapsLate ? LG(' (' + S.lapsLate + ' après la fin)', ' (' + S.lapsLate + ' after the end)') : '');
   renderTrack();
-  $('pauseBtn').textContent = paused() ? LG('Arrêt en cours…', 'Stopped…') : LG('Le patient s\'arrête', 'Patient stops');
+  var pz = paused() ? S.pauses[S.pauses.length - 1] : null;
+  $('pauseBtn').textContent = pz ? LG('Arrêt ', 'Stopped ') + mmss(S.t - pz.s) : LG('Le patient s\'arrête', 'Patient stops');
+  $('pauseBtn').className = 'b-pause' + (S.running ? '' : ' disabled') + (pz ? ' on' : '');
+  if (pz) { $('phrase').textContent = S.alert ? LG('Repos. SpO2 sous 85 % : attendre qu\'elle remonte.', 'Rest. SpO2 below 85%: wait for it to recover.') : LG('« ', '“') + PAUSE_PHRASE + LG(' » dans ', '” in ') + mmss(30 - (S.t - pz.s) % 30); }
   $('pinfo').textContent = (S.pauses.length ? S.pauses.length + LG(' arrêt', ' stop') + (S.pauses.length > 1 ? 's' : '') + ', ' + Math.round(pauseTotal()) + LG(' s au total. ', ' s in total. ') : '') + LG('Le chronomètre continue pendant les arrêts.', 'The timer keeps running during stops.');
   var strip = '';
   for (var m = 1; m <= 6; m++) {
-    var r = S.mins[m], st = !r ? '' : (ok(r.s) && ok(r.f) ? ' ok' : r.due ? ' due' : '');
+    var r = S.mins[m], st = (!r ? '' : (ok(r.s) && ok(r.f) ? ' ok' : r.due ? ' due' : '')) + (S.minOpen === m ? ' on' : '');
     strip += '<button type="button" class="mn' + st + '" data-min="' + m + '">' + m + ' min<b>' + (r && ok(r.s) ? r.s : '·') + '</b>' + (r && ok(r.f) ? r.f : '') + '</button>';
   }
+  var ph = phoneTab();
+  if (ph) { if ($('minstrip').innerHTML) $('minstrip').innerHTML = ''; if ($('promptBox').innerHTML) { $('promptBox').innerHTML = ''; $('promptBox').removeAttribute('data-m'); } renderMtab(); return; }
+  if ($('mtab').innerHTML) $('mtab').innerHTML = '';
   if ($('minstrip').innerHTML !== strip) $('minstrip').innerHTML = strip;
   var want = S.minOpen;
   var box = $('promptBox');
@@ -1522,7 +1601,7 @@ function openSettings() {
 /* ---------- Événements ---------- */
 document.addEventListener('input', function (e) {
   var k = e.target.getAttribute('data-k'); if (!k) return;
-  if (k.indexOf('mins.') === 0) { var m = k.split('.')[1]; if (!S.mins[m]) S.mins[m] = { s: '', f: '' }; }
+  if (k.indexOf('mins.') === 0) { var m = k.split('.')[1]; if (!S.mins[m]) S.mins[m] = { s: '', f: '' }; if (S.running && paused()) S.mins[m].ts = S.t; }
   var bad = implausible(k, e.target.value);
   if (bad) { S.bad[k] = e.target.value; set(k, ''); } else { delete S.bad[k]; set(k, e.target.value); }
   var lab = e.target.parentNode && e.target.parentNode.parentNode;
@@ -1572,7 +1651,7 @@ document.addEventListener('click', function (e) {
   var rp = b.getAttribute('data-rpane');
   if (rp != null) { S.rpane = +rp; go('recup'); return; }
   var mn = b.getAttribute('data-min');
-  if (mn) { if (!S.mins[mn]) S.mins[mn] = { s: '', f: '' }; S.minOpen = +mn; $('promptBox').innerHTML = ''; renderTest(); return; }
+  if (mn) { if (!S.mins[mn]) S.mins[mn] = { s: '', f: '' }; S.minOpen = +mn; S.minPick = Date.now(); $('promptBox').innerHTML = ''; renderTest(); if (phoneTab()) { var fi = document.querySelector('#mrw' + mn + ' input'); if (fi) fi.focus(); } return; }
   var sc = b.getAttribute('data-scale');
   if (sc) { openScale(sc); return; }
   var pk = b.getAttribute('data-pick');
@@ -1588,7 +1667,7 @@ document.addEventListener('click', function (e) {
       if (S.running) S.laps.push(S.t); else if (S.stop) S.lapsLate = (S.lapsLate || 0) + 1; else break;
       lastLapAt = Date.now(); beep(1200, 0.05); haptic('tap'); renderTest(); if (S.stop) go('test'); break;
     case 'undoBtn': if (S.lapsLate) S.lapsLate--; else if (S.laps.length) S.laps.pop(); else break; beep(300, 0.12, 2); haptic('undo'); renderTest(); break;
-    case 'pauseBtn': openPause(); break;
+    case 'pauseBtn': if (!S.running) break; if (paused()) { S.pauses[S.pauses.length - 1].e = S.t; S.alert = null; say(LG('Reprise de la marche.', 'Walking resumed.')); } else { S.pauses.push({ s: S.t, e: null, spo2: '', fc: '', pas: '', pad: '' }); say(PAUSE_PHRASE); beep(520, 0.2); } renderTest(); break;
     case 'o2Btn': openO2(); break;
     // Pendant un arrêt, la fenêtre d'oxygène revient au panneau d'arrêt (le patient n'est pas reparti).
     case 'o2No': closeSheet(); if (paused()) S.sheet = 'pause', renderPauseSheet(); break;
@@ -1599,8 +1678,9 @@ document.addEventListener('click', function (e) {
     case 'stopBtn': openStop(); break;
     case 'stopNo': closeSheet(); if (paused()) S.sheet = 'pause', renderPauseSheet(); break;
     case 'stopOk': if (S.motif) finish(S.motif); break;
+    case 'stepsBtn': document.body.className += ' showsteps'; break;
     case 'falseStart': if (S.running && S.t < 30) cancelStart(); break;
-    case 'minDone': var cur = S.minOpen; S.minOpen = null; for (var m = 1; m <= 6; m++) if (m !== cur && S.mins[m] && S.mins[m].due && !(ok(S.mins[m].s) && ok(S.mins[m].f))) { S.minOpen = m; break; } renderTest(); break;
+    case 'minDone': var cur = S.minOpen; S.minOpen = null; S.minPick = 0; for (var m = 1; m <= 6; m++) if (m !== cur && S.mins[m] && S.mins[m].due && !(ok(S.mins[m].s) && ok(S.mins[m].f))) { S.minOpen = m; break; } renderTest(); break;
     case 'gear': openSettings(); break;
     case 'cfgClose': closeSheet(); go(S.step); break;
     case 'demoBtn':
@@ -1707,7 +1787,7 @@ var Report = (function () {
       spo2Rec3: S.rec[3].spo2, fcRec3: S.rec[3].fc, taR3s: S.rec[3].pas, taR3d: S.rec[3].pad,
       borgD0: b(S.rest.bd), borgD1: b(S.end.bd), borgF0: b(S.rest.bf), borgF1: b(S.end.bf)
     };
-    for (let i = 1; i <= 6; i++) { const r = S.mins[i] || {}; V[`m${i}spo2`] = r.s || ''; V[`m${i}fc`] = r.f || ''; }
+    for (let i = 1; i <= 6; i++) { const r = S.mins[i] || {}; V[`m${i}spo2`] = r.s || ''; V[`m${i}fc`] = r.f || ''; V[`m${i}t`] = r.ts != null ? r.ts / 60 : ''; }
     S.rt.forEach((r, i) => { V[`rt${i + 1}d`] = r.d; V[`rt${i + 1}s`] = r.s; });
     o2changes = S.exam === 'titr' && S.o2 === 'o2' ? S.o2ch.map(c => ({ t: c.t, v: parseFloat(String(c.v).replace(',', '.')) })) : [];
   }
@@ -1771,7 +1851,7 @@ function pauseTotal() { return pauses.reduce((a, p) => a + ((p.e ?? elapsed()) -
 function series() {
   const pts = [], lastMin = endT >= TEST ? 6 : Math.floor(endT / 60);
   pts.push({ t: 0, s: num('m0spo2'), f: num('m0fc') });
-  for (let i = 1; i <= lastMin; i++) pts.push({ t: i, s: num(`m${i}spo2`), f: num(`m${i}fc`) });
+  for (let i = 1; i <= lastMin; i++) pts.push({ t: ok(num(`m${i}t`)) ? num(`m${i}t`) : i, s: num(`m${i}spo2`), f: num(`m${i}fc`) });
   if (endT < TEST) pts.push({ t: endT / 60, s: num('spo2End'), f: num('fcEnd'), end: true });
   else if (ok(num('spo2End')) || ok(num('fcEnd'))) { const p6 = pts[pts.length - 1]; if (!ok(p6.s)) p6.s = num('spo2End'); if (!ok(p6.f)) p6.f = num('fcEnd'); }
   const rec = { t: endT / 60 + 1, s: num('spo2Rec'), f: num('fcRec'), rec: true };
@@ -1887,8 +1967,7 @@ function buildBrief(c, desat) {
     out.push(`Titration de l'oxygène à l'effort${o2dev() ? ` (dispositif ${o2dev()})` : ''}${bits.length ? ' : ' + bits.join(' ; ') : ''}.`);
   }
   if (c.pr) {
-    out.push(`Distance parcourue de ${Math.round(c.dist)} m, soit ${c.pct} % de la valeur attendue : capacité de marche ${c.dist < c.pr.lin ? 'diminuée' : 'dans les limites de la normale'}.`);
-    if (c.pr.outOfRange) out.push("Âge hors de la population de référence des équations (40 à 80 ans).");
+    out.push(`Distance parcourue de ${Math.round(c.dist)} m, soit ${c.pct} % de la valeur théorique (${c.pr.p} m ; LIN ${c.pr.lin} m) : capacité de marche ${c.dist < c.pr.lin ? 'diminuée' : 'dans les limites de la normale'}.`);
   } else if (c.dist > 0) out.push(`Distance parcourue de ${Math.round(c.dist)} m.`);
   if (ok(c.sRest) && ok(c.nadir)) {
     const sous = o2 ? (o2dev() && !titr() ? ` sous oxygène pulsé (dispositif ${o2dev()})` : ' sous oxygène') : '';
@@ -1996,8 +2075,7 @@ function buildBriefEN(c, desat) {
     out.push(`Exertional oxygen titration${o2dev() ? ` (device ${o2dev()})` : ''}${bits.length ? ': ' + bits.join('; ') : ''}.`);
   }
   if (c.pr) {
-    out.push(`Distance walked ${Math.round(c.dist)} m, i.e. ${c.pct}% of the expected value: walking capacity ${c.dist < c.pr.lin ? 'reduced' : 'within normal limits'}.`);
-    if (c.pr.outOfRange) out.push('Age outside the reference population of the equations (40 to 80 years).');
+    out.push(`Distance walked ${Math.round(c.dist)} m, i.e. ${c.pct}% of the predicted value (${c.pr.p} m; LLN ${c.pr.lin} m): walking capacity ${c.dist < c.pr.lin ? 'reduced' : 'within normal limits'}.`);
   } else if (c.dist > 0) out.push(`Distance walked ${Math.round(c.dist)} m.`);
   if (ok(c.sRest) && ok(c.nadir)) {
     const on = o2 ? (o2dev() && !titr() ? ` on pulsed oxygen (device ${o2dev()})` : ' on oxygen') : '';
@@ -2270,13 +2348,13 @@ async function buildDocx() {
   const c = compute(), desat = ok(c.sRest) && ok(c.nadir) ? c.sRest - c.nadir : NaN, sp = speedStats(c.dist);
   const sy = symptoms();
   const perf = EN ? [
-    ['Distance', `${Math.round(c.dist)} m${c.pr ? `, i.e. ${c.pct}% of the predicted value (${c.pr.p} m; lower limit ${c.pr.lin} m)` : ', predicted value not calculated (age, height or weight missing)'}`],
+    ['Distance', `${Math.round(c.dist)} m${c.pr ? `, i.e. ${c.pct}% of the predicted value (${c.pr.p} m; LLN ${c.pr.lin} m)` : ', predicted value not calculated (age, height or weight missing)'}`],
     ['Speed', sp ? (pauses.length ? `${fr(sp.kmhTot)} km/h overall (${fr(sp.mTot)} m/min), ${fr(sp.kmhWalk)} km/h while walking (${fr(sp.mWalk)} m/min)` : `${fr(sp.kmhTot)} km/h (${fr(sp.mTot)} m/min), no stops`) : dash],
     ['Oxygenation', ok(c.nadir) ? `Nadir ${c.nadir}%, ${!ok(desat) ? 'desaturation not calculated (resting SpO2 missing)' : desat > 0 ? `desaturation of ${desat} point${desat > 1 ? 's' : ''}` : 'no desaturation'}` : dash],
     ['Course of the test', `${$('endStatus').textContent} ${pauses.length ? `${pauses.length === 1 ? 'One stop' : `${pauses.length} stops`}, ${Math.round(pauseTotal())} s in total.` : 'No stops.'}`],
     ['Limiting symptoms', sy.length ? sy.map(tv).join(', ') : 'none reported']
   ] : [
-    ['Distance', `${Math.round(c.dist)} m${c.pr ? `, soit ${c.pct} % de la valeur théorique (${c.pr.p} m ; limite inférieure ${c.pr.lin} m)` : ', valeur théorique non calculée (âge, taille ou poids manquant)'}`],
+    ['Distance', `${Math.round(c.dist)} m${c.pr ? `, soit ${c.pct} % de la valeur théorique (${c.pr.p} m ; LIN ${c.pr.lin} m)` : ', valeur théorique non calculée (âge, taille ou poids manquant)'}`],
     ['Vitesse', sp ? (pauses.length ? `${fr(sp.kmhTot)} km/h globale (${fr(sp.mTot)} m/min), ${fr(sp.kmhWalk)} km/h pendant la marche (${fr(sp.mWalk)} m/min)` : `${fr(sp.kmhTot)} km/h (${fr(sp.mTot)} m/min), sans arrêt`) : dash],
     ['Oxygénation', ok(c.nadir) ? `Nadir ${c.nadir} %, ${!ok(desat) ? 'désaturation non calculée (SpO2 de repos manquante)' : desat > 0 ? `désaturation de ${desat} point${desat > 1 ? 's' : ''}` : 'sans désaturation'}` : dash],
     ['Déroulement', `${$('endStatus').textContent} ${pauses.length ? `${pauses.length === 1 ? 'Un arrêt' : `${pauses.length} arrêts`}, ${Math.round(pauseTotal())} s au total.` : 'Aucun arrêt.'}`],
