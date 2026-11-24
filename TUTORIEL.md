@@ -36,7 +36,7 @@ On choisit le type d'examen, test de marche de 6 minutes ou titration de l'oxyg�
 
 ## 3. Repos
 
-Le patient est assis au repos depuis au moins 15 minutes. On saisit la SpO2, la FC et la pression artérielle, puis on fait coter la dyspnée et la fatigue.
+Le patient est assis au repos depuis au moins 15 minutes. On saisit la SpO2, la FC et la pression artérielle, puis on fait coter la dyspnée et la fatigue. Sur iPhone, les quatre valeurs se saisissent dans une ligne qui se referme avec « OK » et affiche alors les chiffres en gros ; on touche la ligne pour les corriger.
 
 <p>
   <img src="captures/tutoriel/repos.png" alt="Écran Repos rempli, avec les cotations de Borg" width="260">
@@ -70,17 +70,17 @@ Le champ « Nadir lu sur l'oxymètre » sert à noter la SpO2 la plus basse affi
 
 ## 6. Arrêt et récupération
 
-À la fin des 6 minutes, l'application passe d'elle-même à cet écran et lance le minuteur de récupération. Le bandeau jaune indique le temps restant avant chaque relevé, et un bip retentit à 1 puis à 3 minutes. L'écran a trois onglets.
+À la fin des 6 minutes, l'application passe d'elle-même à cet écran et lance le minuteur de récupération. La ligne marquée d'un trait ocre, sous le titre, indique le temps restant avant chaque relevé, et un bip retentit à 1 puis à 3 minutes. L'écran a trois onglets.
 
 <p>
   <img src="captures/tutoriel/recup.png" alt="Onglet Arrêt : mesures à l'arrêt et mètres depuis le dernier plot" width="200">
   &nbsp;
   <img src="captures/tutoriel/symptomes.png" alt="Onglet Borg et symptômes" width="200">
   &nbsp;
-  <img src="captures/tutoriel/recup3.png" alt="Onglet Récupération : relevés à 1 et 3 minutes" width="200">
+  <img src="captures/tutoriel/recup3.png" alt="Onglet Récupération : tableau de l'arrêt et des relevés à 1 et 3 minutes, ligne de 1 min ouverte" width="200">
 </p>
 
-L'onglet **Arrêt** reçoit la SpO2, la FC et la pression artérielle à l'arrêt, et le curseur sert à indiquer les mètres parcourus depuis le dernier plot. L'onglet **Borg, symptômes** permet la cotation de fin, avec le rappel de la cote d'avant le test, puis les symptômes qui ont empêché le patient de marcher plus loin. L'onglet **Récupération** reçoit les relevés à 1 et à 3 minutes.
+L'onglet **Arrêt** reçoit la SpO2, la FC et la pression artérielle à l'arrêt (sur iPhone, elles se saisissent dans le tableau de l'onglet Récupération), le nadir lu sur l'oxymètre, et le curseur sert à indiquer les mètres parcourus depuis le dernier plot. L'onglet **Borg, symptômes** permet la cotation de fin, avec le rappel de la cote d'avant le test, puis les symptômes qui ont empêché le patient de marcher plus loin. L'onglet **Récupération** est un tableau, comme celui des minutes pendant le test : les lignes « Arrêt », « 1 min » et « 3 min » affichent les valeurs en gros, un point quand elles manquent. La ligne attendue s'ouvre d'elle-même (l'arrêt, puis 1 min et 3 min au minuteur) ; « OK » la referme, et on touche une ligne pour la remplir ou la corriger.
 
 ## 7. Bilan et compte rendu
 

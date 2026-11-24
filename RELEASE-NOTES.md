@@ -2,6 +2,10 @@
 
 *English · [Français](NOTES-DE-VERSION.md)*
 
+## 25 November 2026 — new look on iPhone
+
+On iPhone held upright, the screens have fewer boxes: values and lists are separated by thin rules, and the texts to read (instructions to the patient, phrase during the test, summary) sit on the background with a teal bar on the left. During the test, the minute table is a real table, the timer and the time left fit on one line, the corridor is drawn at the top of the "+1 length" button, which is larger than before, and "Undo 1" is discreet. At rest and after the end, the readings (SpO2, HR, SBP, DBP) are entered in a table that works like the minute table during the test: large figures, a dot when a value is missing, the row that is due opens on its own (rest; end, then 1 and 3 min with the timer), "OK" closes it, and a row can be tapped to correct it. The values at the end are now entered in the table of the Recovery tab. The tabs of this screen are underlined. The recovery timer stops at 3 minutes (a test reopened the next day no longer shows a duration of several days). The way the app works, the iPad and landscape are unchanged.
+
 ## 23 November 2026 — titration starting on room air
 
 A titration can start on room air, to show desaturation on air first. During the test, the "Oxygen: room air, change" button opens "Switch to oxygen", where the interface, the mode, the source and the flow or setting are chosen; later changes work as before, and undoing the first change returns to room air. The report states it ("room air at the start, then nasal cannula, continuous flow", "switch from room air to 2 L/min at 1 min 42 s"), and the O2 track of the figure starts from zero. On iPhone, the test screen of a titration now fits without the bottom buttons going under the home bar.

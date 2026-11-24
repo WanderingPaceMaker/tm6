@@ -708,6 +708,42 @@ h1{font-size:28px;line-height:1.15;margin:20px 0 4px;text-wrap:balance}
   .cols.test .lap{padding-top:64px}
   .cols.test .ctl{grid-template-columns:.9fr 1.3fr 1.3fr}
   .cols.test .b-undo{border-color:transparent;background:none;color:var(--muted);white-space:nowrap;padding-left:0;padding-right:0}
+  /* Même principe sur les autres écrans (go d'Allan du 25 novembre 2026) : filets plutôt que cadres, texte à lire sur le fond
+     avec un filet pétrole, ocre = relevé à faire maintenant ; les champs de saisie gardent leur bord (où toucher). */
+  .lead{border-left:4px solid var(--accent);padding:1px 0 1px 12px;color:var(--fg)}
+  .readout{border-left:0;padding:0;margin:6px 0 10px}
+  .readout .rv{font-size:44px}
+  .borgrow{border:0;border-bottom:1px solid var(--line);border-radius:0;background:none;padding:8px 0;margin:0}
+  .borgrow:first-of-type{border-top:1px solid var(--line)}
+  .borgrow .showscale{background:none;color:var(--accent);border:2px solid var(--line);min-height:44px;padding:6px 14px}
+  .consignes{background:none;border-radius:0;padding:2px 0 2px 12px;font-size:17px;line-height:1.4}
+  .check{border:0;border-bottom:1px solid var(--line);border-radius:0;background:none;padding:10px 0;margin:0}
+  .check.on{border-color:var(--line)}
+  .rtabs{grid-gap:0}
+  .rtclk{background:none;border-radius:0;text-align:left;color:var(--fg);font:700 19px/1.3 var(--f-body);border-left:4px solid var(--warn);padding:2px 0 2px 12px;margin:0 0 8px}
+  .rtab{border:0;border-radius:0;background:none;color:var(--muted);box-shadow:inset 0 -3px 0 transparent}
+  .rtab.on{background:none;color:var(--accent);box-shadow:inset 0 -3px 0 var(--accent)}
+  .kpis{grid-gap:0;border-top:1px solid var(--line)}
+  .kpi{background:none;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:10px 0}
+  .kpi:nth-child(odd){border-right:1px solid var(--line);padding-right:10px}
+  .kpi:nth-child(even){padding-left:12px}
+  .b-syn .text{background:none;border:0;border-left:4px solid var(--accent);border-radius:0;padding:2px 0 2px 12px;font-size:16px;line-height:1.45}
+  .ltab{margin:0}
+  .lh,.lrow{display:grid;grid-template-columns:46px repeat(4,minmax(0,1fr)) 44px;grid-gap:4px;-webkit-align-items:center;align-items:center;width:100%}
+  .lh{font-size:13px;color:var(--muted);text-align:center;padding:0 0 4px 10px;border-bottom:1px solid var(--line)}
+  .lrow{min-height:52px;margin:0;padding:0 0 0 10px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:none;text-align:center;font:inherit;color:var(--fg)}
+  button.lrow{-webkit-appearance:none;appearance:none}
+  .ltab > .lrow:last-child{border-bottom:0}
+  .lrow .mm{font-size:14px;color:var(--muted);text-align:left}
+  .lrow b{font:700 24px/1 var(--f-num);font-variant-numeric:tabular-nums}
+  .lrow b.bad{color:var(--alert)}
+  .lrow.due{background:var(--warn-soft);box-shadow:inset 4px 0 0 var(--warn)}
+  .lrow.on{background:var(--warn-soft);box-shadow:inset 5px 0 0 var(--warn);padding:6px 0 6px 10px}
+  .lrow.on .mm{font-weight:700;color:var(--fg)}
+  .lrow.on .f > span:first-child{display:none}
+  .lrow.on .f .box{padding:0 4px}
+  .lrow.on .f input{font-size:22px;padding:8px 0;text-align:center}
+  .lrow.on .mok{min-height:44px;padding:0}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style></head><body>
@@ -1078,7 +1114,7 @@ var SCREENS = {
   repos: function () {
     nextBar('cond', LG('Suivant : préparer le départ', 'Next: get ready to start'), 'pret');
     return '<h1>' + LG('Repos, avant le départ', 'Rest, before the start') + '</h1><p class="lead">' + LG('Patient assis près de la ligne de départ, au repos au moins 15 minutes avant le test. Vérifier les contre-indications ; relever SpO2, FC et pression artérielle, puis dyspnée et fatigue.', 'Patient seated near the starting line, resting for at least 15 minutes before the test. Check contraindications; record SpO2, HR and blood pressure, then dyspnoea and fatigue.') + '</p>' +
-      '<div class="cols"><div class="col"><div class="card"><div class="grid2">' + field('rest.spo2', 'SpO2', '%') + field('rest.fc', LG('FC', 'HR'), '/min') + field('rest.pas', LG('PAS', 'SBP'), 'mmHg') + field('rest.pad', LG('PAD', 'DBP'), 'mmHg') + '</div>' + flags('repos') + '</div>' + restTitr() + '</div>' +
+      '<div class="cols"><div class="col"><div class="card">' + (phoneTab() ? ltab(lrowsRest()) : '<div class="grid2">' + field('rest.spo2', 'SpO2', '%') + field('rest.fc', LG('FC', 'HR'), '/min') + field('rest.pas', LG('PAS', 'SBP'), 'mmHg') + field('rest.pad', LG('PAD', 'DBP'), 'mmHg') + '</div>') + flags('repos') + '</div>' + restTitr() + '</div>' +
       '<div class="col"><div class="card' + (restTitrOn() ? ' borgpair' : '') + '"><h2>' + LG('Borg avant le test', 'Borg before the test') + '</h2>' + borg('rest.bd', LG('Dyspnée', 'Dyspnoea')) + borg('rest.bf', 'Fatigue') + '</div></div></div>';
   },
   pret: function () {
@@ -1125,14 +1161,14 @@ var SCREENS = {
     return '<h1>' + LG('Arrêt et récupération', 'End and recovery') + '</h1><p class="lead rcl">' + stopTxt + (S.stop.reason ? '.' : LG('. À dire : « ' + END_PHRASE + ' »', '. Say: “' + END_PHRASE + '”')) + LG(' Le minuteur de récupération tourne.', ' The recovery timer is running.') + '</p>' +
       '<div class="rtabs"><span class="rtstop">' + stopTxt + '</span><span class="rtclk" id="rtClk"></span>' + [LG('Arrêt', 'End'), LG('Borg, symptômes', 'Borg, symptoms'), LG('Récupération', 'Recovery')].map(function (t, i) { return '<button type="button" class="rtab' + ((S.rpane || 0) === i ? ' on' : '') + '" data-rpane="' + i + '">' + t + '</button>'; }).join('') + '</div>' +
       '<div class="cols rcp" data-pane="' + (S.rpane || 0) + '"><div class="col"><div class="rec"><div class="rt" id="rt1"><span>' + LG('Récupération', 'Recovery') + '</span><b id="recClk">0:00</b></div><div class="rt" id="rt3"><span id="recLbl">' + LG('Relevé à 1 min dans', 'Reading at 1 min in') + '</span><b id="recNext">1:00</b></div></div>' +
-      '<div class="card"><h2>' + LG('À l\'arrêt', 'At the end') + '</h2><div class="grid2">' + field('end.spo2', 'SpO2', '%') + field('end.fc', LG('FC', 'HR'), '/min') + field('end.pas', LG('PAS', 'SBP'), 'mmHg') + field('end.pad', LG('PAD', 'DBP'), 'mmHg') + '</div>' +
+      '<div class="card"><h2>' + LG('À l\'arrêt', 'At the end') + '</h2>' + (phoneTab() ? '' : '<div class="grid2">' + field('end.spo2', 'SpO2', '%') + field('end.fc', LG('FC', 'HR'), '/min') + field('end.pas', LG('PAS', 'SBP'), 'mmHg') + field('end.pad', LG('PAD', 'DBP'), 'mmHg') + '</div>') +
       '<div class="nadirrow phoneonly">' + field('nadir', LG('Nadir lu sur l\'oxymètre, s\'il est plus bas qu\'un relevé', 'Nadir read on the oximeter, if lower than a reading'), '%') + '</div>' +
       '<div style="height:12px"></div><div class="f"><span>' + (nLaps() === 0 && depart() ? LG('Mètres depuis la ligne de départ', 'Metres from the starting line') : LG('Mètres depuis le dernier plot', 'Metres from the last cone')) + LG(' : ', ': ') + '<b id="partV">' + (S.end.partiel || 0) + ' m</b></span>' +
       '<input class="slider" type="range" min="0" max="' + partMax() + '" step="1" value="' + (S.end.partiel || 0) + '" data-k="end.partiel"></div>' + flags('recup') + '</div></div><div class="col">' +
       '<div class="card"><h2>' + LG('Borg à la fin', 'Borg at the end') + '</h2>' + borg('end.bd', LG('Dyspnée', 'Dyspnoea')) + borg('end.bf', 'Fatigue') + '</div>' +
       '<div class="card"><h2>' + LG('Symptômes limitants', 'Limiting symptoms') + '</h2><p class="say">' + LG('Après le Borg : « Qu\'est-ce qui vous a empêché de marcher plus loin ? »', 'After the Borg: “What, if anything, kept you from walking farther?”') + '</p>' + sy + '</div>' +
-      '</div><div class="col"><div class="card" id="rc1"><h2>' + LG('Récupération à 1 min', 'Recovery at 1 min') + '</h2><div class="grid4">' + field('rec.1.spo2', 'SpO2 %', '') + field('rec.1.fc', LG('FC /min', 'HR /min'), '') + field('rec.1.pas', LG('PAS', 'SBP'), '') + field('rec.1.pad', LG('PAD', 'DBP'), '') + '</div></div>' +
-      '<div class="card" id="rc3"><h2>' + LG('Récupération à 3 min', 'Recovery at 3 min') + '</h2><div class="grid4">' + field('rec.3.spo2', 'SpO2 %', '') + field('rec.3.fc', LG('FC /min', 'HR /min'), '') + field('rec.3.pas', LG('PAS', 'SBP'), '') + field('rec.3.pad', LG('PAD', 'DBP'), '') + '</div></div></div></div>';
+      '</div><div class="col">' + (phoneTab() ? ltab(lrowsRec()) + '</div></div>' : '<div class="card" id="rc1"><h2><span class="lg">' + LG('Récupération à ', 'Recovery at ') + '</span>1 min</h2><div class="grid4">' + field('rec.1.spo2', 'SpO2 %', '') + field('rec.1.fc', LG('FC /min', 'HR /min'), '') + field('rec.1.pas', LG('PAS', 'SBP'), '') + field('rec.1.pad', LG('PAD', 'DBP'), '') + '</div></div>' +
+      '<div class="card" id="rc3"><h2><span class="lg">' + LG('Récupération à ', 'Recovery at ') + '</span>3 min</h2><div class="grid4">' + field('rec.3.spo2', 'SpO2 %', '') + field('rec.3.fc', LG('FC /min', 'HR /min'), '') + field('rec.3.pas', LG('PAS', 'SBP'), '') + field('rec.3.pad', LG('PAD', 'DBP'), '') + '</div></div></div></div>');
   },
   bilan: function () {
     $('next').style.display = 'block';
@@ -1218,6 +1254,34 @@ function o2Label() {
 }
 
 function fr1(v) { var t = (Math.round(v * 10) / 10).toString(); return EN ? t : t.replace('.', ','); }
+// iPhone portrait : relevés du repos et de la récupération en tableau léger, comme le tableau des minutes du test
+// (go d'Allan du 25 novembre 2026) : chiffres en gros, point si la valeur manque, une seule ligne ouverte à la saisie,
+// la ligne attendue s'ouvre d'elle-même (repos, arrêt, puis 1 et 3 min au minuteur), toucher une ligne pour la corriger.
+function lrowsRest() { return [{ id: 'rest', l: LG('Repos', 'Rest'), p: 'rest.', due: true }]; }
+function lrowsRec() {
+  return [{ id: 'end', l: LG('Arrêt', 'End'), p: 'end.', due: true }, { id: 'rec1', l: '1 min', p: 'rec.1.', due: S.recT >= 60 }, { id: 'rec3', l: '3 min', p: 'rec.3.', due: S.recT >= 180 }];
+}
+function lfull(r) { return ['spo2', 'fc', 'pas', 'pad'].every(function (k) { return ok(get(r.p + k)); }); }
+// Ligne ouverte : celle choisie à la main (S.lsel), sinon la dernière ligne attendue et incomplète.
+function lopen(rows) {
+  if (S.lsel !== undefined) return S.lsel;
+  for (var i = rows.length - 1; i >= 0; i--) if (rows[i].due && !lfull(rows[i])) return rows[i].id;
+  return '';
+}
+function ltab(rows) {
+  var open = lopen(rows), ks = ['spo2', 'fc', 'pas', 'pad'];
+  var h = '<div class="ltab"><div class="lh"><span></span><span>SpO2 %</span><span>' + LG('FC /min', 'HR /min') + '</span><span>' + LG('PAS', 'SBP') + '</span><span>' + LG('PAD', 'DBP') + '</span><span></span></div>';
+  rows.forEach(function (r) {
+    var st = (lfull(r) ? ' ok' : r.due ? ' due' : '');
+    if (r.id === open) h += '<div class="lrow on' + st + '"><span class="mm">' + r.l + '</span>' + ks.map(function (k) { return field(r.p + k, '', ''); }).join('') + '<button type="button" class="mok" data-lok="' + r.id + '">OK</button></div>';
+    else h += '<button type="button" class="lrow' + st + '" data-lrow="' + r.id + '"><span class="mm">' + r.l + '</span>' + ks.map(function (k) {
+      var b = S.bad[r.p + k] != null, v = b ? S.bad[r.p + k] : get(r.p + k);
+      return '<b class="' + (b ? 'bad' : '') + '">' + (v === '' || v == null ? '·' : esc(v)) + '</b>';
+    }).join('') + '<span></span></button>';
+  });
+  return h + '</div>';
+}
+function ltyping() { var a = document.activeElement; return !!(a && a.tagName === 'INPUT' && a.closest && a.closest('.ltab')); }
 function kpi(v, l, bad) { return '<div class="kpi' + (bad ? ' bad' : '') + '"><b>' + v + '</b><span>' + l + '</span></div>'; }
 // Même rendu que table(), mais en blocs : peut se répartir sur plusieurs colonnes.
 function entries(rows) {
@@ -1409,6 +1473,7 @@ function demoFill() {
 /* ---------- Navigation ---------- */
 function go(step) {
   if (step === 'test' && !S.started) step = 'pret';
+  if (step !== S.step) S.lsel = undefined;
   S.step = step; S.seen[step] = 1;
   document.body.setAttribute('data-step', step); document.body.className = document.body.className.replace(/ ?showsteps/g, '');
   var h = SCREENS[step]();
@@ -1442,7 +1507,7 @@ function tick() {
     if (S.t >= TEST) { finish(null); return; }
   } else if (S.stop) {
     S.recT = (now - S.recT0) / 1000 * S.speed;
-    [1, 3].forEach(function (m) { if (S.recT >= m * 60 && !S.recFired[m]) { S.recFired[m] = 1; beep(740, 0.3, m === 1 ? 1 : 2); } });
+    [1, 3].forEach(function (m) { if (S.recT >= m * 60 && !S.recFired[m]) { S.recFired[m] = 1; beep(740, 0.3, m === 1 ? 1 : 2); if (S.step === 'recup' && phoneTab() && !ltyping()) { S.lsel = undefined; go('recup'); } } });
   }
   if (S.step === 'test') renderTest(true);
   if (S.step === 'recup') renderRecup();
@@ -1478,6 +1543,7 @@ function checkSpo2(k, val) {
 function minTyping() { var a = document.activeElement, b = $('promptBox'); return !!(a && b && a.tagName === 'INPUT' && b.contains(a)); }
 // Une minute choisie à la main reste ouverte 15 s (temps réel) même si une nouvelle minute commence.
 // iPhone en portrait : tableau des six minutes (SpO2, FC, allers de la minute), saisie dans la ligne touchée.
+if (window.matchMedia) { var mqPT = matchMedia('(max-width:699px) and (orientation:portrait)'); if (mqPT.addListener) mqPT.addListener(function () { if ((S.step === 'repos' || S.step === 'recup') && !ltyping()) go(S.step); }); }
 function phoneTab() { return !!(window.matchMedia && matchMedia('(max-width:699px) and (orientation:portrait)').matches); }
 function lapsIn(m) { var n = 0; S.laps.forEach(function (t) { if (t >= (m - 1) * 60 && t < m * 60) n++; }); return n; }
 function renderMtab() {
@@ -1544,8 +1610,8 @@ function renderRecup() {
   $('recClk').textContent = mmss(Math.min(S.recT, 180)); // plafonné à 3 min : un test rouvert le lendemain affichait « 2412:42 »
   $('recLbl').textContent = S.recT < 60 ? LG('Relevé à 1 min dans', 'Reading at 1 min in') : S.recT < 180 ? LG('Relevé à 3 min dans', 'Reading at 3 min in') : LG('Relevés', 'Readings');
   $('recNext').textContent = S.recT < 60 ? mmss(60 - S.recT) : S.recT < 180 ? mmss(180 - S.recT) : LG('terminé', 'done');
-  $('rc1').style.borderColor = S.recT >= 60 && !ok(S.rec[1].spo2) ? 'var(--warn)' : '';
-  $('rc3').style.borderColor = S.recT >= 180 && !ok(S.rec[3].spo2) ? 'var(--warn)' : '';
+  if ($('rc1')) { var d1 = S.recT >= 60 && !ok(S.rec[1].spo2); $('rc1').style.borderColor = d1 ? 'var(--warn)' : ''; $('rc1').className = 'card' + (d1 ? ' due' : '');
+  var d3 = S.recT >= 180 && !ok(S.rec[3].spo2); $('rc3').style.borderColor = d3 ? 'var(--warn)' : ''; $('rc3').className = 'card' + (d3 ? ' due' : ''); }
   if ($('rtClk')) $('rtClk').textContent = S.recT < 180 ? $('recLbl').textContent + ' ' + $('recNext').textContent : LG('Relevés à 1 et 3 min passés', '1- and 3-min readings due');
 }
 
@@ -1678,6 +1744,10 @@ document.addEventListener('click', function (e) {
   if (sy) { var i = S.end.sympt.indexOf(sy); if (i >= 0) S.end.sympt.splice(i, 1); else S.end.sympt.push(sy); b.className = 'opt' + (i >= 0 ? '' : ' on'); return; }
   var rp = b.getAttribute('data-rpane');
   if (rp != null) { S.rpane = +rp; go('recup'); return; }
+  var lr = b.getAttribute('data-lrow');
+  if (lr) { S.lsel = lr; var y0 = window.scrollY; go(S.step); window.scrollTo(0, y0); var li = document.querySelectorAll('.lrow.on input'), fi = null; for (var q = 0; q < li.length; q++) if (li[q].value === '') { fi = li[q]; break; } fi = fi || li[0]; if (fi) fi.focus(); return; }
+  var lo = b.getAttribute('data-lok');
+  if (lo) { var rows = S.step === 'repos' ? lrowsRest() : lrowsRec(), nx = ''; for (var q2 = rows.length - 1; q2 >= 0; q2--) if (rows[q2].id !== lo && rows[q2].due && !lfull(rows[q2])) { nx = rows[q2].id; break; } S.lsel = nx; go(S.step); return; }
   var mn = b.getAttribute('data-min');
   if (mn) { if (!S.mins[mn]) S.mins[mn] = { s: '', f: '' }; S.minOpen = +mn; S.minPick = Date.now(); $('promptBox').innerHTML = ''; renderTest(); if (phoneTab()) { var fi = document.querySelector('#mrw' + mn + ' input'); if (fi) fi.focus(); } return; }
   var sc = b.getAttribute('data-scale');

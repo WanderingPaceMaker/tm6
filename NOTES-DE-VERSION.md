@@ -2,6 +2,10 @@
 
 *[English](RELEASE-NOTES.md) · Français*
 
+## 25 novembre 2026 — nouveau dessin sur iPhone
+
+Sur iPhone tenu en portrait, les écrans ont moins de cadres : les valeurs et les listes sont séparées par des filets, et les textes à lire (consignes au patient, phrase pendant le test, synthèse) sont posés sur le fond avec un trait pétrole à gauche. Pendant le test, le tableau des minutes est un vrai tableau, le chronomètre et le temps restant tiennent sur une ligne, le couloir est dessiné dans le haut du bouton « +1 aller », plus grand qu'avant, et « Annuler 1 » est discret. Au repos et après l'arrêt, les relevés (SpO2, FC, PAS, PAD) se saisissent dans un tableau qui fonctionne comme celui des minutes pendant le test : chiffres en gros, point quand une valeur manque, ligne attendue ouverte d'elle-même (repos ; arrêt, puis 1 et 3 min au minuteur), « OK » pour la refermer, toucher une ligne pour la corriger. Les valeurs à l'arrêt se saisissent désormais dans le tableau de l'onglet Récupération. Les onglets de cet écran sont soulignés. Le minuteur de récupération s'arrête à 3 minutes (un test rouvert le lendemain n'affiche plus une durée de plusieurs jours). Le fonctionnement, l'iPad et le paysage ne changent pas.
+
 ## 23 novembre 2026 — titration partie en air ambiant
 
 Une titration peut commencer en air ambiant, pour montrer d'abord la désaturation en air. Pendant le test, le bouton « Oxygène : air ambiant, modifier » ouvre « Passer sous oxygène », où l'on choisit l'interface, le mode, la source et le débit ou le réglage ; les changements suivants se font comme avant, et annuler le premier changement ramène à l'air ambiant. Le compte rendu l'écrit (« air ambiant au départ, puis lunettes, débit continu », « passage de l'air ambiant à 2 L/min à 1 min 42 s »), et la piste O2 de la figure part de zéro. Sur iPhone, l'écran du test d'une titration tient désormais sans que les boutons du bas passent sous la barre d'accueil.

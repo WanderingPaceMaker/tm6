@@ -36,7 +36,7 @@ Choose the type of test, 6-minute walk test or exertional oxygen titration, then
 
 ## 3. Rest
 
-The patient has been sitting at rest for at least 15 minutes. Enter SpO2, HR and blood pressure, then have the patient rate dyspnoea and fatigue.
+The patient has been sitting at rest for at least 15 minutes. Enter SpO2, HR and blood pressure, then have the patient rate dyspnoea and fatigue. On iPhone, the four values are entered in a row that closes with "OK" and then shows the figures in large type; tap the row to correct them.
 
 <p>
   <img src="captures/tutorial/repos.png" alt="Rest screen filled in, with the Borg ratings" width="260">
@@ -70,17 +70,17 @@ The "Nadir read on the oximeter" field records the lowest SpO2 shown by the oxim
 
 ## 6. End and recovery
 
-At the end of the 6 minutes, the app moves to this screen on its own and starts the recovery timer. The yellow band shows the time left before each reading, and a beep sounds at 1 and then at 3 minutes. The screen has three tabs.
+At the end of the 6 minutes, the app moves to this screen on its own and starts the recovery timer. The line marked with an ochre bar, under the title, shows the time left before each reading, and a beep sounds at 1 and then at 3 minutes. The screen has three tabs.
 
 <p>
   <img src="captures/tutorial/recup.png" alt="End tab: measurements at the end and metres from the last cone" width="200">
   &nbsp;
   <img src="captures/tutorial/symptomes.png" alt="Borg, symptoms tab" width="200">
   &nbsp;
-  <img src="captures/tutorial/recup3.png" alt="Recovery tab: readings at 1 and 3 minutes" width="200">
+  <img src="captures/tutorial/recup3.png" alt="Recovery tab: table of the end values and the readings at 1 and 3 minutes, 1-min row open" width="200">
 </p>
 
-The **End** tab receives SpO2, HR and blood pressure at the end, and the slider gives the metres walked since the last cone. The **Borg, symptoms** tab holds the end-of-test rating, with a reminder of the rating before the test, then the symptoms that kept the patient from walking farther. The **Recovery** tab receives the readings at 1 and 3 minutes.
+The **End** tab receives SpO2, HR and blood pressure at the end (on iPhone, they are entered in the table of the Recovery tab), the nadir read on the oximeter, and the slider gives the metres walked since the last cone. The **Borg, symptoms** tab holds the end-of-test rating, with a reminder of the rating before the test, then the symptoms that kept the patient from walking farther. The **Recovery** tab is a table, like the minute table during the test: the "End", "1 min" and "3 min" rows show the values in large type, or a dot when they are missing. The row that is due opens on its own (the end, then 1 min and 3 min with the timer); "OK" closes it, and a row can be tapped to fill it in or correct it.
 
 ## 7. Results and report
 
